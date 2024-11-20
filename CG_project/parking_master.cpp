@@ -54,8 +54,8 @@ GLfloat	Box_Color[14 * 3][3];
 
 //Block 그리기 - 차체
 void initBlock();
-#define BLOCK_SIZE 0.5f
-#define WHEEL_SIZE BLOCK_SIZE / 4
+#define CAR_SIZE 0.5f
+#define WHEEL_SIZE CAR_SIZE / 4
 GLfloat Block[4][12 * 3][3];
 GLfloat	Block_Color[4][12 * 3][3];
 
@@ -128,9 +128,22 @@ glm::mat4 SRT_MATRIX()
 }
 
 // 자동체 몸체의 변환, 이 함수를 기준으로 헤드라이트, 바퀴 등의 위치가 정해진다.
+float car_dx = 0.0f, car_dy = WHEEL_SIZE, car_dz = 0.0f;	// 차체의 이동 변환
+float car_rotateY = 0.0f;
+glm::mat4 Car_Body() 
+{
+	glm::mat4 T = glm::mat4(1.0f);
+	glm::mat4 Ry = glm::mat4(1.0f);
+	//glm::mat4 S = glm::mat4(1.0f);
+
+	Ry = glm::rotate(Ry, glm::radians(car_rotateY), glm::vec3(0.0, 1.0, 0.0));
+	T = glm::translate(T, glm::vec3(car_dx, car_dy, car_dz));
+
+	return SRT_MATRIX() * Ry * T;
+}
 
 // 헤드라이트를 차량의 앞으로 고정
-glm::mat4 Headlights(int left_right) //num은 4개 바퀴의 번호, type은 실린더, 뚜껑 객체 종류
+glm::mat4 Headlights(int left_right) 
 {
 	glm::mat4 T = glm::mat4(1.0f);
 	glm::mat4 Ry = glm::mat4(1.0f);
@@ -138,14 +151,14 @@ glm::mat4 Headlights(int left_right) //num은 4개 바퀴의 번호, type은 실
 
 	if (left_right == 0)
 	{
-		T = glm::translate(T, glm::vec3(-BLOCK_SIZE/3, BLOCK_SIZE / 8, BLOCK_SIZE));
+		T = glm::translate(T, glm::vec3(-CAR_SIZE/3, CAR_SIZE / 8, CAR_SIZE));
 	}
 	else if(left_right == 1)
 	{
-		T = glm::translate(T, glm::vec3(BLOCK_SIZE/3, BLOCK_SIZE / 8, BLOCK_SIZE));
+		T = glm::translate(T, glm::vec3(CAR_SIZE/3, CAR_SIZE / 8, CAR_SIZE));
 	}
 	
-	return T;
+	return Car_Body() * T;
 }
 
 // 바퀴
@@ -154,21 +167,21 @@ glm::mat4 Wheels(int num)
 	glm::mat4 T2 = glm::mat4(1.0f);
 	if (num == 1) //앞 기준 왼쪽 앞
 	{
-		T2 = glm::translate(T2, glm::vec3(-(BLOCK_SIZE / 2 + WHEEL_SIZE / 4), 0.0f, BLOCK_SIZE * 0.5f));
+		T2 = glm::translate(T2, glm::vec3(-(CAR_SIZE / 2 + WHEEL_SIZE / 4), 0.0f, CAR_SIZE * 0.5f));
 	}
 	if (num == 2) //오른쪽 앞
 	{
-		T2 = glm::translate(T2, glm::vec3(BLOCK_SIZE / 2 + WHEEL_SIZE / 4, 0.0f, BLOCK_SIZE * 0.5f));
+		T2 = glm::translate(T2, glm::vec3(CAR_SIZE / 2 + WHEEL_SIZE / 4, 0.0f, CAR_SIZE * 0.5f));
 	}
 	if (num == 3) //왼쪽 뒤
 	{
-		T2 = glm::translate(T2, glm::vec3(-(BLOCK_SIZE / 2 + WHEEL_SIZE / 4), 0.0f, -BLOCK_SIZE * 0.5f));
+		T2 = glm::translate(T2, glm::vec3(-(CAR_SIZE / 2 + WHEEL_SIZE / 4), 0.0f, -CAR_SIZE * 0.5f));
 	}
 	if (num == 4)  //오른쪽 뒤
 	{
-		T2 = glm::translate(T2, glm::vec3(BLOCK_SIZE / 2 + WHEEL_SIZE / 4, 0.0f, -BLOCK_SIZE * 0.5f));
+		T2 = glm::translate(T2, glm::vec3(CAR_SIZE / 2 + WHEEL_SIZE / 4, 0.0f, -CAR_SIZE * 0.5f));
 	}
-	return T2;
+	return Car_Body() * T2;
 }
 glm::mat4 Wheel_on_000(int num, int type) //num은 4개 바퀴의 번호, type은 실린더, 뚜껑 객체 종류
 {
@@ -189,7 +202,7 @@ glm::mat4 Wheel_on_000(int num, int type) //num은 4개 바퀴의 번호, type�
 	{
 		T = glm::translate(T, glm::vec3(0.0f, 0.0f, WHEEL_SIZE / 4));
 	}
-
+	//Car_Body() 이미 적용됨
 	return Wheels(num) * Ry * T;
 }
 
@@ -356,6 +369,7 @@ void drawObjects(int modelLoc, int mod)
 
 	// 차체
 	glBindVertexArray(vao[1]);
+	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(Car_Body()));
 	glDrawArrays(GL_TRIANGLES, 0, 6 * 6);
 	glDrawArrays(GL_TRIANGLES, 36, 6 * 6);
 	// 헤드라이트
@@ -385,6 +399,9 @@ GLvoid Keyboard(unsigned char key, int x, int y)
 		glutLeaveMainLoop(); // OpenGL 메인 루프 종료
 		break;
 	}
+	case 'r':
+		car_rotateY += 10.0f;
+		break;
 	
 	//은면제거
 	case 'h':
@@ -591,14 +608,14 @@ void initBlock()
 	if (true)
 	{
 		GLfloat vertices[8][3] = {
-			{-BLOCK_SIZE / 2,	0.0f,			-BLOCK_SIZE},	// Vertex 0
-			{ BLOCK_SIZE / 2,	0.0f,			-BLOCK_SIZE},	// Vertex 1
-			{ BLOCK_SIZE / 2,	BLOCK_SIZE / 2,	-BLOCK_SIZE},   // Vertex 2
-			{-BLOCK_SIZE / 2,	BLOCK_SIZE / 2, -BLOCK_SIZE },  // Vertex 3
-			{-BLOCK_SIZE / 2,	0.0f,			 BLOCK_SIZE },  // Vertex 4
-			{ BLOCK_SIZE / 2,	0.0f,			 BLOCK_SIZE },  // Vertex 5
-			{ BLOCK_SIZE / 2,	BLOCK_SIZE / 2,  BLOCK_SIZE },  // Vertex 6
-			{-BLOCK_SIZE / 2,	BLOCK_SIZE / 2,  BLOCK_SIZE }   // Vertex 7
+			{-CAR_SIZE / 2,	0.0f,			-CAR_SIZE},	// Vertex 0
+			{ CAR_SIZE / 2,	0.0f,			-CAR_SIZE},	// Vertex 1
+			{ CAR_SIZE / 2,	CAR_SIZE / 2,	-CAR_SIZE},   // Vertex 2
+			{-CAR_SIZE / 2,	CAR_SIZE / 2, -CAR_SIZE },  // Vertex 3
+			{-CAR_SIZE / 2,	0.0f,			 CAR_SIZE },  // Vertex 4
+			{ CAR_SIZE / 2,	0.0f,			 CAR_SIZE },  // Vertex 5
+			{ CAR_SIZE / 2,	CAR_SIZE / 2,  CAR_SIZE },  // Vertex 6
+			{-CAR_SIZE / 2,	CAR_SIZE / 2,  CAR_SIZE }   // Vertex 7
 		};
 		//큐브 데이터 초기화
 		GLfloat CubeFigure[1][TRI_COUNT * 3][3] = {
@@ -645,14 +662,14 @@ void initBlock()
 	if (true)
 	{
 		GLfloat vertices[8][3] = {
-			{-BLOCK_SIZE / 3,	BLOCK_SIZE / 2,						-BLOCK_SIZE/3*2},	// Vertex 0
-			{ BLOCK_SIZE / 3,	BLOCK_SIZE / 2,						-BLOCK_SIZE / 3 * 2},	// Vertex 1
-			{ BLOCK_SIZE / 3,	BLOCK_SIZE / 2 + BLOCK_SIZE / 3,	-BLOCK_SIZE / 3 * 2},   // Vertex 2
-			{-BLOCK_SIZE / 3,	BLOCK_SIZE / 2 + BLOCK_SIZE / 3,	-BLOCK_SIZE / 3 * 2 },  // Vertex 3
-			{-BLOCK_SIZE / 3,	BLOCK_SIZE / 2,						BLOCK_SIZE / 3 * 2 },  // Vertex 4
-			{ BLOCK_SIZE / 3,	BLOCK_SIZE / 2,						BLOCK_SIZE / 3 * 2 },  // Vertex 5
-			{ BLOCK_SIZE / 3,	BLOCK_SIZE / 2 + BLOCK_SIZE / 3,	BLOCK_SIZE / 3 * 2 },  // Vertex 6
-			{-BLOCK_SIZE / 3,	BLOCK_SIZE / 2 + BLOCK_SIZE / 3,	BLOCK_SIZE / 3 * 2 }   // Vertex 7
+			{-CAR_SIZE / 3,	CAR_SIZE / 2,						-CAR_SIZE/3*2},	// Vertex 0
+			{ CAR_SIZE / 3,	CAR_SIZE / 2,						-CAR_SIZE / 3 * 2},	// Vertex 1
+			{ CAR_SIZE / 3,	CAR_SIZE / 2 + CAR_SIZE / 3,	-CAR_SIZE / 3 * 2},   // Vertex 2
+			{-CAR_SIZE / 3,	CAR_SIZE / 2 + CAR_SIZE / 3,	-CAR_SIZE / 3 * 2 },  // Vertex 3
+			{-CAR_SIZE / 3,	CAR_SIZE / 2,						CAR_SIZE / 3 * 2 },  // Vertex 4
+			{ CAR_SIZE / 3,	CAR_SIZE / 2,						CAR_SIZE / 3 * 2 },  // Vertex 5
+			{ CAR_SIZE / 3,	CAR_SIZE / 2 + CAR_SIZE / 3,	CAR_SIZE / 3 * 2 },  // Vertex 6
+			{-CAR_SIZE / 3,	CAR_SIZE / 2 + CAR_SIZE / 3,	CAR_SIZE / 3 * 2 }   // Vertex 7
 		};
 		//큐브 데이터 초기화
 		GLfloat CubeFigure[1][TRI_COUNT * 3][3] = {
@@ -699,14 +716,14 @@ void initBlock()
 	if (true)
 	{
 		GLfloat vertices[8][3] = {
-			{-BLOCK_SIZE / 8,	-BLOCK_SIZE / 8,	-BLOCK_SIZE / 8},	// Vertex 0
-			{ BLOCK_SIZE / 8,	-BLOCK_SIZE / 8,	-BLOCK_SIZE / 8},	// Vertex 1
-			{ BLOCK_SIZE / 8,	BLOCK_SIZE	/ 8,		-BLOCK_SIZE / 8},  // Vertex 2
-			{-BLOCK_SIZE / 8,	BLOCK_SIZE	/ 8,		-BLOCK_SIZE / 8},  // Vertex 3
-			{-BLOCK_SIZE / 8,	-BLOCK_SIZE / 8,	BLOCK_SIZE  / 8},	// Vertex 4
-			{ BLOCK_SIZE / 8,	-BLOCK_SIZE / 8,	BLOCK_SIZE  / 8},	// Vertex 5
-			{ BLOCK_SIZE / 8,	BLOCK_SIZE	/ 8,		BLOCK_SIZE  / 8},	// Vertex 6
-			{-BLOCK_SIZE / 8,	BLOCK_SIZE	/ 8,		BLOCK_SIZE  / 8}	// Vertex 7
+			{-CAR_SIZE / 8,	-CAR_SIZE / 8, -CAR_SIZE / 8},	// Vertex 0
+			{ CAR_SIZE / 8,	-CAR_SIZE / 8, -CAR_SIZE / 8},	// Vertex 1
+			{ CAR_SIZE / 8,	CAR_SIZE / 8, -CAR_SIZE / 8},  // Vertex 2
+			{-CAR_SIZE / 8,	CAR_SIZE / 8, -CAR_SIZE / 8},  // Vertex 3
+			{-CAR_SIZE / 8,	-CAR_SIZE / 8, CAR_SIZE  / 8},	// Vertex 4
+			{ CAR_SIZE / 8,	-CAR_SIZE / 8, CAR_SIZE  / 8},	// Vertex 5
+			{ CAR_SIZE / 8,	CAR_SIZE / 8, CAR_SIZE  / 8},	// Vertex 6
+			{-CAR_SIZE / 8,	CAR_SIZE / 8, CAR_SIZE  / 8}	// Vertex 7
 		};
 		//큐브 데이터 초기화
 		GLfloat CubeFigure[1][TRI_COUNT * 3][3] = {
