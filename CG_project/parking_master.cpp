@@ -162,6 +162,7 @@ glm::mat4 Headlights(int left_right)
 }
 
 // 바퀴
+float front_wheels_rotateY = 0.0f;	//앞바퀴 회전량
 glm::mat4 Wheels(int num)
 {
 	glm::mat4 T2 = glm::mat4(1.0f);
@@ -187,9 +188,15 @@ glm::mat4 Wheel_on_000(int num, int type) //num은 4개 바퀴의 번호, type�
 {
 	glm::mat4 T = glm::mat4(1.0f);
 	glm::mat4 Ry = glm::mat4(1.0f);
+	glm::mat4 Ry2 = glm::mat4(1.0f);
 	//glm::mat4 S = glm::mat4(1.0f);
 
 	Ry = glm::rotate(Ry, glm::radians(90.0f), glm::vec3(0.0, 1.0, 0.0));
+	if (num == 1 || num == 2)
+	{
+		//앞바퀴들에게 회전 변환 추가 적용
+		Ry2 = glm::rotate(Ry2, glm::radians(front_wheels_rotateY), glm::vec3(0.0, 1.0, 0.0));
+	}
 	if (type == 0)		//바퀴
 	{
 		T = glm::translate(T, glm::vec3(0.0f, 0.0f, -WHEEL_SIZE / 4));
@@ -203,7 +210,7 @@ glm::mat4 Wheel_on_000(int num, int type) //num은 4개 바퀴의 번호, type�
 		T = glm::translate(T, glm::vec3(0.0f, 0.0f, WHEEL_SIZE / 4));
 	}
 	//Car_Body() 이미 적용됨
-	return Wheels(num) * Ry * T;
+	return Wheels(num) * Ry2 * Ry * T;
 }
 
 float c_dx = 0.0f;
@@ -399,6 +406,12 @@ GLvoid Keyboard(unsigned char key, int x, int y)
 		glutLeaveMainLoop(); // OpenGL 메인 루프 종료
 		break;
 	}
+	case 'e':
+		front_wheels_rotateY += 10.0f;
+		break;
+	case 'E':
+		front_wheels_rotateY -= 10.0f;
+		break;
 	case 'r':
 		car_rotateY += 10.0f;
 		break;
