@@ -1,4 +1,5 @@
 ﻿//링커-명령줄 : glew32.lib freeglut.lib
+//나는 조성욱이다
 #define _CRT_SECURE_NO_WARNINGS
 #include <iostream>
 #include <stdio.h>
