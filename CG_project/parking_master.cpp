@@ -114,38 +114,8 @@ GLfloat handle_rect_color[6][3] = {
 // 바퀴 (사각형) 초기화
 #define WHEEL_SIZE CAR_SIZE / 4
 #define WHEEL_RECT_SIZE WHEEL_SIZE / 8
-GLfloat wheel_rect[4][6][3] = {
-	{
-		{-WHEEL_RECT_SIZE, 0, -WHEEL_SIZE}, {WHEEL_RECT_SIZE, 0, -WHEEL_SIZE}, {-WHEEL_RECT_SIZE, 0, WHEEL_SIZE},
-		{-WHEEL_RECT_SIZE, 0, WHEEL_SIZE},  {WHEEL_RECT_SIZE, 0, -WHEEL_SIZE}, { WHEEL_RECT_SIZE, 0, WHEEL_SIZE}
-	},
-	{
-		{-WHEEL_RECT_SIZE, 0, -WHEEL_SIZE}, {WHEEL_RECT_SIZE, 0, -WHEEL_SIZE}, {-WHEEL_RECT_SIZE, 0, WHEEL_SIZE},
-		{-WHEEL_RECT_SIZE, 0, WHEEL_SIZE},  {WHEEL_RECT_SIZE, 0, -WHEEL_SIZE}, { WHEEL_RECT_SIZE, 0, WHEEL_SIZE}
-	},
-	{
-		{-WHEEL_RECT_SIZE, 0, -WHEEL_SIZE}, {WHEEL_RECT_SIZE, 0, -WHEEL_SIZE}, {-WHEEL_RECT_SIZE, 0, WHEEL_SIZE},
-		{-WHEEL_RECT_SIZE, 0, WHEEL_SIZE},  {WHEEL_RECT_SIZE, 0, -WHEEL_SIZE}, { WHEEL_RECT_SIZE, 0, WHEEL_SIZE}
-	},
-	{
-		{-WHEEL_RECT_SIZE, 0, -WHEEL_SIZE}, {WHEEL_RECT_SIZE, 0, -WHEEL_SIZE}, {-WHEEL_RECT_SIZE, 0, WHEEL_SIZE},
-		{-WHEEL_RECT_SIZE, 0, WHEEL_SIZE},  {WHEEL_RECT_SIZE, 0, -WHEEL_SIZE}, { WHEEL_RECT_SIZE, 0, WHEEL_SIZE}
-	}
-};
-GLfloat wheel_rect_color[4][6][3] = {
-	{		{0.0f, 0.0f, 1.0f},		{0.0f, 0.0f, 1.0f},		{0.0f, 0.0f, 1.0f},
-			{0.0f, 0.0f, 1.0f},		{0.0f, 0.0f, 1.0f},		{0.0f, 0.0f, 1.0f}
-	},
-	{		{0.0f, 0.0f, 1.0f},		{0.0f, 0.0f, 1.0f},		{0.0f, 0.0f, 1.0f},
-			{0.0f, 0.0f, 1.0f},		{0.0f, 0.0f, 1.0f},		{0.0f, 0.0f, 1.0f}
-	},
-	{		{0.0f, 0.0f, 1.0f},		{0.0f, 0.0f, 1.0f},		{0.0f, 0.0f, 1.0f},
-			{0.0f, 0.0f, 1.0f},		{0.0f, 0.0f, 1.0f},		{0.0f, 0.0f, 1.0f}
-	},
-	{		{0.0f, 0.0f, 1.0f},		{0.0f, 0.0f, 1.0f},		{0.0f, 0.0f, 1.0f},
-			{0.0f, 0.0f, 1.0f},		{0.0f, 0.0f, 1.0f},		{0.0f, 0.0f, 1.0f}
-	}
-};
+GLfloat wheel_rect[4][TRI_COUNT * 3][3];
+GLfloat wheel_rect_color[4][TRI_COUNT * 3][3];
 
 // 필요 변수 선언
 GLint width, height;
@@ -277,31 +247,29 @@ glm::mat4 Wheel_rects(int num)
 	}
 	if (num == 1) //앞 기준 왼쪽 앞
 	{
-		T = glm::translate(T, glm::vec3(-(WHEEL_SIZE / 4 + 0.001f), 0.0f, 0.0f));
+		T = glm::translate(T, glm::vec3(-(0.001f), 0.0f, 0.0f));
 		T2 = glm::translate(T2, glm::vec3(-(CAR_SIZE / 2 + WHEEL_SIZE / 4), 0.0f, CAR_SIZE * 0.5f));
 	}
 	if (num == 2) //오른쪽 앞
 	{
-		T = glm::translate(T, glm::vec3((WHEEL_SIZE / 4 + 0.001f), 0.0f, 0.0f));
+		T = glm::translate(T, glm::vec3((0.001f), 0.0f, 0.0f));
 		T2 = glm::translate(T2, glm::vec3(CAR_SIZE / 2 + WHEEL_SIZE / 4, 0.0f, CAR_SIZE * 0.5f));
 	}
 	if (num == 3) //왼쪽 뒤
 	{
-		T = glm::translate(T, glm::vec3(-(WHEEL_SIZE / 4 + 0.001f), 0.0f, 0.0f));
+		T = glm::translate(T, glm::vec3(-(0.001f), 0.0f, 0.0f));
 		T2 = glm::translate(T2, glm::vec3(-(CAR_SIZE / 2 + WHEEL_SIZE / 4), 0.0f, -CAR_SIZE * 0.5f));
 	}
 	if (num == 4)  //오른쪽 뒤
 	{
-		T = glm::translate(T, glm::vec3((WHEEL_SIZE / 4 + 0.001f), 0.0f, 0.0f));
+		T = glm::translate(T, glm::vec3((0.001f), 0.0f, 0.0f));
 		T2 = glm::translate(T2, glm::vec3(CAR_SIZE / 2 + WHEEL_SIZE / 4, 0.0f, -CAR_SIZE * 0.5f));
 	}
 
 	glm::mat4 Rx = glm::mat4(1.0f);
 	Rx = glm::rotate(Rx, glm::radians(wheel_rect_rotateX), glm::vec3(1.0, 0.0, 0.0));
-	glm::mat4 Rz = glm::mat4(1.0f);
-	Rz = glm::rotate(Rz, glm::radians(90.0f), glm::vec3(0.0, 0.0, 1.0));
 
-	return Car_Body() * T2 * Ry * Rx * T * Rz;
+	return Car_Body() * T2 * Ry * Rx * T;
 }
 glm::mat4 Wheel_on_000(int num, int type) //num은 4개 바퀴의 번호, type은 실린더, 뚜껑 객체 종류
 {
@@ -570,13 +538,13 @@ void drawCar(int modelLoc, int mod)
 	// 바퀴 사각형
 	glBindVertexArray(vao[4]);
 	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(Wheel_rects(1)));
-	glDrawArrays(GL_TRIANGLES, 0, 6);	//앞바퀴 1
+	glDrawArrays(GL_TRIANGLES, 0, 6 * 6);	//앞바퀴 1
 	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(Wheel_rects(2)));
-	glDrawArrays(GL_TRIANGLES, 6, 6);	//앞바퀴 2
+	glDrawArrays(GL_TRIANGLES, 36, 6 * 6);	//앞바퀴 2
 	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(Wheel_rects(3)));
-	glDrawArrays(GL_TRIANGLES, 12, 6);	//뒷바퀴 1
+	glDrawArrays(GL_TRIANGLES, 72, 6 * 6);	//뒷바퀴 1
 	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(Wheel_rects(4)));
-	glDrawArrays(GL_TRIANGLES, 18, 6);	//뒷바퀴 2
+	glDrawArrays(GL_TRIANGLES, 108, 6 * 6);	//뒷바퀴 2
 }
 void drawWalls(int modelLoc)
 {
@@ -1213,6 +1181,63 @@ void initCar()
 			Block_Color[3][j][0] = 1.0f;
 			Block_Color[3][j][1] = 1.0f;
 			Block_Color[3][j][2] = 0.0f;
+		}
+	}
+
+	//바퀴 사각형
+	if(true)
+	{
+		GLfloat vertices[8][3] = {
+				{-WHEEL_SIZE/4,	-WHEEL_SIZE/8,  -WHEEL_SIZE },		// Vertex 0
+				{ WHEEL_SIZE/4,	-WHEEL_SIZE/8,  -WHEEL_SIZE },		// Vertex 1
+				{ WHEEL_SIZE/4,	 WHEEL_SIZE/8, 	-WHEEL_SIZE },		// Vertex 2
+				{-WHEEL_SIZE/4,	 WHEEL_SIZE/8, 	-WHEEL_SIZE },		// Vertex 3
+				{-WHEEL_SIZE/4,	-WHEEL_SIZE/8,   WHEEL_SIZE },	// Vertex 4
+				{ WHEEL_SIZE/4,	-WHEEL_SIZE/8,   WHEEL_SIZE },	// Vertex 5
+				{ WHEEL_SIZE/4,	 WHEEL_SIZE/8, 	 WHEEL_SIZE },		// Vertex 6
+				{-WHEEL_SIZE/4,	 WHEEL_SIZE/8, 	 WHEEL_SIZE }		// Vertex 7
+		};
+		//큐브 데이터 초기화
+		GLfloat CubeFigure[1][TRI_COUNT * 3][3] = {
+			{
+				// Front face - 2tri	012 023 -02
+				{vertices[0][0], vertices[0][1], vertices[0][2]}, {vertices[1][0], vertices[1][1], vertices[1][2]}, {vertices[2][0], vertices[2][1], vertices[2][2]},
+				{vertices[0][0], vertices[0][1], vertices[0][2]}, {vertices[2][0], vertices[2][1], vertices[2][2]}, {vertices[3][0], vertices[3][1], vertices[3][2]},
+
+				// Back face - 2tri		456 467 -46
+				{vertices[4][0], vertices[4][1], vertices[4][2]}, {vertices[5][0], vertices[5][1], vertices[5][2]}, {vertices[6][0], vertices[6][1], vertices[6][2]},
+				{vertices[4][0], vertices[4][1], vertices[4][2]}, {vertices[6][0], vertices[6][1], vertices[6][2]}, {vertices[7][0], vertices[7][1], vertices[7][2]},
+
+				// Left face - 2tri		047 073 -07
+				{vertices[0][0], vertices[0][1], vertices[0][2]}, {vertices[4][0], vertices[4][1], vertices[4][2]}, {vertices[7][0], vertices[7][1], vertices[7][2]},
+				{vertices[0][0], vertices[0][1], vertices[0][2]}, {vertices[7][0], vertices[7][1], vertices[7][2]}, {vertices[3][0], vertices[3][1], vertices[3][2]},
+
+				// Right face - 2tri	156 162 -16
+				{vertices[1][0], vertices[1][1], vertices[1][2]}, {vertices[5][0], vertices[5][1], vertices[5][2]}, {vertices[6][0], vertices[6][1], vertices[6][2]},
+				{vertices[1][0], vertices[1][1], vertices[1][2]}, {vertices[6][0], vertices[6][1], vertices[6][2]}, {vertices[2][0], vertices[2][1], vertices[2][2]},
+
+				// Top face - 2tri		326 367 -36
+				{vertices[3][0], vertices[3][1], vertices[3][2]}, {vertices[2][0], vertices[2][1], vertices[2][2]}, {vertices[6][0], vertices[6][1], vertices[6][2]},
+				{vertices[3][0], vertices[3][1], vertices[3][2]}, {vertices[6][0], vertices[6][1], vertices[6][2]}, {vertices[7][0], vertices[7][1], vertices[7][2]},
+
+				// Bottom face - 2tri	015 054 -05
+				{vertices[0][0], vertices[0][1], vertices[0][2]}, {vertices[1][0], vertices[1][1], vertices[1][2]}, {vertices[5][0], vertices[5][1], vertices[5][2]},
+				{vertices[0][0], vertices[0][1], vertices[0][2]}, {vertices[5][0], vertices[5][1], vertices[5][2]}, {vertices[4][0], vertices[4][1], vertices[4][2]}
+			}
+		};
+
+		for (int i = 0; i < 4; i++)
+		{
+			for (int j = 0; j < TRI_COUNT * 3; j++)
+			{
+				for (int k = 0; k < 3; k++)
+				{
+					wheel_rect[i][j][k] = CubeFigure[0][j][k];
+				}
+				wheel_rect_color[i][j][0] = 0.0f;
+				wheel_rect_color[i][j][1] = 0.0f;
+				wheel_rect_color[i][j][2] = 1.0f;
+			}
 		}
 	}
 }
