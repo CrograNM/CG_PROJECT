@@ -34,6 +34,13 @@ float generateRandomFloat(float min, float max)
 	return dis(gen);
 }
 
+// 마우스 이동 상태 저장
+int lastMouseX = -1, lastMouseY = -1;
+void MouseMotion(int x, int y);
+void MouseButton(int button, int state, int x, int y);
+// 마우스 버튼 상태를 저장할 변수
+bool isLeftMousePressed = false;
+
 // 도형 변수 및 함수
 void initFigure();
 void initRobot();
@@ -92,6 +99,7 @@ GLuint vao[5], vbo[6];							//--- VAO, VBO
 GLvoid drawScene(GLvoid);
 GLvoid Reshape(int w, int h);
 GLvoid Keyboard(unsigned char key, int x, int y);
+GLvoid KeyboardUp(unsigned char key, int x, int y);
 
 char* filetobuf(const char* file);
 void make_vertexShaders();
@@ -130,7 +138,7 @@ glm::mat4 SRT_MATRIX()
 // 자동체 몸체의 변환, 이 함수를 기준으로 헤드라이트, 바퀴 등의 위치가 정해진다.
 float car_dx = 0.0f, car_dy = WHEEL_SIZE, car_dz = 0.0f;	// 차체의 이동 변환
 float car_rotateY = 0.0f;
-glm::mat4 Car_Body() 
+glm::mat4 Car_Body()
 {
 	glm::mat4 T = glm::mat4(1.0f);
 	glm::mat4 Ry = glm::mat4(1.0f);
@@ -139,11 +147,11 @@ glm::mat4 Car_Body()
 	Ry = glm::rotate(Ry, glm::radians(car_rotateY), glm::vec3(0.0, 1.0, 0.0));
 	T = glm::translate(T, glm::vec3(car_dx, car_dy, car_dz));
 
-	return SRT_MATRIX() * Ry * T;
+	return SRT_MATRIX() * T * Ry;
 }
 
 // 헤드라이트를 차량의 앞으로 고정
-glm::mat4 Headlights(int left_right) 
+glm::mat4 Headlights(int left_right)
 {
 	glm::mat4 T = glm::mat4(1.0f);
 	glm::mat4 Ry = glm::mat4(1.0f);
@@ -151,13 +159,13 @@ glm::mat4 Headlights(int left_right)
 
 	if (left_right == 0)
 	{
-		T = glm::translate(T, glm::vec3(-CAR_SIZE/3, CAR_SIZE / 8, CAR_SIZE));
+		T = glm::translate(T, glm::vec3(-CAR_SIZE / 3, CAR_SIZE / 8, CAR_SIZE));
 	}
-	else if(left_right == 1)
+	else if (left_right == 1)
 	{
-		T = glm::translate(T, glm::vec3(CAR_SIZE/3, CAR_SIZE / 8, CAR_SIZE));
+		T = glm::translate(T, glm::vec3(CAR_SIZE / 3, CAR_SIZE / 8, CAR_SIZE));
 	}
-	
+
 	return Car_Body() * T;
 }
 
@@ -337,9 +345,6 @@ int main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정
 		std::cout << "GLEW Initialized\n";
 
 	glEnable(GL_DEPTH_TEST);
-	//setFigures(); // init
-	//initFigure();
-	//initBox();
 	initBlock();
 	// 자동체 액셀 브레이크 감지 - 이동 애니메이션
 	glutTimerFunc(TIMER_VELOCITY, TimerFunction_UpdateMove, 1);
@@ -351,16 +356,17 @@ int main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정
 	glutDisplayFunc(drawScene);					//--- 출력 콜백함수의 지정
 	glutReshapeFunc(Reshape);					//--- 다시 그리기 콜백함수 지정
 	glutKeyboardFunc(Keyboard);					// 키보드 입력
+	glutKeyboardUpFunc(KeyboardUp);					// 키보드 입력
 	//glutSpecialFunc(SpecialKeyboard);			// 키보드 입력(방향키 등 스페셜)
-	//glutMouseFunc(Mouse);						// 마우스 입력
-	//glutMotionFunc(Motion);					// 마우스 움직임
+	glutMouseFunc(MouseButton);					// 마우스 버튼 콜백 등록
+	glutMotionFunc(MouseMotion);				// 마우스 드래그 콜백 등록
 	glutMainLoop();								//--- 이벤트 처리 시작
 	gluDeleteQuadric(qobj);
 }
 
 //그리기 함수
 void drawObjects(int modelLoc, int mod);
-GLvoid drawScene()
+void drawScene()
 {
 	glViewport(0, 0, clientWidth, clientHeight);
 
@@ -373,53 +379,49 @@ GLvoid drawScene()
 	int viewLoc = glGetUniformLocation(shaderProgramID, "view");
 	int projLoc = glGetUniformLocation(shaderProgramID, "projection");
 
-	if (isCull)
-	{
+	if (isCull) {
 		glDisable(GL_DEPTH_TEST);
 	}
-	else
-	{
+	else {
 		glEnable(GL_DEPTH_TEST);
 	}
-	//--- 모델링변환, 뷰잉변환, 투영변환 행렬을 설정한 후, 버텍스 세이더에 저장한다.
-	if (true)
-	{
-		//뷰잉변환
-		// glm::vec3 cameraRight = glm::normalize(glm::cross(cameraDirection, cameraUp));
-		glm::vec3 orbitCenter = glm::vec3(0.0f, 0.0f, 0.0f); // 공전 중심점
-		glm::vec3 cameraPos = glm::vec3(c_dx, c_dy, c_dz);
-		glm::vec3 cameraDirection = glm::vec3(0.0f, 0.0f, -1.0f);
-		glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
-		// 화면 중심의 Y축 기준으로 공전 적용
-		glm::mat4 cameraRotateMat = glm::rotate(glm::mat4(1.0f), glm::radians(c_rotateY), glm::vec3(0.0, 1.0, 0.0));
-		cameraPos = glm::vec3(cameraRotateMat * glm::vec4(cameraPos - orbitCenter, 1.0f)) + orbitCenter;
-		// 공전 이후 카메라 방향 업데이트
-		cameraDirection = glm::normalize(orbitCenter - cameraPos);
-		// 카메라의 Y축 기준으로 회전 적용
-		cameraDirection = glm::rotate(glm::mat4(1.0f), glm::radians(c_angleY), cameraUp) * glm::vec4(cameraDirection, 0.0f);
 
-		glm::mat4 vTransform = glm::mat4(1.0f);
-		vTransform = glm::lookAt(cameraPos, cameraPos + cameraDirection, cameraUp);
-		glUniformMatrix4fv(viewLoc, 1, GL_FALSE, &vTransform[0][0]);
+	// 차체 중심을 공전 중심으로 설정
+	glm::vec3 orbitCenter = glm::vec3(car_dx, car_dy, car_dz);
 
-		//투영변환
-		glm::mat4 pTransform = glm::mat4(1.0f);
-		if (isProspect == false)
-		{	// 직각투영
-			pTransform = glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f, -0.1f, 100.0f);
-		}
-		else
-		{	// 원근투영
-			pTransform = glm::perspective(glm::radians(45.0f), (float)clientWidth / (float)clientHeight, 0.1f, 50.0f);
-		}
-		//pTransform = glm::translate(pTransform, glm::vec3(0.0, 0.0, 0.0));
-		glUniformMatrix4fv(projLoc, 1, GL_FALSE, &pTransform[0][0]);
+	// 카메라 위치 계산
+	float cameraDistance = c_dz; // `c_dz`를 카메라 거리로 사용
+	glm::vec3 cameraDirection = glm::vec3(0.0f, 0.0f, -1.0f);
+	glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
 
-		//모델 그리기
-		drawObjects(modelLoc, 0);
+	glm::mat4 cameraRotateMat = glm::rotate(glm::mat4(1.0f), glm::radians(c_rotateY), glm::vec3(0.0, 1.0, 0.0));
+	glm::vec3 cameraOffset = glm::vec3(cameraRotateMat * glm::vec4(0.0f, 1.9f, cameraDistance, 1.0f)); // Y축으로 살짝 올림
+	glm::vec3 cameraPos = orbitCenter + cameraOffset;
+
+	// 카메라 방향 업데이트 (살짝 아래로 보기)
+	glm::vec3 lookTarget = orbitCenter + glm::vec3(0.0f, -0.2f, 0.0f); // 아래로 약간 이동
+	cameraDirection = glm::normalize(lookTarget - cameraPos);
+
+	// 뷰 행렬 설정
+	glm::mat4 vTransform = glm::lookAt(cameraPos, lookTarget, cameraUp);
+	glUniformMatrix4fv(viewLoc, 1, GL_FALSE, &vTransform[0][0]);
+
+	// 투영변환
+	glm::mat4 pTransform = glm::mat4(1.0f);
+	if (!isProspect) {
+		pTransform = glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f, -0.1f, 100.0f);
 	}
-	glutSwapBuffers();  // 화면에 출력하기
+	else {
+		pTransform = glm::perspective(glm::radians(45.0f), (float)clientWidth / (float)clientHeight, 0.1f, 50.0f);
+	}
+	glUniformMatrix4fv(projLoc, 1, GL_FALSE, &pTransform[0][0]);
+
+	// 모델 그리기
+	drawObjects(modelLoc, 0);
+
+	glutSwapBuffers();
 }
+
 void draw_wheels(int modelLoc, int num)
 {
 	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(Wheel_on_000(num, 0)));
@@ -463,6 +465,7 @@ void drawObjects(int modelLoc, int mod)
 	draw_wheels(modelLoc, 2);	//2
 	draw_wheels(modelLoc, 3);	//3
 	draw_wheels(modelLoc, 4);	//4
+
 }
 
 GLvoid Reshape(int w, int h) //--- 콜백 함수: 다시 그리기 콜백 함수
@@ -479,13 +482,11 @@ GLvoid Keyboard(unsigned char key, int x, int y)
 		glutLeaveMainLoop(); // OpenGL 메인 루프 종료
 		break;
 	}
-	case 'e':
-		front_wheels_rotateY += 10.0f;
+	case 'a':
+	{
+		a_down = true;
+		front_wheels_rotateY = std::min(front_wheels_rotateY + 5.0f, 30.0f);
 		break;
-<<<<<<< Updated upstream
-	case 'E':
-		front_wheels_rotateY -= 10.0f;
-=======
 	}
 	case 'd':
 	{
@@ -504,13 +505,11 @@ GLvoid Keyboard(unsigned char key, int x, int y)
 		break;
 	case 'b': 
 		isBraking = true;
->>>>>>> Stashed changes
 		break;
 	case 'r':
 		car_rotateY += 10.0f;
 		break;
-	
-	//은면제거
+		//은면제거
 	case 'h':
 	{
 		if (isCull)
@@ -577,8 +576,6 @@ GLvoid Keyboard(unsigned char key, int x, int y)
 	}
 	glutPostRedisplay(); //--- refresh
 }
-<<<<<<< Updated upstream
-=======
 GLvoid KeyboardUp(unsigned char key, int x, int y) {
 	switch (key)
 	{
@@ -606,7 +603,6 @@ GLvoid KeyboardUp(unsigned char key, int x, int y) {
 	}
 	glutPostRedisplay(); //--- refresh
 }
->>>>>>> Stashed changes
 
 char* filetobuf(const char* file)
 {
@@ -738,7 +734,6 @@ void InitBuffer()
 	glEnableVertexAttribArray(1);
 
 }
-
 void initBlock()
 {
 	//아래 몸체
@@ -799,7 +794,7 @@ void initBlock()
 	if (true)
 	{
 		GLfloat vertices[8][3] = {
-			{-CAR_SIZE / 3,	CAR_SIZE / 2,						-CAR_SIZE/3*2},	// Vertex 0
+			{-CAR_SIZE / 3,	CAR_SIZE / 2,						-CAR_SIZE / 3 * 2},	// Vertex 0
 			{ CAR_SIZE / 3,	CAR_SIZE / 2,						-CAR_SIZE / 3 * 2},	// Vertex 1
 			{ CAR_SIZE / 3,	CAR_SIZE / 2 + CAR_SIZE / 3,	-CAR_SIZE / 3 * 2},   // Vertex 2
 			{-CAR_SIZE / 3,	CAR_SIZE / 2 + CAR_SIZE / 3,	-CAR_SIZE / 3 * 2 },  // Vertex 3
@@ -857,10 +852,10 @@ void initBlock()
 			{ CAR_SIZE / 8,	-CAR_SIZE / 8, -CAR_SIZE / 8},	// Vertex 1
 			{ CAR_SIZE / 8,	CAR_SIZE / 8, -CAR_SIZE / 8},  // Vertex 2
 			{-CAR_SIZE / 8,	CAR_SIZE / 8, -CAR_SIZE / 8},  // Vertex 3
-			{-CAR_SIZE / 8,	-CAR_SIZE / 8, CAR_SIZE  / 8},	// Vertex 4
-			{ CAR_SIZE / 8,	-CAR_SIZE / 8, CAR_SIZE  / 8},	// Vertex 5
-			{ CAR_SIZE / 8,	CAR_SIZE / 8, CAR_SIZE  / 8},	// Vertex 6
-			{-CAR_SIZE / 8,	CAR_SIZE / 8, CAR_SIZE  / 8}	// Vertex 7
+			{-CAR_SIZE / 8,	-CAR_SIZE / 8, CAR_SIZE / 8},	// Vertex 4
+			{ CAR_SIZE / 8,	-CAR_SIZE / 8, CAR_SIZE / 8},	// Vertex 5
+			{ CAR_SIZE / 8,	CAR_SIZE / 8, CAR_SIZE / 8},	// Vertex 6
+			{-CAR_SIZE / 8,	CAR_SIZE / 8, CAR_SIZE / 8}	// Vertex 7
 		};
 		//큐브 데이터 초기화
 		GLfloat CubeFigure[1][TRI_COUNT * 3][3] = {
@@ -908,4 +903,53 @@ void initBlock()
 			Block_Color[3][j][2] = 0.0f;
 		}
 	}
+}
+
+// 마우스 버튼 콜백 함수
+void MouseButton(int button, int state, int x, int y)
+{
+	if (button == GLUT_LEFT_BUTTON) { // 좌클릭
+		if (state == GLUT_DOWN) {
+			isLeftMousePressed = true; // 마우스 눌림 상태
+			lastMouseX = x;           // 초기 위치 저장
+		}
+		else if (state == GLUT_UP) {
+			isLeftMousePressed = false; // 마우스 떼기 상태
+			lastMouseX = -1;           // 초기화
+		}
+	}
+	else if (button == 3) { // 휠 위로 스크롤
+		c_dz -= 0.1f;       // 카메라를 앞으로 이동
+		glutPostRedisplay(); // 화면 갱신 요청
+	}
+	else if (button == 4) { // 휠 아래로 스크롤
+		c_dz += 0.1f;       // 카메라를 뒤로 이동
+		glutPostRedisplay(); // 화면 갱신 요청
+	}
+}
+
+// 마우스 드래그 콜백 함수
+void MouseMotion(int x, int y)
+{
+	if (!isLeftMousePressed) {
+		return; // 마우스가 눌리지 않은 경우 동작하지 않음
+	}
+
+	if (lastMouseX == -1) {
+		// 초기 마우스 위치 저장
+		lastMouseX = x;
+		return;
+	}
+
+	// 마우스 이동 차이 계산
+	int dx = x - lastMouseX;
+
+	// Y축 회전 갱신 (좌우 이동)
+	c_rotateY += dx * 0.1f;
+
+	// 갱신된 위치를 저장
+	lastMouseX = x;
+
+	// 화면 갱신 요청
+	glutPostRedisplay();
 }
