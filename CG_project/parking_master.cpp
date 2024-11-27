@@ -1,5 +1,4 @@
 ﻿//링커-명령줄 : glew32.lib freeglut.lib
-//나는 조성욱이다
 #define _CRT_SECURE_NO_WARNINGS
 #include <iostream>
 #include <stdio.h>
@@ -17,6 +16,9 @@
 #include <random>
 
 #define M_PI 3.14159265358979323846
+
+// 전역 변수
+bool keyStates[256] = { false };
 
 // 클라이언트
 #define clientWidth 900
@@ -72,8 +74,8 @@ GLfloat	figure_Color[MAX_FIGURE][TRI_COUNT * 3][3];
 
 // 땅바닥 그리기 - vao 1
 GLfloat ground[6][3] = {
-	{-1, 0, -1}, {1, 0, -1}, {-1, 0, 1},
-	{-1, 0, 1}, {1, 0, -1}, {1, 0, 1}
+	{-5.0f, 0.0f, -5.0f}, {5.0f, 0.0f, -5.0f}, {-5.0f, 0.0f, 5.0f},
+	{-5.0f, 0.0f, 5.0f}, {5.0f, 0.0f, -5.0f}, {5.0f, 0.0f, 5.0f}
 };
 GLfloat ground_color[6][3] = {
 	{0.8f, 0.8f, 0.8f},
@@ -84,6 +86,7 @@ GLfloat ground_color[6][3] = {
 	{0.8f, 0.8f, 0.8f},
 	{0.8f, 0.8f, 0.8f},
 };
+
 
 // 3차원 도형 모델 생성 (구, 원뿔)
 GLUquadricObj* qobj;
@@ -249,6 +252,108 @@ void TimerFunction_RotateCamera(int value)
 	}
 }
 
+<<<<<<< Updated upstream
+=======
+//액셀, 브레이크를 감지하여 가속 및 감속 적용
+// 전역 변수
+float car_speed = 0.0f;         // 현재 자동차 속도
+const float MAX_SPEED = 0.05f;   // 최대 속도
+const float acceleration = 0.001f; // 가속도
+const float deceleration = 0.002f; // 감속도 (브레이크)
+const float friction = 0.001f;    // 마찰력 (자연 감속)
+bool isAccelerating = false;    // 액셀 상태
+bool isBraking = false;         // 브레이크 상태
+
+const float speed = 0.05f;
+const float WHEEL_TURN_SPEED = 0.5f;	// 복원 속도
+const float CAR_SPEED = 0.05f;			// 자동차 이동 속도
+bool a_down = false;
+bool d_down = false;
+float moveFactor = 1.0f;
+void UpdateCar(bool isReverse)
+{
+	// 자동차 회전 업데이트 (앞바퀴 회전량에 따라 방향 전환
+	float moveFactor = isReverse ? -1.0f : 1.0f; // 후진 시 방향 반전
+
+	car_rotateY += moveFactor * front_wheels_rotateY * 0.1f;
+
+	// 자동차 이동 (회전 방향에 따른 이동량 계산)
+	float radians = glm::radians(car_rotateY);
+	car_dx += moveFactor * CAR_SPEED * sin(radians);
+	car_dz += moveFactor * CAR_SPEED * cos(radians);
+
+	// 앞바퀴 회전량을 점점 0으로 복원
+	if (a_down == false && d_down == false)
+	{
+		if (front_wheels_rotateY > 0.0f)
+			front_wheels_rotateY = std::max(0.0f, front_wheels_rotateY - WHEEL_TURN_SPEED);
+		else if (front_wheels_rotateY < 0.0f)
+			front_wheels_rotateY = std::min(0.0f, front_wheels_rotateY + WHEEL_TURN_SPEED);
+	}
+}
+// 타이머 함수: 속도 업데이트 및 이동 처리
+void TimerFunction_UpdateMove(int value)
+{
+	// 액셀 및 브레이크 상태 업데이트
+	if (keyStates['w']) {
+		isAccelerating = true;
+		moveFactor = 1.0f;
+	}
+	else if (keyStates['s']) {
+		isAccelerating = true;
+		moveFactor = -1.0f;
+	}
+	else {
+		isAccelerating = false;
+	}
+
+	if (keyStates['b']) {
+		isBraking = true;
+	}
+	else {
+		isBraking = false;
+	}
+
+	// 키 조합에 따른 앞바퀴 회전량 업데이트
+	if (keyStates['a'] && !keyStates['d']) {
+		front_wheels_rotateY = std::min(front_wheels_rotateY + 5.0f, 30.0f);
+	}
+	if (keyStates['d'] && !keyStates['a']) {
+		front_wheels_rotateY = std::max(front_wheels_rotateY - 5.0f, -30.0f);
+	}
+
+	// 자동차 속도 업데이트
+	if (isAccelerating)
+		car_speed = std::min(car_speed + acceleration, MAX_SPEED); // 최대 속도 제한
+	else if (isBraking)
+		car_speed = std::max(car_speed - deceleration, 0.0f);      // 속도는 0 이상
+	else
+		car_speed = std::max(car_speed - friction, 0.0f);          // 자연 감속
+
+	if (car_speed > 0.0f)
+	{
+		car_rotateY += moveFactor * front_wheels_rotateY * 0.1f;
+		// 자동차 이동 (회전 방향에 따른 이동량 계산)
+		float radians = glm::radians(car_rotateY);
+		car_dx += moveFactor * car_speed * sin(radians);
+		car_dz += moveFactor * car_speed * cos(radians);
+
+		// 앞바퀴 회전량을 점점 0으로 복원
+		if (!keyStates['a'] && !keyStates['d'])
+		{
+			if (front_wheels_rotateY > 0.0f)
+				front_wheels_rotateY = std::max(0.0f, front_wheels_rotateY - WHEEL_TURN_SPEED);
+			else if (front_wheels_rotateY < 0.0f)
+				front_wheels_rotateY = std::min(0.0f, front_wheels_rotateY + WHEEL_TURN_SPEED);
+		}
+	}
+
+	// 화면 갱신 요청 및 타이머 재설정
+	glutPostRedisplay();
+	glutTimerFunc(TIMER_VELOCITY, TimerFunction_UpdateMove, 1);
+}
+
+>>>>>>> Stashed changes
 int main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정
 {
 	srand(time(0));
@@ -403,23 +508,30 @@ GLvoid Reshape(int w, int h) //--- 콜백 함수: 다시 그리기 콜백 함수
 }
 GLvoid Keyboard(unsigned char key, int x, int y)
 {
+	keyStates[key] = true; // 키가 눌렸음을 표시
+
 	switch (key)
 	{
 	case 'q':		// 프로그램 종료
-	{
 		std::cout << "--Quit--\n";
 		glutLeaveMainLoop(); // OpenGL 메인 루프 종료
 		break;
+<<<<<<< Updated upstream
 	}
 	case 'e':
 		front_wheels_rotateY += 10.0f;
 		break;
 	case 'E':
 		front_wheels_rotateY -= 10.0f;
+=======
+	case 'b':
+		isBraking = true;
+>>>>>>> Stashed changes
 		break;
-	case 'r':
-		car_rotateY += 10.0f;
+	case 'h': // 은면 제거 토글
+		isCull = !isCull;
 		break;
+<<<<<<< Updated upstream
 
 		//은면제거
 	case 'h':
@@ -432,59 +544,37 @@ GLvoid Keyboard(unsigned char key, int x, int y)
 		{
 			isCull = true;
 		}
+=======
+	case 'p': // 투영 모드 토글
+		isProspect = !isProspect;
+>>>>>>> Stashed changes
 		break;
-	}
-	//직각/원근 투영
-	case 'p':
-	{
-		if (isProspect)
-		{
-			isProspect = false;
-		}
-		else
-		{
-			isProspect = true;
-		}
-		break;
-	}
-	//카메라 이동
 	case 'z': case 'Z':
-	{
-		if (key == 'z')
-		{
+		if (key == 'z') {
 			c_dz += 0.1f;
 		}
-		else if (key == 'Z')
-		{
+		else {
 			c_dz -= 0.1f;
 		}
 		break;
-	}
 	case 'x': case 'X':
-	{
-		if (key == 'x')
-		{
+		if (key == 'x') {
 			c_dx += 0.1f;
 		}
-		else if (key == 'X')
-		{
+		else {
 			c_dx -= 0.1f;
 		}
 		break;
-	}
-	//카메라 공전
 	case 'y': case 'Y':
-	{
-		if (key == 'y')
-		{
+		if (key == 'y') {
 			c_rotateY += 5.0f;
 		}
-		else if (key == 'Y')
-		{
+		else {
 			c_rotateY -= 5.0f;
 		}
 		break;
 	}
+<<<<<<< Updated upstream
 	case 'a':
 		if (key == 'a')
 		{
@@ -500,8 +590,30 @@ GLvoid Keyboard(unsigned char key, int x, int y)
 		break;
 	}
 	glutPostRedisplay(); //--- refresh
+=======
+	glutPostRedisplay(); // 화면 갱신 요청
 }
+GLvoid KeyboardUp(unsigned char key, int x, int y)
+{
+	keyStates[key] = false; // 키가 떼어졌음을 표시
 
+	switch (key)
+	{
+	case 'w': // 액셀 해제
+	case 's': // 액셀 해제
+		isAccelerating = false;
+		break;
+	case 'b': // 브레이크 해제
+		isBraking = false;
+		break;
+	case 'a': // 좌회전 해제
+	case 'd': // 우회전 해제
+		// 별도의 처리 필요 없음 (이제 키 상태를 기반으로 처리)
+		break;
+	}
+	glutPostRedisplay(); // 화면 갱신 요청
+>>>>>>> Stashed changes
+}
 char* filetobuf(const char* file)
 {
 	FILE* fptr;
