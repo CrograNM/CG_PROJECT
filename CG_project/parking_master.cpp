@@ -242,6 +242,77 @@ void TimerFunction_RotateCamera(int value)
 	}
 }
 
+//액셀, 브레이크를 감지하여 가속 및 감속 적용
+// 전역 변수
+float car_speed = 0.0f;         // 현재 자동차 속도
+const float MAX_SPEED = 0.05f;   // 최대 속도
+const float acceleration = 0.001f; // 가속도
+const float deceleration = 0.002f; // 감속도 (브레이크)
+const float friction = 0.005f;    // 마찰력 (자연 감속)
+bool isAccelerating = false;    // 액셀 상태
+bool isBraking = false;         // 브레이크 상태
+
+const float speed = 0.05f;
+const float WHEEL_TURN_SPEED = 0.5f;	// 복원 속도
+const float CAR_SPEED = 0.05f;			// 자동차 이동 속도
+bool a_down = false;
+bool d_down = false;
+float moveFactor = 1.0f;
+void UpdateCar(bool isReverse)
+{
+	// 자동차 회전 업데이트 (앞바퀴 회전량에 따라 방향 전환
+	float moveFactor = isReverse ? -1.0f : 1.0f; // 후진 시 방향 반전
+
+	car_rotateY += moveFactor * front_wheels_rotateY * 0.1f;
+
+	// 자동차 이동 (회전 방향에 따른 이동량 계산)
+	float radians = glm::radians(car_rotateY);
+	car_dx += moveFactor * CAR_SPEED * sin(radians);
+	car_dz += moveFactor * CAR_SPEED * cos(radians);
+
+	// 앞바퀴 회전량을 점점 0으로 복원
+	if (a_down == false && d_down == false)
+	{
+		if (front_wheels_rotateY > 0.0f)
+			front_wheels_rotateY = std::max(0.0f, front_wheels_rotateY - WHEEL_TURN_SPEED);
+		else if (front_wheels_rotateY < 0.0f)
+			front_wheels_rotateY = std::min(0.0f, front_wheels_rotateY + WHEEL_TURN_SPEED);
+	}
+}
+// 타이머 함수: 속도 업데이트 및 이동 처리
+void TimerFunction_UpdateMove(int value)
+{
+	// 속도 계산
+	if (isAccelerating)
+		car_speed = std::min(car_speed + acceleration, MAX_SPEED); // 최대 속도 제한
+	else if (isBraking)
+		car_speed = std::max(car_speed - deceleration, 0.0f);      // 속도는 0 이상
+	else
+		car_speed = std::max(car_speed - friction, 0.0f);          // 자연 감속
+
+	if (car_speed > 0.0f)  
+	{
+		car_rotateY += moveFactor * front_wheels_rotateY * 0.1f;
+		// 자동차 이동 (회전 방향에 따른 이동량 계산)
+		float radians = glm::radians(car_rotateY);
+		car_dx += moveFactor * car_speed * sin(radians);
+		car_dz += moveFactor * car_speed * cos(radians);
+
+		// 앞바퀴 회전량을 점점 0으로 복원
+		if (a_down == false && d_down == false)
+		{
+			if (front_wheels_rotateY > 0.0f)
+				front_wheels_rotateY = std::max(0.0f, front_wheels_rotateY - WHEEL_TURN_SPEED);
+			else if (front_wheels_rotateY < 0.0f)
+				front_wheels_rotateY = std::min(0.0f, front_wheels_rotateY + WHEEL_TURN_SPEED);
+		}
+	}
+
+	// 화면 갱신 요청 및 타이머 재설정
+	glutPostRedisplay();
+	glutTimerFunc(TIMER_VELOCITY, TimerFunction_UpdateMove, 1);
+}
+
 int main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정
 {
 	srand(time(0));
@@ -270,6 +341,8 @@ int main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정
 	//initFigure();
 	//initBox();
 	initBlock();
+	// 자동체 액셀 브레이크 감지 - 이동 애니메이션
+	glutTimerFunc(TIMER_VELOCITY, TimerFunction_UpdateMove, 1);
 
 	//--- 세이더 읽어와서 세이더 프로그램 만들기
 	make_shaderProgram();
@@ -409,8 +482,29 @@ GLvoid Keyboard(unsigned char key, int x, int y)
 	case 'e':
 		front_wheels_rotateY += 10.0f;
 		break;
+<<<<<<< Updated upstream
 	case 'E':
 		front_wheels_rotateY -= 10.0f;
+=======
+	}
+	case 'd':
+	{
+		d_down = true;
+		front_wheels_rotateY = std::max(front_wheels_rotateY - 5.0f, -30.0f);
+		break;
+	}
+
+	case 'w': // 엑셀: 자동차 앞으로 이동
+		moveFactor = 1.0f;
+		isAccelerating = true;
+		break;
+	case 's':
+		moveFactor = -1.0f;
+		isAccelerating = true;
+		break;
+	case 'b': 
+		isBraking = true;
+>>>>>>> Stashed changes
 		break;
 	case 'r':
 		car_rotateY += 10.0f;
@@ -483,6 +577,36 @@ GLvoid Keyboard(unsigned char key, int x, int y)
 	}
 	glutPostRedisplay(); //--- refresh
 }
+<<<<<<< Updated upstream
+=======
+GLvoid KeyboardUp(unsigned char key, int x, int y) {
+	switch (key)
+	{
+	case 'w': // 액셀 해제
+		isAccelerating = false;
+		break;
+
+	case 's': // 액셀 해제
+		isAccelerating = false;
+		break;
+
+	case 'b': // 브레이크 해제
+		isBraking = false;
+		break;
+	case 'a':
+	{
+		a_down = false;
+		break;
+	}
+	case 'd':
+	{
+		d_down = false;
+		break;
+	}
+	}
+	glutPostRedisplay(); //--- refresh
+}
+>>>>>>> Stashed changes
 
 char* filetobuf(const char* file)
 {
