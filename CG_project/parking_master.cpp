@@ -87,6 +87,59 @@ GLfloat ground_color[6][3] = {
 	{0.8f, 0.8f, 0.8f},
 };
 
+<<<<<<< Updated upstream
+=======
+// 벽 높이와 두께
+#define WALL_HEIGHT 0.5f
+#define WALL_THICKNESS 0.1f
+
+void drawWalls(int modelLoc);
+
+// 벽 정점 데이터
+GLfloat walls[24][3] = {
+	// Front Wall
+	{-5.0f, 0.0f, -5.0f}, {5.0f, 0.0f, -5.0f}, {-5.0f, WALL_HEIGHT, -5.0f},
+	{-5.0f, WALL_HEIGHT, -5.0f}, {5.0f, 0.0f, -5.0f}, {5.0f, WALL_HEIGHT, -5.0f},
+	// Back Wall
+	{-5.0f, 0.0f, 5.0f}, {5.0f, 0.0f, 5.0f}, {-5.0f, WALL_HEIGHT, 5.0f},
+	{-5.0f, WALL_HEIGHT, 5.0f}, {5.0f, 0.0f, 5.0f}, {5.0f, WALL_HEIGHT, 5.0f},
+	// Left Wall
+	{-5.0f, 0.0f, -5.0f}, {-5.0f, 0.0f, 5.0f}, {-5.0f, WALL_HEIGHT, -5.0f},
+	{-5.0f, WALL_HEIGHT, -5.0f}, {-5.0f, 0.0f, 5.0f}, {-5.0f, WALL_HEIGHT, 5.0f},
+	// Right Wall
+	{5.0f, 0.0f, -5.0f}, {5.0f, 0.0f, 5.0f}, {5.0f, WALL_HEIGHT, -5.0f},
+	{5.0f, WALL_HEIGHT, -5.0f}, {5.0f, 0.0f, 5.0f}, {5.0f, WALL_HEIGHT, 5.0f}
+};
+
+// 벽 색상 데이터
+GLfloat wall_colors[24][3] = {
+	{0.3f, 0.3f, 0.3f}, {0.3f, 0.3f, 0.3f}, {0.3f, 0.3f, 0.3f},
+	{0.3f, 0.3f, 0.3f}, {0.3f, 0.3f, 0.3f}, {0.3f, 0.3f, 0.3f},
+	{0.3f, 0.3f, 0.3f}, {0.3f, 0.3f, 0.3f}, {0.3f, 0.3f, 0.3f},
+	{0.3f, 0.3f, 0.3f}, {0.3f, 0.3f, 0.3f}, {0.3f, 0.3f, 0.3f},
+	{0.3f, 0.3f, 0.3f}, {0.3f, 0.3f, 0.3f}, {0.3f, 0.3f, 0.3f},
+	{0.3f, 0.3f, 0.3f}, {0.3f, 0.3f, 0.3f}, {0.3f, 0.3f, 0.3f},
+	{0.3f, 0.3f, 0.3f}, {0.3f, 0.3f, 0.3f}, {0.3f, 0.3f, 0.3f},
+	{0.3f, 0.3f, 0.3f}, {0.3f, 0.3f, 0.3f}, {0.3f, 0.3f, 0.3f}
+};
+
+
+#define HANDLE_SIZE 0.7f
+#define HAND_RECT_SIZE HANDLE_SIZE / 4
+GLfloat handle_rect[6][3] = {
+	{-HAND_RECT_SIZE, 0, -HAND_RECT_SIZE}, {HAND_RECT_SIZE, 0, -HAND_RECT_SIZE}, {-HAND_RECT_SIZE, 0, HAND_RECT_SIZE},
+	{-HAND_RECT_SIZE, 0, HAND_RECT_SIZE},  {HAND_RECT_SIZE, 0, -HAND_RECT_SIZE}, { HAND_RECT_SIZE, 0, HAND_RECT_SIZE}
+};
+GLfloat handle_rect_color[6][3] = {
+	{0.3f, 0.0f, 1.0f},
+	{0.3f, 0.0f, 1.0f},
+	{0.3f, 0.0f, 1.0f},
+	   
+	{0.3f, 0.0f, 1.0f},
+	{0.3f, 0.0f, 1.0f},
+	{0.3f, 0.0f, 1.0f},
+};
+>>>>>>> Stashed changes
 
 // 3차원 도형 모델 생성 (구, 원뿔)
 GLUquadricObj* qobj;
@@ -223,6 +276,26 @@ glm::mat4 Wheel_on_000(int num, int type) //num은 4개 바퀴의 번호, type�
 	return Wheels(num) * Ry2 * Ry * T;
 }
 
+bool checkCollision(float carX, float carZ, float carSize, float wallX, float wallZ, float wallWidth, float wallHeight) {
+	// 차의 AABB
+	float carMinX = carX - carSize / 2;
+	float carMaxX = carX + carSize / 2;
+	float carMinZ = carZ - carSize / 2;
+	float carMaxZ = carZ + carSize / 2;
+
+	// 벽의 AABB
+	float wallMinX = wallX - wallWidth / 2;
+	float wallMaxX = wallX + wallWidth / 2;
+	float wallMinZ = wallZ - wallHeight / 2;
+	float wallMaxZ = wallZ + wallHeight / 2;
+
+	// 충돌 여부 확인
+	return (carMinX <= wallMaxX && carMaxX >= wallMinX) &&
+		(carMinZ <= wallMaxZ && carMaxZ >= wallMinZ);
+}
+
+
+
 float c_dx = 0.0f;
 float c_dy = 1.0f;
 float c_dz = 3.0f;
@@ -270,27 +343,45 @@ const float CAR_SPEED = 0.05f;			// 자동차 이동 속도
 bool a_down = false;
 bool d_down = false;
 float moveFactor = 1.0f;
-void UpdateCar(bool isReverse)
-{
-	// 자동차 회전 업데이트 (앞바퀴 회전량에 따라 방향 전환
+void UpdateCar(bool isReverse) {
+	// 자동차 회전 업데이트
 	float moveFactor = isReverse ? -1.0f : 1.0f; // 후진 시 방향 반전
-
 	car_rotateY += moveFactor * front_wheels_rotateY * 0.1f;
 
-	// 자동차 이동 (회전 방향에 따른 이동량 계산)
+	// 이동 전 위치 저장
+	float prevCarX = car_dx;
+	float prevCarZ = car_dz;
+
+	// 자동차 이동 계산
 	float radians = glm::radians(car_rotateY);
 	car_dx += moveFactor * CAR_SPEED * sin(radians);
 	car_dz += moveFactor * CAR_SPEED * cos(radians);
 
+	// 벽과의 충돌 확인
+	for (int i = 0; i < 4; i++) { // 4개의 벽
+		float wallX = (i % 2 == 0) ? 0.0f : (i == 1 ? 5.0f : -5.0f);
+		float wallZ = (i % 2 == 1) ? 0.0f : (i == 0 ? 5.0f : -5.0f);
+		float wallWidth = (i % 2 == 0) ? 10.0f : WALL_THICKNESS;
+		float wallHeight = (i % 2 == 1) ? 10.0f : WALL_THICKNESS;
+
+		if (checkCollision(car_dx, car_dz, CAR_SIZE, wallX, wallZ, wallWidth, wallHeight)) {
+			// 충돌 발생 시 이전 위치로 되돌림
+			car_dx = prevCarX;
+			car_dz = prevCarZ;
+			break;
+		}
+	}
+
 	// 앞바퀴 회전량을 점점 0으로 복원
-	if (a_down == false && d_down == false)
-	{
+	if (!a_down && !d_down) {
 		if (front_wheels_rotateY > 0.0f)
 			front_wheels_rotateY = std::max(0.0f, front_wheels_rotateY - WHEEL_TURN_SPEED);
 		else if (front_wheels_rotateY < 0.0f)
 			front_wheels_rotateY = std::min(0.0f, front_wheels_rotateY + WHEEL_TURN_SPEED);
 	}
 }
+
+
 // 타이머 함수: 속도 업데이트 및 이동 처리
 void TimerFunction_UpdateMove(int value)
 {
@@ -333,14 +424,37 @@ void TimerFunction_UpdateMove(int value)
 	if (car_speed > 0.0f)
 	{
 		car_rotateY += moveFactor * front_wheels_rotateY * 0.1f;
-		// 자동차 이동 (회전 방향에 따른 이동량 계산)
+		// 이동 전 위치 저장
+		float prevCarX = car_dx;
+		float prevCarZ = car_dz;
+
+		// 자동차 이동 계산
 		float radians = glm::radians(car_rotateY);
 		car_dx += moveFactor * car_speed * sin(radians);
 		car_dz += moveFactor * car_speed * cos(radians);
 
+		// 벽과의 충돌 확인
+		for (int i = 0; i < 4; i++) { // 4개의 벽
+			float wallX = (i % 2 == 0) ? 0.0f : (i == 1 ? 5.0f : -5.0f);
+			float wallZ = (i % 2 == 1) ? 0.0f : (i == 0 ? 5.0f : -5.0f);
+			float wallWidth = (i % 2 == 0) ? 10.0f : WALL_THICKNESS;
+			float wallHeight = (i % 2 == 1) ? 10.0f : WALL_THICKNESS;
+
+			if (checkCollision(car_dx, car_dz, CAR_SIZE, wallX, wallZ, wallWidth, wallHeight)) {
+				// 충돌 발생 시 이전 위치로 되돌림
+				car_dx = prevCarX;
+				car_dz = prevCarZ;
+				break;
+			}
+		}
+
 		// 앞바퀴 회전량을 점점 0으로 복원
+<<<<<<< Updated upstream
 		if (!keyStates['a'] && !keyStates['d'])
 		{
+=======
+		if (!a_down && !d_down) {
+>>>>>>> Stashed changes
 			if (front_wheels_rotateY > 0.0f)
 				front_wheels_rotateY = std::max(0.0f, front_wheels_rotateY - WHEEL_TURN_SPEED);
 			else if (front_wheels_rotateY < 0.0f)
@@ -352,6 +466,10 @@ void TimerFunction_UpdateMove(int value)
 	glutPostRedisplay();
 	glutTimerFunc(TIMER_VELOCITY, TimerFunction_UpdateMove, 1);
 }
+
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 
 >>>>>>> Stashed changes
 int main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정
@@ -500,6 +618,12 @@ void drawObjects(int modelLoc, int mod)
 	draw_wheels(modelLoc, 2);	//2
 	draw_wheels(modelLoc, 3);	//3
 	draw_wheels(modelLoc, 4);	//4
+<<<<<<< Updated upstream
+=======
+
+	drawWalls(modelLoc);
+
+>>>>>>> Stashed changes
 }
 
 GLvoid Reshape(int w, int h) //--- 콜백 함수: 다시 그리기 콜백 함수
@@ -702,8 +826,8 @@ void InitBuffer()
 	//glGenVertexArrays(1, &vao);		//--- VAO 를 지정하고 할당하기
 	//glBindVertexArray(vao);			//--- VAO를 바인드하기
 
-	glGenVertexArrays(3, vao);
-	glGenBuffers(6, vbo);
+	glGenVertexArrays(4, vao);
+	glGenBuffers(8, vbo);
 
 	// 좌표축 VAO, VBO 초기화
 
@@ -743,7 +867,29 @@ void InitBuffer()
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (void*)0);
 	glEnableVertexAttribArray(1);
 
+<<<<<<< Updated upstream
+=======
+	// 벽
+	glBindVertexArray(vao[3]);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[6]);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(walls), walls, GL_STATIC_DRAW);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (void*)0);
+	glEnableVertexAttribArray(0);
+
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[7]);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(wall_colors), wall_colors, GL_STATIC_DRAW);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (void*)0);
+	glEnableVertexAttribArray(1);
+>>>>>>> Stashed changes
 }
+
+void drawWalls(int modelLoc) {
+	glBindVertexArray(vao[3]);
+	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(SRT_MATRIX()));
+	glDrawArrays(GL_TRIANGLES, 0, 24);
+}
+
+
 void initBlock()
 {
 	//아래 몸체
