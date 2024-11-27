@@ -146,7 +146,7 @@ glm::mat4 Car_Body()
 	Ry = glm::rotate(Ry, glm::radians(car_rotateY), glm::vec3(0.0, 1.0, 0.0));
 	T = glm::translate(T, glm::vec3(car_dx, car_dy, car_dz));
 
-	return SRT_MATRIX() * Ry * T;
+	return SRT_MATRIX() * T * Ry;
 }
 
 // 헤드라이트를 차량의 앞으로 고정
@@ -273,9 +273,6 @@ int main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정
 		std::cout << "GLEW Initialized\n";
 
 	glEnable(GL_DEPTH_TEST);
-	//setFigures(); // init
-	//initFigure();
-	//initBox();
 	initBlock();
 
 	//--- 세이더 읽어와서 세이더 프로그램 만들기
@@ -286,8 +283,8 @@ int main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정
 	glutReshapeFunc(Reshape);					//--- 다시 그리기 콜백함수 지정
 	glutKeyboardFunc(Keyboard);					// 키보드 입력
 	//glutSpecialFunc(SpecialKeyboard);			// 키보드 입력(방향키 등 스페셜)
-	glutMouseFunc(MouseButton);      // 마우스 버튼 콜백 등록
-	glutMotionFunc(MouseMotion);     // 마우스 드래그 콜백 등록
+	glutMouseFunc(MouseButton);					// 마우스 버튼 콜백 등록
+	glutMotionFunc(MouseMotion);				// 마우스 드래그 콜백 등록
 	glutMainLoop();								//--- 이벤트 처리 시작
 	gluDeleteQuadric(qobj);
 }
@@ -323,7 +320,7 @@ void drawScene()
 	glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
 
 	glm::mat4 cameraRotateMat = glm::rotate(glm::mat4(1.0f), glm::radians(c_rotateY), glm::vec3(0.0, 1.0, 0.0));
-	glm::vec3 cameraOffset = glm::vec3(cameraRotateMat * glm::vec4(0.0f, 0.5f, cameraDistance, 1.0f)); // Y축으로 살짝 올림
+	glm::vec3 cameraOffset = glm::vec3(cameraRotateMat * glm::vec4(0.0f, 1.9f, cameraDistance, 1.0f)); // Y축으로 살짝 올림
 	glm::vec3 cameraPos = orbitCenter + cameraOffset;
 
 	// 카메라 방향 업데이트 (살짝 아래로 보기)
@@ -349,8 +346,6 @@ void drawScene()
 
 	glutSwapBuffers();
 }
-
-
 
 void draw_wheels(int modelLoc, int num)
 {
@@ -395,11 +390,34 @@ void drawObjects(int modelLoc, int mod)
 	draw_wheels(modelLoc, 2);	//2
 	draw_wheels(modelLoc, 3);	//3
 	draw_wheels(modelLoc, 4);	//4
+
 }
 
 GLvoid Reshape(int w, int h) //--- 콜백 함수: 다시 그리기 콜백 함수
 {
 	glViewport(0, 0, w, h);
+}
+
+const float speed = 0.05f;
+const float WHEEL_TURN_SPEED = 0.5f;	// 복원 속도
+const float CAR_SPEED = 0.05f;			// 자동차 이동 속도
+void UpdateCar(bool isReverse)
+{
+	// 자동차 회전 업데이트 (앞바퀴 회전량에 따라 방향 전환
+	float moveFactor = isReverse ? -1.0f : 1.0f; // 후진 시 방향 반전
+
+	car_rotateY += moveFactor * front_wheels_rotateY * 0.1f;
+
+	// 자동차 이동 (회전 방향에 따른 이동량 계산)
+	float radians = glm::radians(car_rotateY);
+	car_dx += moveFactor * CAR_SPEED * sin(radians);
+	car_dz += moveFactor * CAR_SPEED * cos(radians);
+
+	// 앞바퀴 회전량을 점점 0으로 복원
+	if (front_wheels_rotateY > 0.0f)
+		front_wheels_rotateY = std::max(0.0f, front_wheels_rotateY - WHEEL_TURN_SPEED);
+	else if (front_wheels_rotateY < 0.0f)
+		front_wheels_rotateY = std::min(0.0f, front_wheels_rotateY + WHEEL_TURN_SPEED);
 }
 GLvoid Keyboard(unsigned char key, int x, int y)
 {
@@ -411,16 +429,32 @@ GLvoid Keyboard(unsigned char key, int x, int y)
 		glutLeaveMainLoop(); // OpenGL 메인 루프 종료
 		break;
 	}
-	case 'e':
-		front_wheels_rotateY += 10.0f;
+	case 'a':
+	{
+		if (key == 'a')
+		{
+			front_wheels_rotateY = std::max(front_wheels_rotateY + 5.0f, 30.0f);
+		}
 		break;
-	case 'E':
-		front_wheels_rotateY -= 10.0f;
+	}
+	case 'd':
+	{
+		if (key == 'd')
+		{
+			front_wheels_rotateY = std::min(front_wheels_rotateY - 5.0f, -30.0f);
+		}
+		break;
+	}
+
+	case 'w': // 엑셀: 자동차 앞으로 이동
+		UpdateCar(false); // 이동과 회전 업데이트
+		break;
+	case 's': 
+		UpdateCar(true); 
 		break;
 	case 'r':
 		car_rotateY += 10.0f;
 		break;
-
 		//은면제거
 	case 'h':
 	{
@@ -485,19 +519,6 @@ GLvoid Keyboard(unsigned char key, int x, int y)
 		}
 		break;
 	}
-	case 'a':
-		if (key == 'a')
-		{
-			car_dx -= 0.01f;
-		}
-		break;
-
-	case 'd':
-		if (key == 'd')
-		{
-			car_dx += 0.01f;
-		}
-		break;
 	}
 	glutPostRedisplay(); //--- refresh
 }
@@ -825,7 +846,6 @@ void MouseButton(int button, int state, int x, int y)
 		glutPostRedisplay(); // 화면 갱신 요청
 	}
 }
-
 
 // 마우스 드래그 콜백 함수
 void MouseMotion(int x, int y)
