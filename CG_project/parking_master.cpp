@@ -259,7 +259,7 @@ glm::mat4 Wheel_on_000(int num, int type) //num은 4개 바퀴의 번호, type�
 
 float c_dx = 0.0f;
 float c_dy = 1.0f;
-float c_dz = 3.0f;
+float c_dz = -3.0f;
 float c_angleY = 0.0f;
 float c_rotateY = 0.0f;
 bool timer_rotateCam = false;
@@ -298,34 +298,20 @@ bool isBraking = false;         // 브레이크 상태
 
 const float speed = 0.05f;
 const float WHEEL_TURN_SPEED = 0.5f;	// 복원 속도
+const float HANDLE_RETURN_SPEED = 15.0f;	// 복원 속도
 const float CAR_SPEED = 0.05f;			// 자동차 이동 속도
 bool a_down = false;
 bool d_down = false;
 float moveFactor = 1.0f;
-void UpdateCar(bool isReverse)
-{
-	// 자동차 회전 업데이트 (앞바퀴 회전량에 따라 방향 전환
-	float moveFactor = isReverse ? -1.0f : 1.0f; // 후진 시 방향 반전
 
-	car_rotateY += moveFactor * front_wheels_rotateY * 0.1f;
+float lastAngle = 0.0f; // 이전 프레임의 각도
+float cumulativeAngle = 0.0f; // 누적된 핸들 회전 각도
 
-	// 자동차 이동 (회전 방향에 따른 이동량 계산)
-	float radians = glm::radians(car_rotateY);
-	car_dx += moveFactor * CAR_SPEED * sin(radians);
-	car_dz += moveFactor * CAR_SPEED * cos(radians);
-
-	// 앞바퀴 회전량을 점점 0으로 복원
-	if (a_down == false && d_down == false)
-	{
-		if (front_wheels_rotateY > 0.0f)
-			front_wheels_rotateY = std::max(0.0f, front_wheels_rotateY - WHEEL_TURN_SPEED);
-		else if (front_wheels_rotateY < 0.0f)
-			front_wheels_rotateY = std::min(0.0f, front_wheels_rotateY + WHEEL_TURN_SPEED);
-	}
-}
 // 타이머 함수: 속도 업데이트 및 이동 처리
 void TimerFunction_UpdateMove(int value)
 {
+	front_wheels_rotateY = (handle_rotateZ / 900.0f) * 30.0f;
+
 	// 속도 계산
 	if (isAccelerating)
 		car_speed = std::min(car_speed + acceleration, MAX_SPEED); // 최대 속도 제한
@@ -342,13 +328,22 @@ void TimerFunction_UpdateMove(int value)
 		car_dx += moveFactor * car_speed * sin(radians);
 		car_dz += moveFactor * car_speed * cos(radians);
 
-		// 앞바퀴 회전량을 점점 0으로 복원
-		if (is_mouse_on_handle = false)
+		// 핸들과 바퀴 복원 로직
+		if (!is_mouse_on_handle)
 		{
-			if (front_wheels_rotateY > 0.0f)
-				front_wheels_rotateY = std::max(0.0f, front_wheels_rotateY - WHEEL_TURN_SPEED);
-			else if (front_wheels_rotateY < 0.0f)
-				front_wheels_rotateY = std::min(0.0f, front_wheels_rotateY + WHEEL_TURN_SPEED);
+			// 핸들 복원
+			if (handle_rotateZ > 0.0f)
+			{
+				handle_rotateZ = std::max(0.0f, handle_rotateZ - HANDLE_RETURN_SPEED);
+			}
+			else if (handle_rotateZ < 0.0f)
+			{
+				handle_rotateZ = std::min(0.0f, handle_rotateZ + HANDLE_RETURN_SPEED);
+			}
+			cumulativeAngle = handle_rotateZ;
+
+			// 복원된 핸들 값에 따라 바퀴 회전량 동기화
+			front_wheels_rotateY = (handle_rotateZ / 900.0f) * 30.0f;
 		}
 	}
 
@@ -565,24 +560,6 @@ GLvoid Keyboard(unsigned char key, int x, int y)
 		glutLeaveMainLoop(); // OpenGL 메인 루프 종료
 		break;
 	}
-
-	case 'v':
-		handle_rotateZ += 5.0f;
-		break;
-
-	case 'a':
-	{
-		a_down = true;
-		front_wheels_rotateY = std::min(front_wheels_rotateY + 5.0f, 30.0f);
-		break;
-	}
-	case 'd':
-	{
-		d_down = true;
-		front_wheels_rotateY = std::max(front_wheels_rotateY - 5.0f, -30.0f);
-		break;
-	}
-
 	case 'w': // 엑셀: 자동차 앞으로 이동
 		moveFactor = 1.0f;
 		isAccelerating = true;
@@ -593,9 +570,6 @@ GLvoid Keyboard(unsigned char key, int x, int y)
 		break;
 	case 'b': 
 		isBraking = true;
-		break;
-	case 'r':
-		car_rotateY += 10.0f;
 		break;
 		//은면제거
 	case 'h':
@@ -992,9 +966,6 @@ void initBlock()
 	}
 }
 
-float lastAngle = 0.0f; // 이전 프레임의 각도
-float cumulativeAngle = 0.0f; // 누적된 핸들 회전 각도
-
 // 마우스 버튼 콜백 함수
 void MouseButton(int button, int state, int x, int y)
 {
@@ -1002,8 +973,9 @@ void MouseButton(int button, int state, int x, int y)
 		if (state == GLUT_DOWN) {
 			if (x > 600 && y > 300) //750, 450이 핸들의 중심좌표
 			{
+				lastAngle = 0.0f;
 				is_mouse_on_handle = true;
-				//std::cout << "핸들 클릭\n";
+				std::cout << "x :"<< x << "  y :" << y << std::endl;
 			}
 			else
 			{
@@ -1014,6 +986,7 @@ void MouseButton(int button, int state, int x, int y)
 		else if (state == GLUT_UP) {
 			if (is_mouse_on_handle)
 			{
+				lastAngle = 0.0f;
 				is_mouse_on_handle = false;
 			}
 			if (is_mouse_on_camera)
@@ -1042,8 +1015,8 @@ void MouseMotion(int x, int y)
 		int dx = x - 750;
 		int dy = y - 450;
 
-		// 현재 각도 계산
-		float currentAngle = atan2(dx, dy) * (180.0f / M_PI);
+		// 기준 각도를 y축 음의 방향으로 설정
+		float currentAngle = -atan2(dx, -dy) * (180.0f / M_PI);
 
 		// 각도 차이 계산 (누적 회전을 위해)
 		float deltaAngle = currentAngle - lastAngle;
@@ -1058,7 +1031,7 @@ void MouseMotion(int x, int y)
 		cumulativeAngle += deltaAngle;
 
 		// handle_rotateZ 업데이트 (누적 각도)
-		handle_rotateZ = 180.0 + cumulativeAngle;
+		handle_rotateZ = cumulativeAngle;
 
 		// 값 제한 (최대 900도, 최소 -900도)
 		if (handle_rotateZ > 900.0f)
@@ -1066,15 +1039,8 @@ void MouseMotion(int x, int y)
 		else if (handle_rotateZ < -900.0f)
 			handle_rotateZ = -900.0f;
 
-		// front_wheels_rotateY 업데이트
-		// handle_rotateZ를 (-900 ~ 900)에서 (-30.0 ~ 30.0)으로 매핑
-		front_wheels_rotateY = (handle_rotateZ / 900.0f) * 30.0f;
-
 		// 현재 각도를 저장 (다음 프레임 비교를 위해)
 		lastAngle = currentAngle;
-
-		// 화면 갱신 요청
-		//glutPostRedisplay();
 	}
 	if (is_mouse_on_camera)
 	{
@@ -1096,3 +1062,4 @@ void MouseMotion(int x, int y)
 	// 화면 갱신 요청
 	glutPostRedisplay();
 }
+
