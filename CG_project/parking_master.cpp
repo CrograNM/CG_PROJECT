@@ -99,6 +99,7 @@ GLuint vao[5], vbo[6];							//--- VAO, VBO
 GLvoid drawScene(GLvoid);
 GLvoid Reshape(int w, int h);
 GLvoid Keyboard(unsigned char key, int x, int y);
+GLvoid KeyboardUp(unsigned char key, int x, int y);
 
 char* filetobuf(const char* file);
 void make_vertexShaders();
@@ -282,6 +283,7 @@ int main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정
 	glutDisplayFunc(drawScene);					//--- 출력 콜백함수의 지정
 	glutReshapeFunc(Reshape);					//--- 다시 그리기 콜백함수 지정
 	glutKeyboardFunc(Keyboard);					// 키보드 입력
+	glutKeyboardUpFunc(KeyboardUp);					// 키보드 입력
 	//glutSpecialFunc(SpecialKeyboard);			// 키보드 입력(방향키 등 스페셜)
 	glutMouseFunc(MouseButton);					// 마우스 버튼 콜백 등록
 	glutMotionFunc(MouseMotion);				// 마우스 드래그 콜백 등록
@@ -401,6 +403,8 @@ GLvoid Reshape(int w, int h) //--- 콜백 함수: 다시 그리기 콜백 함수
 const float speed = 0.05f;
 const float WHEEL_TURN_SPEED = 0.5f;	// 복원 속도
 const float CAR_SPEED = 0.05f;			// 자동차 이동 속도
+bool a_down = false;
+bool d_down = false;
 void UpdateCar(bool isReverse)
 {
 	// 자동차 회전 업데이트 (앞바퀴 회전량에 따라 방향 전환
@@ -414,10 +418,13 @@ void UpdateCar(bool isReverse)
 	car_dz += moveFactor * CAR_SPEED * cos(radians);
 
 	// 앞바퀴 회전량을 점점 0으로 복원
-	if (front_wheels_rotateY > 0.0f)
-		front_wheels_rotateY = std::max(0.0f, front_wheels_rotateY - WHEEL_TURN_SPEED);
-	else if (front_wheels_rotateY < 0.0f)
-		front_wheels_rotateY = std::min(0.0f, front_wheels_rotateY + WHEEL_TURN_SPEED);
+	if (a_down == false && d_down == false)
+	{
+		if (front_wheels_rotateY > 0.0f)
+			front_wheels_rotateY = std::max(0.0f, front_wheels_rotateY - WHEEL_TURN_SPEED);
+		else if (front_wheels_rotateY < 0.0f)
+			front_wheels_rotateY = std::min(0.0f, front_wheels_rotateY + WHEEL_TURN_SPEED);
+	}
 }
 GLvoid Keyboard(unsigned char key, int x, int y)
 {
@@ -431,20 +438,22 @@ GLvoid Keyboard(unsigned char key, int x, int y)
 	}
 	case 'a':
 	{
-		if (key == 'a')
-		{
-			front_wheels_rotateY = std::max(front_wheels_rotateY + 5.0f, 30.0f);
-		}
+		a_down = true;
+		front_wheels_rotateY = std::min(front_wheels_rotateY + 5.0f, 30.0f);
 		break;
 	}
 	case 'd':
 	{
-		if (key == 'd')
-		{
-			front_wheels_rotateY = std::min(front_wheels_rotateY - 5.0f, -30.0f);
-		}
+		d_down = true;
+		front_wheels_rotateY = std::max(front_wheels_rotateY - 5.0f, -30.0f);
 		break;
 	}
+	case 'e': // 앞바퀴 회전 오른쪽
+		front_wheels_rotateY = std::min(front_wheels_rotateY + 5.0f, 30.0f); // 최대 회전량 제한
+		break;
+	case 'E': // 앞바퀴 회전 왼쪽
+		front_wheels_rotateY = std::max(front_wheels_rotateY - 5.0f, -30.0f); // 최대 회전량 제한
+		break;
 
 	case 'w': // 엑셀: 자동차 앞으로 이동
 		UpdateCar(false); // 이동과 회전 업데이트
@@ -517,6 +526,22 @@ GLvoid Keyboard(unsigned char key, int x, int y)
 		{
 			c_rotateY -= 5.0f;
 		}
+		break;
+	}
+	}
+	glutPostRedisplay(); //--- refresh
+}
+GLvoid KeyboardUp(unsigned char key, int x, int y) {
+	switch (key)
+	{
+	case 'a':
+	{
+		a_down = false;
+		break;
+	}
+	case 'd':
+	{
+		d_down = false;
 		break;
 	}
 	}
