@@ -256,7 +256,7 @@ float car_speed = 0.0f;         // 현재 자동차 속도
 const float MAX_SPEED = 0.05f;   // 최대 속도
 const float acceleration = 0.001f; // 가속도
 const float deceleration = 0.002f; // 감속도 (브레이크)
-const float friction = 0.005f;    // 마찰력 (자연 감속)
+const float friction = 0.001f;    // 마찰력 (자연 감속)
 bool isAccelerating = false;    // 액셀 상태
 bool isBraking = false;         // 브레이크 상태
 
