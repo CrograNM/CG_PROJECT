@@ -51,6 +51,14 @@ float generateRandomFloat(float min, float max)
 //	return 1 - (y / (float)glutGet(GLUT_WINDOW_HEIGHT)) * 2;  // 정수 나눗셈 방지
 //}
 
+struct OBB {
+	glm::vec3 center;         // OBB 중심
+	glm::vec3 halfSize;       // 각 축의 절반 크기
+	glm::mat3 orientation;    // OBB의 회전 행렬
+};
+
+OBB carOBB;
+
 // 마우스 이동 상태 저장
 int lastMouseX = -1, lastMouseY = -1;
 void MouseMotion(int x, int y);
@@ -163,7 +171,6 @@ GLvoid InitBuffer();
 
 // 타이머 관련
 #define TIMER_VELOCITY 16
-void TimerFunction_angleY(int value);
 int	timer_angleY = false;
 bool isPlus = true;
 
@@ -292,23 +299,92 @@ glm::mat4 Wheel_on_000(int num, int type) //num은 4개 바퀴의 번호, type�
 	return Wheels(num) * Ry2 * Ry * T;
 }
 
-bool checkCollision(float carX, float carZ, float carSize, float wallX, float wallZ, float wallWidth, float wallHeight) {
-	// 차의 AABB
-	float carMinX = carX - carSize;
-	float carMaxX = carX + carSize;
-	float carMinZ = carZ - carSize;
-	float carMaxZ = carZ + carSize;
 
-	// 벽의 AABB
-	float wallMinX = wallX - wallWidth / 2;
-	float wallMaxX = wallX + wallWidth / 2;
-	float wallMinZ = wallZ - wallHeight / 2;
-	float wallMaxZ = wallZ + wallHeight / 2;
 
-	// 충돌 여부 확인
-	return (carMinX <= wallMaxX && carMaxX >= wallMinX) &&
-		(carMinZ <= wallMaxZ && carMaxZ >= wallMinZ);
+// 차량 OBB 초기화
+void initializeCarOBB() {
+	carOBB.center = glm::vec3(car_dx, car_dy, car_dz); // 초기 위치
+	carOBB.halfSize = glm::vec3(CAR_SIZE / 2 - 0.05f, CAR_SIZE / 2, CAR_SIZE); // 차량 크기
+	carOBB.orientation = glm::mat3(1.0f); // 초기 회전 없음
 }
+
+// 차량 OBB 갱신
+void updateCarOBB() {
+	// 차량의 중심 업데이트
+	carOBB.center = glm::vec3(car_dx, car_dy, car_dz);
+
+	// 회전 행렬 업데이트
+	glm::mat4 rotationMatrix = glm::rotate(glm::mat4(1.0f), glm::radians(car_rotateY), glm::vec3(0.0f, 1.0f, 0.0f));
+	carOBB.orientation = glm::mat3(rotationMatrix);
+}
+
+bool checkOBBCollision(const OBB& obb1, const OBB& obb2) {
+	const float epsilon = 1e-5f;
+
+	// OBB의 축 방향(각 행렬의 열 벡터)
+	glm::vec3 axes1[3] = {
+		glm::vec3(obb1.orientation[0]),
+		glm::vec3(obb1.orientation[1]),
+		glm::vec3(obb1.orientation[2])
+	};
+
+	glm::vec3 axes2[3] = {
+		glm::vec3(obb2.orientation[0]),
+		glm::vec3(obb2.orientation[1]),
+		glm::vec3(obb2.orientation[2])
+	};
+
+	// 두 OBB 중심 간 벡터
+	glm::vec3 translation = obb2.center - obb1.center;
+
+	// 두 OBB의 축 방향으로의 투영 반경
+	float r1, r2;
+
+	// 15개의 축 검사 (각 OBB의 축 3개 + 교차 축 9개)
+	for (int i = 0; i < 3; ++i) {
+		for (int j = 0; j < 3; ++j) {
+			glm::vec3 axis = glm::cross(axes1[i], axes2[j]);
+
+			// 축이 유효하지 않으면 검사 생략
+			if (glm::length(axis) < epsilon) continue;
+
+			axis = glm::normalize(axis);
+
+			// 두 OBB를 해당 축으로 투영
+			r1 = glm::dot(obb1.halfSize, glm::abs(glm::transpose(obb1.orientation) * axis));
+			r2 = glm::dot(obb2.halfSize, glm::abs(glm::transpose(obb2.orientation) * axis));
+
+			// 중심 거리와 투영 반경 비교
+			if (glm::abs(glm::dot(translation, axis)) > r1 + r2) {
+				return false; // 충돌하지 않음
+			}
+		}
+	}
+
+	return true; // 충돌
+}
+
+std::vector<OBB> walls_obb;
+
+void initializeWalls() {
+	walls_obb.clear();
+
+	// 예제: 4개의 벽 정의
+	walls_obb.push_back({ glm::vec3(0.0f, WALL_HEIGHT / 2, -GROUND_SIZE), glm::vec3(GROUND_SIZE, WALL_HEIGHT / 2, WALL_THICKNESS), glm::mat3(1.0f) }); // Front wall
+	walls_obb.push_back({ glm::vec3(0.0f, WALL_HEIGHT / 2, GROUND_SIZE), glm::vec3(GROUND_SIZE, WALL_HEIGHT / 2, WALL_THICKNESS), glm::mat3(1.0f) });  // Back wall
+	walls_obb.push_back({ glm::vec3(-GROUND_SIZE, WALL_HEIGHT / 2, 0.0f), glm::vec3(WALL_THICKNESS, WALL_HEIGHT / 2, GROUND_SIZE), glm::mat3(1.0f) }); // Left wall
+	walls_obb.push_back({ glm::vec3(GROUND_SIZE, WALL_HEIGHT / 2, 0.0f), glm::vec3(WALL_THICKNESS, WALL_HEIGHT / 2, GROUND_SIZE), glm::mat3(1.0f) });  // Right wall
+}
+
+bool checkCollisionWithWalls(const OBB& carOBB) {
+	for (const auto& wall : walls_obb) {
+		if (checkOBBCollision(carOBB, wall)) {
+			return true; // 충돌
+		}
+	}
+	return false; // 충돌 없음
+}
+
 
 float c_dx = 0.0f;
 float c_dy = 1.0f;
@@ -361,21 +437,25 @@ float lastAngle = 0.0f; // 이전 프레임의 각도
 float cumulativeAngle = 0.0f; // 누적된 핸들 회전 각도
 
 // 타이머 함수: 속도 업데이트 및 이동 처리
-// 타이머 함수: 속도 업데이트 및 이동 처리
-void TimerFunction_UpdateMove(int value)
-{
+void TimerFunction_UpdateMove(int value) {
+	// 바퀴 회전량 갱신
 	front_wheels_rotateY = (handle_rotateZ / 900.0f) * 30.0f;
 
 	// 속도 계산
-	if (isAccelerating)
+	if (isAccelerating) {
 		car_speed = std::min(car_speed + acceleration, MAX_SPEED); // 최대 속도 제한
-	else if (isBraking)
+	}
+	else if (isBraking) {
 		car_speed = std::max(car_speed - deceleration, 0.0f);      // 속도는 0 이상
-	else
+	}
+	else {
 		car_speed = std::max(car_speed - friction, 0.0f);          // 자연 감속
+	}
 
-	if (car_speed > 0.0f)
-	{
+	// 차량이 움직이는 경우
+	if (car_speed > 0.0f) {
+		// 차량 회전
+		float previousRotateY = car_rotateY;
 		car_rotateY += moveFactor * front_wheels_rotateY * 0.1f;
 
 		// 이동 후의 새로운 위치 계산
@@ -383,52 +463,49 @@ void TimerFunction_UpdateMove(int value)
 		float new_dx = car_dx + moveFactor * car_speed * sin(radians);
 		float new_dz = car_dz + moveFactor * car_speed * cos(radians);
 
-		// 벽과의 충돌 여부 확인
-		bool isColliding = false;
-		for (int i = 0; i < 4; ++i) // 4개의 벽을 검사
-		{
-			float wallX = (i % 2 == 0) ? 0.0f : (i == 1 ? GROUND_SIZE : -GROUND_SIZE);
-			float wallZ = (i % 2 == 1) ? 0.0f : (i == 2 ? GROUND_SIZE : -GROUND_SIZE);
-			float wallWidth = (i % 2 == 0) ? GROUND_SIZE * 2 : WALL_THICKNESS;
-			float wallHeight = (i % 2 == 1) ? GROUND_SIZE * 2 : WALL_THICKNESS;
+		// 차량의 OBB 갱신 (임시 위치로 업데이트)
+		carOBB.center = glm::vec3(new_dx, car_dy, new_dz);
+		carOBB.orientation = glm::mat3(glm::rotate(glm::mat4(1.0f), glm::radians(car_rotateY), glm::vec3(0.0f, 1.0f, 0.0f)));
 
-			if (checkCollision(new_dx, new_dz, CAR_SIZE, wallX, wallZ, wallWidth, wallHeight))
-			{
-				isColliding = true;
-				break;
-			}
-		}
-
-		// 충돌이 없을 때만 이동 업데이트
-		if (!isColliding)
-		{
+		// 충돌 여부 확인
+		if (!checkCollisionWithWalls(carOBB)) {
+			// 충돌이 없으면 위치 업데이트
 			car_dx = new_dx;
 			car_dz = new_dz;
-		}
 
-		// 핸들과 바퀴 복원 로직
-		if (!is_mouse_on_handle)
-		{
-			// 핸들 복원
-			if (handle_rotateZ > 0.0f)
-			{
-				handle_rotateZ = std::max(0.0f, handle_rotateZ - HANDLE_RETURN_SPEED);
-			}
-			else if (handle_rotateZ < 0.0f)
-			{
-				handle_rotateZ = std::min(0.0f, handle_rotateZ + HANDLE_RETURN_SPEED);
-			}
-			cumulativeAngle = handle_rotateZ;
-
-			// 복원된 핸들 값에 따라 바퀴 회전량 동기화
-			front_wheels_rotateY = (handle_rotateZ / 900.0f) * 30.0f;
+			// OBB 갱신
+			updateCarOBB();
 		}
+		else {
+			// 충돌이 발생하면 회전을 복원
+			car_rotateY = previousRotateY;
+
+			// 속도를 0으로 설정 (정지)
+			car_speed = 0.0f;
+		}
+	}
+
+	// 핸들과 바퀴 복원 로직
+	if (!is_mouse_on_handle) {
+		// 핸들 복원
+		if (handle_rotateZ > 0.0f) {
+			handle_rotateZ = std::max(0.0f, handle_rotateZ - HANDLE_RETURN_SPEED);
+		}
+		else if (handle_rotateZ < 0.0f) {
+			handle_rotateZ = std::min(0.0f, handle_rotateZ + HANDLE_RETURN_SPEED);
+		}
+		cumulativeAngle = handle_rotateZ;
+
+		// 복원된 핸들 값에 따라 바퀴 회전량 동기화
+		front_wheels_rotateY = (handle_rotateZ / 900.0f) * 30.0f;
 	}
 
 	// 화면 갱신 요청 및 타이머 재설정
 	glutPostRedisplay();
 	glutTimerFunc(TIMER_VELOCITY, TimerFunction_UpdateMove, 1);
 }
+
+
 
 
 int main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정
@@ -462,6 +539,9 @@ int main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정
 	//--- 세이더 읽어와서 세이더 프로그램 만들기
 	make_shaderProgram();
 	InitBuffer();
+	initializeCarOBB();    // 차량 OBB 초기화 호출
+	initializeWalls();     // 벽 OBB 초기화 호출
+
 
 	glutDisplayFunc(drawScene);					//--- 출력 콜백함수의 지정
 	glutReshapeFunc(Reshape);					//--- 다시 그리기 콜백함수 지정
