@@ -47,7 +47,6 @@ bool isCull = false;
 // Car 초기화
 void initCar();
 #define CAR_SIZE 0.5f
-#define WHEEL_SIZE CAR_SIZE / 4
 GLfloat Block[4][TRI_COUNT * 3][3];
 GLfloat	Block_Color[4][TRI_COUNT * 3][3];
 
@@ -95,6 +94,7 @@ GLfloat wall_colors[24][3] = {
 	{0.3f, 0.3f, 0.3f}, {0.3f, 0.3f, 0.3f}, {0.3f, 0.3f, 0.3f}
 };
 
+// 핸들 초기화
 #define HANDLE_SIZE 0.7f
 #define HAND_RECT_SIZE HANDLE_SIZE / 4
 GLfloat handle_rect[6][3] = {
@@ -111,12 +111,48 @@ GLfloat handle_rect_color[6][3] = {
 	{0.3f, 0.0f, 1.0f},
 };
 
+// 바퀴 (사각형) 초기화
+#define WHEEL_SIZE CAR_SIZE / 4
+#define WHEEL_RECT_SIZE WHEEL_SIZE / 8
+GLfloat wheel_rect[4][6][3] = {
+	{
+		{-WHEEL_RECT_SIZE, 0, -WHEEL_SIZE}, {WHEEL_RECT_SIZE, 0, -WHEEL_SIZE}, {-WHEEL_RECT_SIZE, 0, WHEEL_SIZE},
+		{-WHEEL_RECT_SIZE, 0, WHEEL_SIZE},  {WHEEL_RECT_SIZE, 0, -WHEEL_SIZE}, { WHEEL_RECT_SIZE, 0, WHEEL_SIZE}
+	},
+	{
+		{-WHEEL_RECT_SIZE, 0, -WHEEL_SIZE}, {WHEEL_RECT_SIZE, 0, -WHEEL_SIZE}, {-WHEEL_RECT_SIZE, 0, WHEEL_SIZE},
+		{-WHEEL_RECT_SIZE, 0, WHEEL_SIZE},  {WHEEL_RECT_SIZE, 0, -WHEEL_SIZE}, { WHEEL_RECT_SIZE, 0, WHEEL_SIZE}
+	},
+	{
+		{-WHEEL_RECT_SIZE, 0, -WHEEL_SIZE}, {WHEEL_RECT_SIZE, 0, -WHEEL_SIZE}, {-WHEEL_RECT_SIZE, 0, WHEEL_SIZE},
+		{-WHEEL_RECT_SIZE, 0, WHEEL_SIZE},  {WHEEL_RECT_SIZE, 0, -WHEEL_SIZE}, { WHEEL_RECT_SIZE, 0, WHEEL_SIZE}
+	},
+	{
+		{-WHEEL_RECT_SIZE, 0, -WHEEL_SIZE}, {WHEEL_RECT_SIZE, 0, -WHEEL_SIZE}, {-WHEEL_RECT_SIZE, 0, WHEEL_SIZE},
+		{-WHEEL_RECT_SIZE, 0, WHEEL_SIZE},  {WHEEL_RECT_SIZE, 0, -WHEEL_SIZE}, { WHEEL_RECT_SIZE, 0, WHEEL_SIZE}
+	}
+};
+GLfloat wheel_rect_color[4][6][3] = {
+	{		{0.0f, 0.0f, 1.0f},		{0.0f, 0.0f, 1.0f},		{0.0f, 0.0f, 1.0f},
+			{0.0f, 0.0f, 1.0f},		{0.0f, 0.0f, 1.0f},		{0.0f, 0.0f, 1.0f}
+	},
+	{		{0.0f, 0.0f, 1.0f},		{0.0f, 0.0f, 1.0f},		{0.0f, 0.0f, 1.0f},
+			{0.0f, 0.0f, 1.0f},		{0.0f, 0.0f, 1.0f},		{0.0f, 0.0f, 1.0f}
+	},
+	{		{0.0f, 0.0f, 1.0f},		{0.0f, 0.0f, 1.0f},		{0.0f, 0.0f, 1.0f},
+			{0.0f, 0.0f, 1.0f},		{0.0f, 0.0f, 1.0f},		{0.0f, 0.0f, 1.0f}
+	},
+	{		{0.0f, 0.0f, 1.0f},		{0.0f, 0.0f, 1.0f},		{0.0f, 0.0f, 1.0f},
+			{0.0f, 0.0f, 1.0f},		{0.0f, 0.0f, 1.0f},		{0.0f, 0.0f, 1.0f}
+	}
+};
+
 // 필요 변수 선언
 GLint width, height;
 GLchar* vertexSource, * fragmentSource;		
 GLuint vertexShader, fragmentShader;		
 GLuint shaderProgramID;						
-GLuint vao[4], vbo[8];						
+GLuint vao[5], vbo[10];						
 
 // 필수 함수 정의
 GLvoid drawScene(GLvoid);
@@ -206,6 +242,7 @@ glm::mat4 Headlights(int left_right)
 
 // 바퀴 변환 - 앞바퀴 회전
 float front_wheels_rotateY = 0.0f;
+float wheel_rect_rotateX = 0.0f;
 glm::mat4 Wheels(int num)
 {
 	glm::mat4 T2 = glm::mat4(1.0f);
@@ -226,6 +263,45 @@ glm::mat4 Wheels(int num)
 		T2 = glm::translate(T2, glm::vec3(CAR_SIZE / 2 + WHEEL_SIZE / 4, 0.0f, -CAR_SIZE * 0.5f));
 	}
 	return Car_Body() * T2;
+}
+glm::mat4 Wheel_rects(int num)
+{
+	glm::mat4 T = glm::mat4(1.0f);
+	glm::mat4 T2 = glm::mat4(1.0f);
+	glm::mat4 Ry = glm::mat4(1.0f);
+
+	if (num == 1 || num == 2)
+	{
+		//앞바퀴들에게 회전 변환 추가 적용
+		Ry = glm::rotate(Ry, glm::radians(front_wheels_rotateY), glm::vec3(0.0, 1.0, 0.0));
+	}
+	if (num == 1) //앞 기준 왼쪽 앞
+	{
+		T = glm::translate(T, glm::vec3(-(WHEEL_SIZE / 4 + 0.001f), 0.0f, 0.0f));
+		T2 = glm::translate(T2, glm::vec3(-(CAR_SIZE / 2 + WHEEL_SIZE / 4), 0.0f, CAR_SIZE * 0.5f));
+	}
+	if (num == 2) //오른쪽 앞
+	{
+		T = glm::translate(T, glm::vec3((WHEEL_SIZE / 4 + 0.001f), 0.0f, 0.0f));
+		T2 = glm::translate(T2, glm::vec3(CAR_SIZE / 2 + WHEEL_SIZE / 4, 0.0f, CAR_SIZE * 0.5f));
+	}
+	if (num == 3) //왼쪽 뒤
+	{
+		T = glm::translate(T, glm::vec3(-(WHEEL_SIZE / 4 + 0.001f), 0.0f, 0.0f));
+		T2 = glm::translate(T2, glm::vec3(-(CAR_SIZE / 2 + WHEEL_SIZE / 4), 0.0f, -CAR_SIZE * 0.5f));
+	}
+	if (num == 4)  //오른쪽 뒤
+	{
+		T = glm::translate(T, glm::vec3((WHEEL_SIZE / 4 + 0.001f), 0.0f, 0.0f));
+		T2 = glm::translate(T2, glm::vec3(CAR_SIZE / 2 + WHEEL_SIZE / 4, 0.0f, -CAR_SIZE * 0.5f));
+	}
+
+	glm::mat4 Rx = glm::mat4(1.0f);
+	Rx = glm::rotate(Rx, glm::radians(wheel_rect_rotateX), glm::vec3(1.0, 0.0, 0.0));
+	glm::mat4 Rz = glm::mat4(1.0f);
+	Rz = glm::rotate(Rz, glm::radians(90.0f), glm::vec3(0.0, 0.0, 1.0));
+
+	return Car_Body() * T2 * Ry * Rx * T * Rz;
 }
 glm::mat4 Wheel_on_000(int num, int type) //num은 4개 바퀴의 번호, type은 실린더, 뚜껑 객체 종류
 {
@@ -364,6 +440,7 @@ void TimerFunction_UpdateMove(int value)
 			car_rotateY += moveFactor * front_wheels_rotateY * 0.1f;
 			car_dx = new_dx;
 			car_dz = new_dz;
+			wheel_rect_rotateX += moveFactor * car_speed * 100.0f;
 		}
 
 		// 핸들과 바퀴 복원 로직
@@ -490,6 +567,16 @@ void drawCar(int modelLoc, int mod)
 	draw_wheels(modelLoc, 3);	//3
 	draw_wheels(modelLoc, 4);	//4
 
+	// 바퀴 사각형
+	glBindVertexArray(vao[4]);
+	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(Wheel_rects(1)));
+	glDrawArrays(GL_TRIANGLES, 0, 6);	//앞바퀴 1
+	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(Wheel_rects(2)));
+	glDrawArrays(GL_TRIANGLES, 6, 6);	//앞바퀴 2
+	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(Wheel_rects(3)));
+	glDrawArrays(GL_TRIANGLES, 12, 6);	//뒷바퀴 1
+	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(Wheel_rects(4)));
+	glDrawArrays(GL_TRIANGLES, 18, 6);	//뒷바퀴 2
 }
 void drawWalls(int modelLoc)
 {
@@ -893,13 +980,9 @@ void make_shaderProgram()
 }
 void InitBuffer()
 {
-	//glGenVertexArrays(1, &vao);		//--- VAO 를 지정하고 할당하기
-	//glBindVertexArray(vao);			//--- VAO를 바인드하기
 
-	glGenVertexArrays(4, vao);
-	glGenBuffers(8, vbo);
-
-	// 좌표축 VAO, VBO 초기화
+	glGenVertexArrays(5, vao);
+	glGenBuffers(10, vbo);
 
 	// 땅
 	glBindVertexArray(vao[0]);
@@ -946,6 +1029,18 @@ void InitBuffer()
 
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[7]);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(wall_colors), wall_colors, GL_STATIC_DRAW);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (void*)0);
+	glEnableVertexAttribArray(1);
+
+	// 바퀴
+	glBindVertexArray(vao[4]);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[8]);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(wheel_rect), wheel_rect, GL_STATIC_DRAW);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (void*)0);
+	glEnableVertexAttribArray(0);
+
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[9]);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(wheel_rect_color), wheel_rect_color, GL_STATIC_DRAW);
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (void*)0);
 	glEnableVertexAttribArray(1);
 }
