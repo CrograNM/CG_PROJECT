@@ -78,15 +78,19 @@ GLfloat obstacle[4][TRI_COUNT * 3][3];
 GLfloat obstacle_color[4][TRI_COUNT * 3][3];
 
 // 도착지점
-#define FINISH_SIZE CAR_SIZE + 0.3f //(바깥쪽 사각형 크기)
+#define FINISH_SIZE 1.0f //(바깥쪽 사각형 크기)
+#define FINISH_SIZE_2 0.9f
+const float fheight = 0.75f;
+const float fy = 0.0001f;
+const float fy2 = 0.00015f;
 GLfloat finish_rect[2][6][3] = {
 	{	//바깥쪽 (z길이가 x길이의 두배로 설정)
-		{-FINISH_SIZE/2, 0, -FINISH_SIZE}, {FINISH_SIZE/2, 0, -FINISH_SIZE}, {-FINISH_SIZE/2, 0, FINISH_SIZE},
-		{-FINISH_SIZE/2, 0, FINISH_SIZE},  {FINISH_SIZE/2, 0, -FINISH_SIZE}, { FINISH_SIZE/2, 0, FINISH_SIZE}
+		{-FINISH_SIZE/2, fy, -FINISH_SIZE * fheight}, {FINISH_SIZE/2, fy, -FINISH_SIZE * fheight}, {-FINISH_SIZE/2, fy, FINISH_SIZE * fheight},
+		{-FINISH_SIZE/2, fy, FINISH_SIZE * fheight},  {FINISH_SIZE/2, fy, -FINISH_SIZE * fheight}, { FINISH_SIZE/2, fy, FINISH_SIZE * fheight}
 	},
 	{	//안쪽
-		{-(FINISH_SIZE - 0.1f) / 2, 0, -FINISH_SIZE}, {(FINISH_SIZE - 0.1f) / 2, 0, -FINISH_SIZE}, {-(FINISH_SIZE - 0.1f) / 2, 0, FINISH_SIZE},
-		{-(FINISH_SIZE - 0.1f) /2, 0, FINISH_SIZE},  {(FINISH_SIZE - 0.1f) /2, 0, -FINISH_SIZE}, { (FINISH_SIZE - 0.1f) /2, 0, FINISH_SIZE}
+		{-FINISH_SIZE_2 / 2, fy2, -FINISH_SIZE_2 * fheight}, {FINISH_SIZE_2 / 2, fy2, -FINISH_SIZE_2 * fheight}, {-FINISH_SIZE_2 / 2, fy2, FINISH_SIZE_2 * fheight},
+		{-FINISH_SIZE_2 / 2, fy2, FINISH_SIZE_2 * fheight},  {FINISH_SIZE_2 / 2, fy2, -FINISH_SIZE_2 * fheight}, { FINISH_SIZE_2 / 2, fy2, FINISH_SIZE_2 * fheight}
 	}
 };
 GLfloat finish_rect_color[2][6][3] = {
@@ -586,6 +590,13 @@ void drawGround(int modelLoc)
 	glBindVertexArray(vao[0]);
 	glDrawArrays(GL_TRIANGLES, 0, 6);
 }
+void drawFinishRect(int modelLoc)
+{
+	// 바닥
+	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(SRT_MATRIX()));
+	glBindVertexArray(vao[5]);
+	glDrawArrays(GL_TRIANGLES, 0, 12);
+}
 void drawScene()
 {
 	glViewport(0, 0, clientWidth, clientHeight);
@@ -601,46 +612,49 @@ void drawScene()
 
 	if (true)
 	{
-		if (isCull)
+		if (true)
 		{
-			glDisable(GL_DEPTH_TEST);
+			if (isCull)
+			{
+				glDisable(GL_DEPTH_TEST);
+			}
+			else
+			{
+				glEnable(GL_DEPTH_TEST);
+			}
+
+			// 차체 중심을 공전 중심으로 설정
+			glm::vec3 orbitCenter = glm::vec3(car_dx, car_dy, car_dz);
+
+			// 카메라 위치 계산
+			float cameraDistance = c_dz; // `c_dz`를 카메라 거리로 사용
+			glm::vec3 cameraDirection = glm::vec3(0.0f, 0.0f, -1.0f);
+			glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
+
+			glm::mat4 cameraRotateMat = glm::rotate(glm::mat4(1.0f), glm::radians(c_rotateY), glm::vec3(0.0, 1.0, 0.0));
+			glm::vec3 cameraOffset = glm::vec3(cameraRotateMat * glm::vec4(0.0f, 1.9f, cameraDistance, 1.0f)); // Y축으로 살짝 올림
+			glm::vec3 cameraPos = orbitCenter + cameraOffset;
+
+			// 카메라 방향 업데이트 (살짝 아래로 보기)
+			glm::vec3 lookTarget = orbitCenter + glm::vec3(0.0f, -0.2f, 0.0f); // 아래로 약간 이동
+			cameraDirection = glm::normalize(lookTarget - cameraPos);
+
+			// 뷰 행렬 설정
+			glm::mat4 vTransform = glm::lookAt(cameraPos, lookTarget, cameraUp);
+			glUniformMatrix4fv(viewLoc, 1, GL_FALSE, &vTransform[0][0]);
+
+			// 투영변환
+			glm::mat4 pTransform = glm::mat4(1.0f);
+			if (!isProspect)
+			{
+				pTransform = glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f, -0.1f, 100.0f);
+			}
+			else
+			{
+				pTransform = glm::perspective(glm::radians(45.0f), (float)clientWidth / (float)clientHeight, 0.1f, 50.0f);
+			}
+			glUniformMatrix4fv(projLoc, 1, GL_FALSE, &pTransform[0][0]);
 		}
-		else
-		{
-			glEnable(GL_DEPTH_TEST);
-		}
-
-		// 차체 중심을 공전 중심으로 설정
-		glm::vec3 orbitCenter = glm::vec3(car_dx, car_dy, car_dz);
-
-		// 카메라 위치 계산
-		float cameraDistance = c_dz; // `c_dz`를 카메라 거리로 사용
-		glm::vec3 cameraDirection = glm::vec3(0.0f, 0.0f, -1.0f);
-		glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
-
-		glm::mat4 cameraRotateMat = glm::rotate(glm::mat4(1.0f), glm::radians(c_rotateY), glm::vec3(0.0, 1.0, 0.0));
-		glm::vec3 cameraOffset = glm::vec3(cameraRotateMat * glm::vec4(0.0f, 1.9f, cameraDistance, 1.0f)); // Y축으로 살짝 올림
-		glm::vec3 cameraPos = orbitCenter + cameraOffset;
-
-		// 카메라 방향 업데이트 (살짝 아래로 보기)
-		glm::vec3 lookTarget = orbitCenter + glm::vec3(0.0f, -0.2f, 0.0f); // 아래로 약간 이동
-		cameraDirection = glm::normalize(lookTarget - cameraPos);
-
-		// 뷰 행렬 설정
-		glm::mat4 vTransform = glm::lookAt(cameraPos, lookTarget, cameraUp);
-		glUniformMatrix4fv(viewLoc, 1, GL_FALSE, &vTransform[0][0]);
-
-		// 투영변환
-		glm::mat4 pTransform = glm::mat4(1.0f);
-		if (!isProspect)
-		{
-			pTransform = glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f, -0.1f, 100.0f);
-		}
-		else
-		{
-			pTransform = glm::perspective(glm::radians(45.0f), (float)clientWidth / (float)clientHeight, 0.1f, 50.0f);
-		}
-		glUniformMatrix4fv(projLoc, 1, GL_FALSE, &pTransform[0][0]);
 
 		// 바닥 그리기
 		drawGround(modelLoc);
@@ -650,6 +664,9 @@ void drawScene()
 
 		// 벽 그리기
 		drawWalls(modelLoc);
+
+		// 도착지점 그리기
+		drawFinishRect(modelLoc);
 	}
 
 	// 핸들 - 뷰포트 설정으로 그리기
@@ -976,8 +993,8 @@ void make_shaderProgram()
 void InitBuffer()
 {
 
-	glGenVertexArrays(5, vao);
-	glGenBuffers(10, vbo);
+	glGenVertexArrays(6, vao);
+	glGenBuffers(12, vbo);
 
 	// 땅
 	glBindVertexArray(vao[0]);
