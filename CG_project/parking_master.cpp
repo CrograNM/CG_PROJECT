@@ -111,9 +111,8 @@ void UpdateParkingStatus();
 // 주차 공간의 경계 정의
 const float PARKING_X_MIN = -FINISH_SIZE / 2;
 const float PARKING_X_MAX = FINISH_SIZE / 2;
-const float PARKING_Z_MIN = -FINISH_SIZE * fheight / 2;
-const float PARKING_Z_MAX = FINISH_SIZE * fheight / 2;
-
+const float PARKING_Z_MIN = -FINISH_SIZE * fheight;
+const float PARKING_Z_MAX = FINISH_SIZE * fheight;
 
 // 땅바닥 초기화
 #define GROUND_SIZE 5.0f
@@ -359,8 +358,8 @@ float lastAngle = 0.0f;						// 이전 프레임의 각도
 float cumulativeAngle = 0.0f;				// 누적된 핸들 회전 각도
 std::vector<std::pair<float, float>> getRotatedCarCorners(float carX, float carZ, float carSize, float carRotateY)
 {
-	float halfWidth = carSize / 2;
-	float halfHeight = carSize;
+	float halfWidth = CAR_SIZE / 2;
+	float halfHeight = CAR_SIZE;
 
 	// 꼭짓점의 상대 좌표
 	std::vector<std::pair<float, float>> corners = {
@@ -409,13 +408,30 @@ bool checkCollision(const std::vector<std::pair<float, float>>& carCorners, floa
 }
 
 // 주차 상태를 업데이트하는 함수
-void UpdateParkingStatus() {
-	bool newIsParked = (car_dx >= PARKING_X_MIN && car_dx <= PARKING_X_MAX &&
-		car_dz >= PARKING_Z_MIN && car_dz <= PARKING_Z_MAX);
+void UpdateParkingStatus(const std::vector<std::pair<float, float>>& carCorners) {
+	bool newIsParked = false;
+	int checkCount = 0;
+	// 차량 꼭짓점 중 하나라도 충돌하면 true
+	//std::cout << "==============================\n";
+	for (const auto& corner : carCorners)
+	{
+		float cornerX = corner.first;
+		float cornerZ = corner.second;
+		//std::cout << "x:" << cornerX << "\n";
+		//std::cout << "z:" << cornerZ << "\n";
+		if (PARKING_X_MIN <= cornerX && cornerX <= PARKING_X_MAX &&
+			PARKING_Z_MIN <= cornerZ && cornerZ <= PARKING_Z_MAX)
+		{
+			checkCount++;
+		}
+	}
+	if (checkCount >= 4)
+	{
+		newIsParked = true;
+	}
 
 	if (newIsParked != isParked) {
 		isParked = newIsParked;
-
 		if (isParked) {
 			// 주차 공간 색상을 연두색으로 변경
 			for (int i = 0; i < 6; ++i) {
@@ -515,7 +531,7 @@ void TimerFunction_UpdateMove(int value)
 				break;
 			}
 			// 주차 상태 업데이트
-			UpdateParkingStatus();
+			UpdateParkingStatus(carCorners);
 		}
 
 		// 충돌이 없을 때만 이동 업데이트
@@ -903,7 +919,7 @@ void MouseButton(int button, int state, int x, int y)
 			{
 				lastAngle = 0.0f;
 				is_mouse_on_handle = true;
-				std::cout << "x :" << x << "  y :" << y << std::endl;
+				//std::cout << "x :" << x << "  y :" << y << std::endl;
 			}
 			else
 			{
