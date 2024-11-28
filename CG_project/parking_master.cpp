@@ -104,6 +104,17 @@ GLfloat finish_rect_color[2][6][3] = {
 	}
 };
 
+// 주차 상태를 나타내는 변수
+bool isParked = false;
+void UpdateParkingStatus();
+
+// 주차 공간의 경계 정의
+const float PARKING_X_MIN = -FINISH_SIZE / 2;
+const float PARKING_X_MAX = FINISH_SIZE / 2;
+const float PARKING_Z_MIN = -FINISH_SIZE * fheight / 2;
+const float PARKING_Z_MAX = FINISH_SIZE * fheight / 2;
+
+
 // 땅바닥 초기화
 #define GROUND_SIZE 5.0f
 GLfloat ground[6][3] = {
@@ -396,6 +407,40 @@ bool checkCollision(const std::vector<std::pair<float, float>>& carCorners, floa
 	// 충돌 없음
 	return false;
 }
+
+// 주차 상태를 업데이트하는 함수
+void UpdateParkingStatus() {
+	bool newIsParked = (car_dx >= PARKING_X_MIN && car_dx <= PARKING_X_MAX &&
+		car_dz >= PARKING_Z_MIN && car_dz <= PARKING_Z_MAX);
+
+	if (newIsParked != isParked) {
+		isParked = newIsParked;
+
+		if (isParked) {
+			// 주차 공간 색상을 연두색으로 변경
+			for (int i = 0; i < 6; ++i) {
+				finish_rect_color[0][i][0] = 0.5f; // R
+				finish_rect_color[0][i][1] = 1.0f; // G
+				finish_rect_color[0][i][2] = 0.5f; // B
+			}
+		}
+		else {
+			// 주차 공간 색상을 원래대로 복원
+			// 바깥쪽 (흰색)
+			for (int i = 0; i < 6; ++i) {
+				finish_rect_color[0][i][0] = 1.0f;
+				finish_rect_color[0][i][1] = 1.0f;
+				finish_rect_color[0][i][2] = 1.0f;
+			}
+		}
+
+		// VBO 업데이트
+		glBindBuffer(GL_ARRAY_BUFFER, vbo[11]);
+		glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(finish_rect_color), finish_rect_color);
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+	}
+}
+
 void TimerFunction_UpdateMove(int value)
 {
 	front_wheels_rotateY = (handle_rotateZ / 900.0f) * 30.0f;
@@ -469,6 +514,8 @@ void TimerFunction_UpdateMove(int value)
 				isColliding = true;
 				break;
 			}
+			// 주차 상태 업데이트
+			UpdateParkingStatus();
 		}
 
 		// 충돌이 없을 때만 이동 업데이트
@@ -1095,7 +1142,7 @@ void InitBuffer()
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (void*)0);
 	glEnableVertexAttribArray(1);
 
-	// 도착지점
+	// 도착지점 (주차 공간)
 	glBindVertexArray(vao[5]);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[10]);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(finish_rect), finish_rect, GL_STATIC_DRAW);
@@ -1103,7 +1150,7 @@ void InitBuffer()
 	glEnableVertexAttribArray(0);
 
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[11]);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(finish_rect_color), finish_rect_color, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(finish_rect_color), finish_rect_color, GL_DYNAMIC_DRAW); // 변경: GL_DYNAMIC_DRAW
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (void*)0);
 	glEnableVertexAttribArray(1);
 }
