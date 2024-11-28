@@ -333,6 +333,8 @@ glm::mat4 Wheel_on_000(int num, int type) //num은 4개 바퀴의 번호, type�
 
 // 자동차 이동-회전 애니메이션 관련
 float car_speed = 0.0f;						// 현재 자동차 속도
+bool isAcceleratingForward = false;
+bool isAcceleratingBackward = false;
 const float MAX_SPEED = 0.05f;				// 최대 속도
 const float acceleration = 0.001f;			// 가속도
 const float deceleration = 0.002f;			// 감속도 (브레이크)
@@ -342,7 +344,6 @@ bool isBraking = false;						// 브레이크 상태
 const float speed = 0.05f;
 const float HANDLE_RETURN_SPEED = 15.0f;	// 복원 속도
 const float CAR_SPEED = 0.05f;				// 자동차 이동 속도
-float moveFactor = 1.0f;
 float lastAngle = 0.0f;						// 이전 프레임의 각도
 float cumulativeAngle = 0.0f;				// 누적된 핸들 회전 각도
 std::vector<std::pair<float, float>> getRotatedCarCorners(float carX, float carZ, float carSize, float carRotateY)
@@ -400,19 +401,56 @@ void TimerFunction_UpdateMove(int value)
 	front_wheels_rotateY = (handle_rotateZ / 900.0f) * 30.0f;
 
 	// 속도 계산
-	if (isAccelerating)
-		car_speed = std::min(car_speed + acceleration, MAX_SPEED); // 최대 속도 제한
-	else if (isBraking)
-		car_speed = std::max(car_speed - deceleration, 0.0f);      // 속도는 0 이상
-	else
-		car_speed = std::max(car_speed - friction, 0.0f);          // 자연 감속
+	if (isAcceleratingForward)
+	{
+		car_speed += acceleration;
+		if (car_speed > MAX_SPEED)
+			car_speed = MAX_SPEED;
+	}
+	if (isAcceleratingBackward)
+	{
+		car_speed -= acceleration;
+		if (car_speed < -MAX_SPEED)
+			car_speed = -MAX_SPEED;
+	}
+	if (isBraking)
+	{
+		if (car_speed > 0.0f)
+		{
+			car_speed -= deceleration;
+			if (car_speed < 0.0f)
+				car_speed = 0.0f;
+		}
+		else if (car_speed < 0.0f)
+		{
+			car_speed += deceleration;
+			if (car_speed > 0.0f)
+				car_speed = 0.0f;
+		}
+	}
+	if (!isAcceleratingForward && !isAcceleratingBackward && !isBraking)
+	{
+		// 자연 감속
+		if (car_speed > 0.0f)
+		{
+			car_speed -= friction;
+			if (car_speed < 0.0f)
+				car_speed = 0.0f;
+		}
+		else if (car_speed < 0.0f)
+		{
+			car_speed += friction;
+			if (car_speed > 0.0f)
+				car_speed = 0.0f;
+		}
+	}
 
-	if (car_speed > 0.0f)
+	if (car_speed != 0.0f)
 	{
 		// 이동 후의 새로운 위치 계산
 		float radians = glm::radians(car_rotateY);
-		float new_dx = car_dx + moveFactor * car_speed * sin(radians);
-		float new_dz = car_dz + moveFactor * car_speed * cos(radians);
+		float new_dx = car_dx + car_speed * sin(radians);
+		float new_dz = car_dz + car_speed * cos(radians);
 
 		// 차량의 꼭짓점 계산
 		auto carCorners = getRotatedCarCorners(new_dx, new_dz, CAR_SIZE, car_rotateY);
@@ -436,10 +474,11 @@ void TimerFunction_UpdateMove(int value)
 		// 충돌이 없을 때만 이동 업데이트
 		if (!isColliding)
 		{
-			car_rotateY += moveFactor * front_wheels_rotateY * 0.1f;
+			// 회전 업데이트 (바퀴 회전에 따라 차량 회전)
+			car_rotateY += front_wheels_rotateY * 0.1f;
 			car_dx = new_dx;
 			car_dz = new_dz;
-			wheel_rect_rotateX += moveFactor * car_speed * 100.0f;
+			wheel_rect_rotateX += car_speed * 100.0f;
 		}
 
 		// 핸들과 바퀴 복원 로직
@@ -713,12 +752,12 @@ GLvoid Keyboard(unsigned char key, int x, int y)
 		break;
 	}
 	case 'w': // 엑셀: 자동차 앞으로 이동
-		moveFactor = 1.0f;
-		isAccelerating = true;
+		isAcceleratingForward = true;
+		isAcceleratingBackward = false;
 		break;
 	case 's':
-		moveFactor = -1.0f;
-		isAccelerating = true;
+		isAcceleratingForward = false;
+		isAcceleratingBackward = true;
 		break;
 	case 'b': 
 		isBraking = true;
@@ -794,11 +833,11 @@ GLvoid KeyboardUp(unsigned char key, int x, int y) {
 	switch (key)
 	{
 	case 'w': // 액셀 해제
-		isAccelerating = false;
+		isAcceleratingForward = false;
 		break;
 
 	case 's': // 액셀 해제
-		isAccelerating = false;
+		isAcceleratingBackward = false;
 		break;
 
 	case 'b': // 브레이크 해제
