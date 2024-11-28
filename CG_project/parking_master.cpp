@@ -50,6 +50,56 @@ void initCar();
 GLfloat Block[4][TRI_COUNT * 3][3];
 GLfloat	Block_Color[4][TRI_COUNT * 3][3];
 
+// 핸들 초기화
+#define HANDLE_SIZE 0.7f
+#define HAND_RECT_SIZE HANDLE_SIZE / 4
+GLfloat handle_rect[6][3] = {
+	{-HAND_RECT_SIZE, 0, -HAND_RECT_SIZE}, {HAND_RECT_SIZE, 0, -HAND_RECT_SIZE}, {-HAND_RECT_SIZE, 0, HAND_RECT_SIZE},
+	{-HAND_RECT_SIZE, 0, HAND_RECT_SIZE},  {HAND_RECT_SIZE, 0, -HAND_RECT_SIZE}, { HAND_RECT_SIZE, 0, HAND_RECT_SIZE}
+};
+GLfloat handle_rect_color[6][3] = {
+	{0.3f, 0.0f, 1.0f},
+	{0.3f, 0.0f, 1.0f},
+	{0.3f, 0.0f, 1.0f},
+
+	{0.3f, 0.0f, 1.0f},
+	{0.3f, 0.0f, 1.0f},
+	{0.3f, 0.0f, 1.0f},
+};
+
+// 바퀴 (육면체) 초기화
+#define WHEEL_SIZE CAR_SIZE / 4
+#define WHEEL_RECT_SIZE WHEEL_SIZE / 8
+GLfloat wheel_rect[4][TRI_COUNT * 3][3];
+GLfloat wheel_rect_color[4][TRI_COUNT * 3][3];
+
+// 장애물
+GLfloat obstacle[4][TRI_COUNT * 3][3];
+GLfloat obstacle_color[4][TRI_COUNT * 3][3];
+
+// 도착지점
+#define FINISH_SIZE CAR_SIZE + 0.3f //(바깥쪽 사각형 크기)
+GLfloat finish_rect[2][6][3] = {
+	{	//바깥쪽 (z길이가 x길이의 두배로 설정)
+		{-FINISH_SIZE/2, 0, -FINISH_SIZE}, {FINISH_SIZE/2, 0, -FINISH_SIZE}, {-FINISH_SIZE/2, 0, FINISH_SIZE},
+		{-FINISH_SIZE/2, 0, FINISH_SIZE},  {FINISH_SIZE/2, 0, -FINISH_SIZE}, { FINISH_SIZE/2, 0, FINISH_SIZE}
+	},
+	{	//안쪽
+		{-(FINISH_SIZE - 0.1f) / 2, 0, -FINISH_SIZE}, {(FINISH_SIZE - 0.1f) / 2, 0, -FINISH_SIZE}, {-(FINISH_SIZE - 0.1f) / 2, 0, FINISH_SIZE},
+		{-(FINISH_SIZE - 0.1f) /2, 0, FINISH_SIZE},  {(FINISH_SIZE - 0.1f) /2, 0, -FINISH_SIZE}, { (FINISH_SIZE - 0.1f) /2, 0, FINISH_SIZE}
+	}
+};
+GLfloat finish_rect_color[2][6][3] = {
+	{	//바깥쪽 (흰색)
+		{1.0f, 1.0f, 1.0f},		{1.0f, 1.0f, 1.0f},		{1.0f, 1.0f, 1.0f},
+		{1.0f, 1.0f, 1.0f},		{1.0f, 1.0f, 1.0f},		{1.0f, 1.0f, 1.0f}
+	},
+	{	//안쪽 (회색)
+		{0.8f, 0.8f, 0.8f},		{0.8f, 0.8f, 0.8f},		{0.8f, 0.8f, 0.8f},
+		{0.8f, 0.8f, 0.8f},		{0.8f, 0.8f, 0.8f},		{0.8f, 0.8f, 0.8f}
+	}
+};
+
 // 땅바닥 초기화
 #define GROUND_SIZE 5.0f
 GLfloat ground[6][3] = {
@@ -94,35 +144,12 @@ GLfloat wall_colors[24][3] = {
 	{0.3f, 0.3f, 0.3f}, {0.3f, 0.3f, 0.3f}, {0.3f, 0.3f, 0.3f}
 };
 
-// 핸들 초기화
-#define HANDLE_SIZE 0.7f
-#define HAND_RECT_SIZE HANDLE_SIZE / 4
-GLfloat handle_rect[6][3] = {
-	{-HAND_RECT_SIZE, 0, -HAND_RECT_SIZE}, {HAND_RECT_SIZE, 0, -HAND_RECT_SIZE}, {-HAND_RECT_SIZE, 0, HAND_RECT_SIZE},
-	{-HAND_RECT_SIZE, 0, HAND_RECT_SIZE},  {HAND_RECT_SIZE, 0, -HAND_RECT_SIZE}, { HAND_RECT_SIZE, 0, HAND_RECT_SIZE}
-};
-GLfloat handle_rect_color[6][3] = {
-	{0.3f, 0.0f, 1.0f},
-	{0.3f, 0.0f, 1.0f},
-	{0.3f, 0.0f, 1.0f},
-	   
-	{0.3f, 0.0f, 1.0f},
-	{0.3f, 0.0f, 1.0f},
-	{0.3f, 0.0f, 1.0f},
-};
-
-// 바퀴 (사각형) 초기화
-#define WHEEL_SIZE CAR_SIZE / 4
-#define WHEEL_RECT_SIZE WHEEL_SIZE / 8
-GLfloat wheel_rect[4][TRI_COUNT * 3][3];
-GLfloat wheel_rect_color[4][TRI_COUNT * 3][3];
-
 // 필요 변수 선언
 GLint width, height;
 GLchar* vertexSource, * fragmentSource;		
 GLuint vertexShader, fragmentShader;		
 GLuint shaderProgramID;						
-GLuint vao[5], vbo[10];						
+GLuint vao[10], vbo[20];						
 
 // 필수 함수 정의
 GLvoid drawScene(GLvoid);
@@ -1009,6 +1036,18 @@ void InitBuffer()
 
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[9]);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(wheel_rect_color), wheel_rect_color, GL_STATIC_DRAW);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (void*)0);
+	glEnableVertexAttribArray(1);
+
+	// 도착지점
+	glBindVertexArray(vao[5]);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[10]);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(finish_rect), finish_rect, GL_STATIC_DRAW);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (void*)0);
+	glEnableVertexAttribArray(0);
+
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[11]);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(finish_rect_color), finish_rect_color, GL_STATIC_DRAW);
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (void*)0);
 	glEnableVertexAttribArray(1);
 }
