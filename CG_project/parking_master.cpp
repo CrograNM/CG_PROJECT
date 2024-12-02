@@ -450,7 +450,7 @@ glm::mat4 RearCameraView() {
 	glm::vec3 cameraPosition = carPosition + carDirection * 0.45f + glm::vec3(0.0f, 0.15f, 0.0f);
 
 
-	glm::vec3 lookAtTarget = carPosition + carDirection * 1.5f;
+	glm::vec3 lookAtTarget = carPosition + carDirection * 1.0f;
 	glm::vec3 upVector(0.0f, 1.0f, 0.0f); // 월드 업 벡터
 
 	return glm::lookAt(cameraPosition, lookAtTarget, upVector);
@@ -853,7 +853,8 @@ void drawScene()
 	int viewLoc = glGetUniformLocation(shaderProgramID, "view");
 	int projLoc = glGetUniformLocation(shaderProgramID, "projection");
 
-	if (true)
+	// 쿼터뷰
+	if (currentGear != REVERSE)
 	{
 		if (true)
 		{
@@ -937,7 +938,8 @@ void drawScene()
 		draw_handle(modelLoc, 0);
 	}
 
-	if (true) // 기어 스틱 그리기
+	// 기어 스틱 그리기
+	if (true)
 	{
 		int miniMapWidth = clientWidth / 3;
 		int miniMapHeight = clientHeight / 3;
@@ -958,7 +960,8 @@ void drawScene()
 		draw_gear_stick(modelLoc, 0);
 	}
 
-	if (true) // 기어 그리기
+	// 기어 그리기
+	if (true)
 	{
 		int miniMapWidth = clientWidth / 3;
 		int miniMapHeight = clientHeight / 3;
@@ -1035,12 +1038,18 @@ void drawScene()
 		glUseProgram(shaderProgramID); // 쉐이더 프로그램 재활성화
 	}
 
+	// 후방 카메라 뷰
 	if (currentGear == REVERSE) {
 		// 후방 카메라 뷰포트 설정
-		int rearViewWidth = clientWidth / 3;
-		int rearViewHeight = clientHeight / 3;
-		int rearViewX = (clientWidth - rearViewWidth) / 2; // 화면 중앙 상단
-		int rearViewY = clientHeight - rearViewHeight;
+		//int rearViewWidth = clientWidth / 3;
+		//int rearViewHeight = clientHeight / 3;
+		//int rearViewX = (clientWidth - rearViewWidth) / 2; // 화면 중앙 상단
+		//int rearViewY = clientHeight - rearViewHeight;
+
+		int rearViewWidth = clientWidth;
+		int rearViewHeight = clientHeight;
+		int rearViewX = 0;// 화면 중앙 상단
+		int rearViewY = 0;
 
 		glViewport(rearViewX, rearViewY, rearViewWidth, rearViewHeight);
 
