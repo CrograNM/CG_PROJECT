@@ -38,7 +38,7 @@ float generateRandomFloat(float min, float max)
 #define TIMER_VELOCITY 16
 
 // 투영, 은면
-bool isProspect = true;
+bool isProspect = true;		
 bool isCull = false;
 
 // 도형 관련
@@ -49,6 +49,70 @@ void initCar();
 #define CAR_SIZE 0.5f
 GLfloat Block[4][TRI_COUNT * 3][3];
 GLfloat	Block_Color[4][TRI_COUNT * 3][3];
+
+// 핸들 초기화
+#define HANDLE_SIZE 0.7f
+#define HAND_RECT_SIZE HANDLE_SIZE / 4
+GLfloat handle_rect[6][3] = {
+	{-HAND_RECT_SIZE, 0, -HAND_RECT_SIZE}, {HAND_RECT_SIZE, 0, -HAND_RECT_SIZE}, {-HAND_RECT_SIZE, 0, HAND_RECT_SIZE},
+	{-HAND_RECT_SIZE, 0, HAND_RECT_SIZE},  {HAND_RECT_SIZE, 0, -HAND_RECT_SIZE}, { HAND_RECT_SIZE, 0, HAND_RECT_SIZE}
+};
+GLfloat handle_rect_color[6][3] = {
+	{0.3f, 0.0f, 1.0f},
+	{0.3f, 0.0f, 1.0f},
+	{0.3f, 0.0f, 1.0f},
+
+	{0.3f, 0.0f, 1.0f},
+	{0.3f, 0.0f, 1.0f},
+	{0.3f, 0.0f, 1.0f},
+};
+
+// 바퀴 (육면체) 초기화
+#define WHEEL_SIZE CAR_SIZE / 4
+#define WHEEL_RECT_SIZE WHEEL_SIZE / 8
+GLfloat wheel_rect[4][TRI_COUNT * 3][3];
+GLfloat wheel_rect_color[4][TRI_COUNT * 3][3];
+
+// 장애물
+GLfloat obstacle[4][TRI_COUNT * 3][3];
+GLfloat obstacle_color[4][TRI_COUNT * 3][3];
+
+// 도착지점
+#define FINISH_SIZE 1.0f //(바깥쪽 사각형 크기)
+#define FINISH_SIZE_2 0.9f
+const float fheight = 0.75f;
+const float fy = 0.0001f;
+const float fy2 = 0.00015f;
+GLfloat finish_rect[2][6][3] = {
+	{	//바깥쪽 (z길이가 x길이의 두배로 설정)
+		{-FINISH_SIZE/2, fy, -FINISH_SIZE * fheight}, {FINISH_SIZE/2, fy, -FINISH_SIZE * fheight}, {-FINISH_SIZE/2, fy, FINISH_SIZE * fheight},
+		{-FINISH_SIZE/2, fy, FINISH_SIZE * fheight},  {FINISH_SIZE/2, fy, -FINISH_SIZE * fheight}, { FINISH_SIZE/2, fy, FINISH_SIZE * fheight}
+	},
+	{	//안쪽
+		{-FINISH_SIZE_2 / 2, fy2, -FINISH_SIZE_2 * fheight}, {FINISH_SIZE_2 / 2, fy2, -FINISH_SIZE_2 * fheight}, {-FINISH_SIZE_2 / 2, fy2, FINISH_SIZE_2 * fheight},
+		{-FINISH_SIZE_2 / 2, fy2, FINISH_SIZE_2 * fheight},  {FINISH_SIZE_2 / 2, fy2, -FINISH_SIZE_2 * fheight}, { FINISH_SIZE_2 / 2, fy2, FINISH_SIZE_2 * fheight}
+	}
+};
+GLfloat finish_rect_color[2][6][3] = {
+	{	//바깥쪽 (흰색)
+		{1.0f, 1.0f, 1.0f},		{1.0f, 1.0f, 1.0f},		{1.0f, 1.0f, 1.0f},
+		{1.0f, 1.0f, 1.0f},		{1.0f, 1.0f, 1.0f},		{1.0f, 1.0f, 1.0f}
+	},
+	{	//안쪽 (회색)
+		{0.8f, 0.8f, 0.8f},		{0.8f, 0.8f, 0.8f},		{0.8f, 0.8f, 0.8f},
+		{0.8f, 0.8f, 0.8f},		{0.8f, 0.8f, 0.8f},		{0.8f, 0.8f, 0.8f}
+	}
+};
+
+// 주차 상태를 나타내는 변수
+bool isParked = false;
+void UpdateParkingStatus();
+
+// 주차 공간의 경계 정의
+const float PARKING_X_MIN = -FINISH_SIZE / 2;
+const float PARKING_X_MAX = FINISH_SIZE / 2;
+const float PARKING_Z_MIN = -FINISH_SIZE * fheight;
+const float PARKING_Z_MAX = FINISH_SIZE * fheight;
 
 // 땅바닥 초기화
 #define GROUND_SIZE 5.0f
@@ -94,35 +158,12 @@ GLfloat wall_colors[24][3] = {
 	{0.3f, 0.3f, 0.3f}, {0.3f, 0.3f, 0.3f}, {0.3f, 0.3f, 0.3f}
 };
 
-// 핸들 초기화
-#define HANDLE_SIZE 0.7f
-#define HAND_RECT_SIZE HANDLE_SIZE / 4
-GLfloat handle_rect[6][3] = {
-	{-HAND_RECT_SIZE, 0, -HAND_RECT_SIZE}, {HAND_RECT_SIZE, 0, -HAND_RECT_SIZE}, {-HAND_RECT_SIZE, 0, HAND_RECT_SIZE},
-	{-HAND_RECT_SIZE, 0, HAND_RECT_SIZE},  {HAND_RECT_SIZE, 0, -HAND_RECT_SIZE}, { HAND_RECT_SIZE, 0, HAND_RECT_SIZE}
-};
-GLfloat handle_rect_color[6][3] = {
-	{0.3f, 0.0f, 1.0f},
-	{0.3f, 0.0f, 1.0f},
-	{0.3f, 0.0f, 1.0f},
-
-	{0.3f, 0.0f, 1.0f},
-	{0.3f, 0.0f, 1.0f},
-	{0.3f, 0.0f, 1.0f},
-};
-
-// 바퀴 (사각형) 초기화
-#define WHEEL_SIZE CAR_SIZE / 4
-#define WHEEL_RECT_SIZE WHEEL_SIZE / 8
-GLfloat wheel_rect[4][TRI_COUNT * 3][3];
-GLfloat wheel_rect_color[4][TRI_COUNT * 3][3];
-
 // 필요 변수 선언
 GLint width, height;
-GLchar* vertexSource, * fragmentSource;
-GLuint vertexShader, fragmentShader;
-GLuint shaderProgramID;
-GLuint vao[5], vbo[10];
+GLchar* vertexSource, * fragmentSource;		
+GLuint vertexShader, fragmentShader;		
+GLuint shaderProgramID;						
+GLuint vao[10], vbo[20];						
 
 // 필수 함수 정의
 GLvoid drawScene(GLvoid);
@@ -168,7 +209,7 @@ glm::mat4 Handle()
 
 	if (true)
 	{
-		T = glm::translate(T, glm::vec3(0.0, HANDLE_SIZE - HANDLE_SIZE / 4, 0.1));
+		T = glm::translate(T, glm::vec3(0.0, HANDLE_SIZE - HANDLE_SIZE/4, 0.1));
 		Rx = glm::rotate(Rx, glm::radians(90.0f), glm::vec3(1.0, 0.0, 0.0));
 		Rz = glm::rotate(Rz, glm::radians(handle_rotateZ), glm::vec3(0.0, 0.0, 1.0));
 	}
@@ -317,8 +358,8 @@ float lastAngle = 0.0f;						// 이전 프레임의 각도
 float cumulativeAngle = 0.0f;				// 누적된 핸들 회전 각도
 std::vector<std::pair<float, float>> getRotatedCarCorners(float carX, float carZ, float carSize, float carRotateY)
 {
-	float halfWidth = carSize / 2;
-	float halfHeight = carSize;
+	float halfWidth = CAR_SIZE / 2;
+	float halfHeight = CAR_SIZE;
 
 	// 꼭짓점의 상대 좌표
 	std::vector<std::pair<float, float>> corners = {
@@ -365,6 +406,57 @@ bool checkCollision(const std::vector<std::pair<float, float>>& carCorners, floa
 	// 충돌 없음
 	return false;
 }
+
+// 주차 상태를 업데이트하는 함수
+void UpdateParkingStatus(const std::vector<std::pair<float, float>>& carCorners) {
+	bool newIsParked = false;
+	int checkCount = 0;
+	// 차량 꼭짓점 중 하나라도 충돌하면 true
+	//std::cout << "==============================\n";
+	for (const auto& corner : carCorners)
+	{
+		float cornerX = corner.first;
+		float cornerZ = corner.second;
+		//std::cout << "x:" << cornerX << "\n";
+		//std::cout << "z:" << cornerZ << "\n";
+		if (PARKING_X_MIN <= cornerX && cornerX <= PARKING_X_MAX &&
+			PARKING_Z_MIN <= cornerZ && cornerZ <= PARKING_Z_MAX)
+		{
+			checkCount++;
+		}
+	}
+	if (checkCount >= 4)
+	{
+		newIsParked = true;
+	}
+
+	if (newIsParked != isParked) {
+		isParked = newIsParked;
+		if (isParked) {
+			// 주차 공간 색상을 연두색으로 변경
+			for (int i = 0; i < 6; ++i) {
+				finish_rect_color[0][i][0] = 0.5f; // R
+				finish_rect_color[0][i][1] = 1.0f; // G
+				finish_rect_color[0][i][2] = 0.5f; // B
+			}
+		}
+		else {
+			// 주차 공간 색상을 원래대로 복원
+			// 바깥쪽 (흰색)
+			for (int i = 0; i < 6; ++i) {
+				finish_rect_color[0][i][0] = 1.0f;
+				finish_rect_color[0][i][1] = 1.0f;
+				finish_rect_color[0][i][2] = 1.0f;
+			}
+		}
+
+		// VBO 업데이트
+		glBindBuffer(GL_ARRAY_BUFFER, vbo[11]);
+		glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(finish_rect_color), finish_rect_color);
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+	}
+}
+
 void TimerFunction_UpdateMove(int value)
 {
 	front_wheels_rotateY = (handle_rotateZ / 900.0f) * 30.0f;
@@ -438,6 +530,8 @@ void TimerFunction_UpdateMove(int value)
 				isColliding = true;
 				break;
 			}
+			// 주차 상태 업데이트
+			UpdateParkingStatus(carCorners);
 		}
 
 		// 충돌이 없을 때만 이동 업데이트
@@ -473,7 +567,6 @@ void TimerFunction_UpdateMove(int value)
 	glutPostRedisplay();
 	glutTimerFunc(TIMER_VELOCITY, TimerFunction_UpdateMove, 1);
 }
-
 
 float c_dx = 0.0f;
 float c_dy = 1.0f;
@@ -599,6 +692,13 @@ void drawGround(int modelLoc)
 	glBindVertexArray(vao[0]);
 	glDrawArrays(GL_TRIANGLES, 0, 6);
 }
+void drawFinishRect(int modelLoc)
+{
+	// 바닥
+	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(SRT_MATRIX()));
+	glBindVertexArray(vao[5]);
+	glDrawArrays(GL_TRIANGLES, 0, 12);
+}
 void drawScene()
 {
 	glViewport(0, 0, clientWidth, clientHeight);
@@ -614,46 +714,49 @@ void drawScene()
 
 	if (true)
 	{
-		if (isCull)
+		if (true)
 		{
-			glDisable(GL_DEPTH_TEST);
+			if (isCull)
+			{
+				glDisable(GL_DEPTH_TEST);
+			}
+			else
+			{
+				glEnable(GL_DEPTH_TEST);
+			}
+
+			// 차체 중심을 공전 중심으로 설정
+			glm::vec3 orbitCenter = glm::vec3(car_dx, car_dy, car_dz);
+
+			// 카메라 위치 계산
+			float cameraDistance = c_dz; // `c_dz`를 카메라 거리로 사용
+			glm::vec3 cameraDirection = glm::vec3(0.0f, 0.0f, -1.0f);
+			glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
+
+			glm::mat4 cameraRotateMat = glm::rotate(glm::mat4(1.0f), glm::radians(c_rotateY), glm::vec3(0.0, 1.0, 0.0));
+			glm::vec3 cameraOffset = glm::vec3(cameraRotateMat * glm::vec4(0.0f, 1.9f, cameraDistance, 1.0f)); // Y축으로 살짝 올림
+			glm::vec3 cameraPos = orbitCenter + cameraOffset;
+
+			// 카메라 방향 업데이트 (살짝 아래로 보기)
+			glm::vec3 lookTarget = orbitCenter + glm::vec3(0.0f, -0.2f, 0.0f); // 아래로 약간 이동
+			cameraDirection = glm::normalize(lookTarget - cameraPos);
+
+			// 뷰 행렬 설정
+			glm::mat4 vTransform = glm::lookAt(cameraPos, lookTarget, cameraUp);
+			glUniformMatrix4fv(viewLoc, 1, GL_FALSE, &vTransform[0][0]);
+
+			// 투영변환
+			glm::mat4 pTransform = glm::mat4(1.0f);
+			if (!isProspect)
+			{
+				pTransform = glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f, -0.1f, 100.0f);
+			}
+			else
+			{
+				pTransform = glm::perspective(glm::radians(45.0f), (float)clientWidth / (float)clientHeight, 0.1f, 50.0f);
+			}
+			glUniformMatrix4fv(projLoc, 1, GL_FALSE, &pTransform[0][0]);
 		}
-		else
-		{
-			glEnable(GL_DEPTH_TEST);
-		}
-
-		// 차체 중심을 공전 중심으로 설정
-		glm::vec3 orbitCenter = glm::vec3(car_dx, car_dy, car_dz);
-
-		// 카메라 위치 계산
-		float cameraDistance = c_dz; // `c_dz`를 카메라 거리로 사용
-		glm::vec3 cameraDirection = glm::vec3(0.0f, 0.0f, -1.0f);
-		glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
-
-		glm::mat4 cameraRotateMat = glm::rotate(glm::mat4(1.0f), glm::radians(c_rotateY), glm::vec3(0.0, 1.0, 0.0));
-		glm::vec3 cameraOffset = glm::vec3(cameraRotateMat * glm::vec4(0.0f, 1.9f, cameraDistance, 1.0f)); // Y축으로 살짝 올림
-		glm::vec3 cameraPos = orbitCenter + cameraOffset;
-
-		// 카메라 방향 업데이트 (살짝 아래로 보기)
-		glm::vec3 lookTarget = orbitCenter + glm::vec3(0.0f, -0.2f, 0.0f); // 아래로 약간 이동
-		cameraDirection = glm::normalize(lookTarget - cameraPos);
-
-		// 뷰 행렬 설정
-		glm::mat4 vTransform = glm::lookAt(cameraPos, lookTarget, cameraUp);
-		glUniformMatrix4fv(viewLoc, 1, GL_FALSE, &vTransform[0][0]);
-
-		// 투영변환
-		glm::mat4 pTransform = glm::mat4(1.0f);
-		if (!isProspect)
-		{
-			pTransform = glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f, -0.1f, 100.0f);
-		}
-		else
-		{
-			pTransform = glm::perspective(glm::radians(45.0f), (float)clientWidth / (float)clientHeight, 0.1f, 50.0f);
-		}
-		glUniformMatrix4fv(projLoc, 1, GL_FALSE, &pTransform[0][0]);
 
 		// 바닥 그리기
 		drawGround(modelLoc);
@@ -663,6 +766,9 @@ void drawScene()
 
 		// 벽 그리기
 		drawWalls(modelLoc);
+
+		// 도착지점 그리기
+		drawFinishRect(modelLoc);
 	}
 
 	// 핸들 - 뷰포트 설정으로 그리기
@@ -708,17 +814,18 @@ GLvoid Keyboard(unsigned char key, int x, int y)
 		glutLeaveMainLoop(); // OpenGL 메인 루프 종료
 		break;
 	}
-	case 'w': // 전진 가속
+	case 'w': // 엑셀: 자동차 앞으로 이동
 		isAcceleratingForward = true;
-		isAcceleratingBackward = false; // 후진 가속 중지
+		isAcceleratingBackward = false;
 		break;
-	case 's': // 후진 가속
-		isAcceleratingBackward = true;
-		isAcceleratingForward = false; // 전진 가속 중지
-		break;
-	case 'b': // 브레이크
+	case 's':
+		// isAcceleratingForward = false;
+		// isAcceleratingBackward = true;
 		isBraking = true;
 		break;
+	//case 'b': 
+	//	isBraking = true;
+	//	break;
 		//은면제거
 	case 'h':
 	{
@@ -789,16 +896,18 @@ GLvoid Keyboard(unsigned char key, int x, int y)
 GLvoid KeyboardUp(unsigned char key, int x, int y) {
 	switch (key)
 	{
-	case 'w': // 전진 가속 해제
+	case 'w': // 액셀 해제
 		isAcceleratingForward = false;
 		break;
-	case 's': // 후진 가속 해제
-		isAcceleratingBackward = false;
-		break;
 
-	case 'b': // 브레이크 해제
+	case 's': // 액셀 해제
+		// isAcceleratingBackward = false;
 		isBraking = false;
 		break;
+
+	//case 'b': // 브레이크 해제
+	//	isBraking = false;
+	//	break;
 	}
 	glutPostRedisplay(); //--- refresh
 }
@@ -812,7 +921,7 @@ void MouseButton(int button, int state, int x, int y)
 			{
 				lastAngle = 0.0f;
 				is_mouse_on_handle = true;
-				std::cout << "x :" << x << "  y :" << y << std::endl;
+				//std::cout << "x :" << x << "  y :" << y << std::endl;
 			}
 			else
 			{
@@ -988,8 +1097,8 @@ void make_shaderProgram()
 void InitBuffer()
 {
 
-	glGenVertexArrays(5, vao);
-	glGenBuffers(10, vbo);
+	glGenVertexArrays(6, vao);
+	glGenBuffers(12, vbo);
 
 	// 땅
 	glBindVertexArray(vao[0]);
@@ -1048,6 +1157,18 @@ void InitBuffer()
 
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[9]);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(wheel_rect_color), wheel_rect_color, GL_STATIC_DRAW);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (void*)0);
+	glEnableVertexAttribArray(1);
+
+	// 도착지점 (주차 공간)
+	glBindVertexArray(vao[5]);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[10]);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(finish_rect), finish_rect, GL_STATIC_DRAW);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (void*)0);
+	glEnableVertexAttribArray(0);
+
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[11]);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(finish_rect_color), finish_rect_color, GL_DYNAMIC_DRAW); // 변경: GL_DYNAMIC_DRAW
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (void*)0);
 	glEnableVertexAttribArray(1);
 }
@@ -1224,17 +1345,17 @@ void initCar()
 	}
 
 	//바퀴 사각형
-	if (true)
+	if(true)
 	{
 		GLfloat vertices[8][3] = {
-				{-WHEEL_SIZE / 4,	-WHEEL_SIZE / 8,  -WHEEL_SIZE },		// Vertex 0
-				{ WHEEL_SIZE / 4,	-WHEEL_SIZE / 8,  -WHEEL_SIZE },		// Vertex 1
-				{ WHEEL_SIZE / 4,	 WHEEL_SIZE / 8, 	-WHEEL_SIZE },		// Vertex 2
-				{-WHEEL_SIZE / 4,	 WHEEL_SIZE / 8, 	-WHEEL_SIZE },		// Vertex 3
-				{-WHEEL_SIZE / 4,	-WHEEL_SIZE / 8,   WHEEL_SIZE },	// Vertex 4
-				{ WHEEL_SIZE / 4,	-WHEEL_SIZE / 8,   WHEEL_SIZE },	// Vertex 5
-				{ WHEEL_SIZE / 4,	 WHEEL_SIZE / 8, 	 WHEEL_SIZE },		// Vertex 6
-				{-WHEEL_SIZE / 4,	 WHEEL_SIZE / 8, 	 WHEEL_SIZE }		// Vertex 7
+				{-WHEEL_SIZE/4,	-WHEEL_SIZE/8,  -WHEEL_SIZE },		// Vertex 0
+				{ WHEEL_SIZE/4,	-WHEEL_SIZE/8,  -WHEEL_SIZE },		// Vertex 1
+				{ WHEEL_SIZE/4,	 WHEEL_SIZE/8, 	-WHEEL_SIZE },		// Vertex 2
+				{-WHEEL_SIZE/4,	 WHEEL_SIZE/8, 	-WHEEL_SIZE },		// Vertex 3
+				{-WHEEL_SIZE/4,	-WHEEL_SIZE/8,   WHEEL_SIZE },	// Vertex 4
+				{ WHEEL_SIZE/4,	-WHEEL_SIZE/8,   WHEEL_SIZE },	// Vertex 5
+				{ WHEEL_SIZE/4,	 WHEEL_SIZE/8, 	 WHEEL_SIZE },		// Vertex 6
+				{-WHEEL_SIZE/4,	 WHEEL_SIZE/8, 	 WHEEL_SIZE }		// Vertex 7
 		};
 		//큐브 데이터 초기화
 		GLfloat CubeFigure[1][TRI_COUNT * 3][3] = {
