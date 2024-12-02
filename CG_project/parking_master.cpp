@@ -114,6 +114,17 @@ void RenderBitmapString(float x, float y, void* font, const char* string)
 GLfloat wheel_rect[4][TRI_COUNT * 3][3];
 GLfloat wheel_rect_color[4][TRI_COUNT * 3][3];
 
+// 기어 상태를 나타내는 열거형
+enum GearState {
+	PARK,	    // P
+	REVERSE,    // R
+	NEUTRAL,	// N
+	DRIVE		// D
+};
+
+// 현재 기어 상태를 저장하는 변수
+GearState currentGear = DRIVE;
+
 // 장애물
 GLfloat obstacle[4][TRI_COUNT * 3][3];
 GLfloat obstacle_color[4][TRI_COUNT * 3][3];
@@ -277,9 +288,26 @@ glm::mat4 Gear_Stick()
 	glm::mat4 T = glm::mat4(1.0f);			//--- 이동 행렬 선언
 	glm::mat4 Rx = glm::mat4(1.0f);			//--- 회전 행렬 선언
 
+	// 기어 상태에 따라 y좌표 변경
+	float gearYOffset = 0.0f;
+	switch (currentGear) {
+	case PARK:
+		gearYOffset = 0.55f;
+		break;
+	case REVERSE:
+		gearYOffset = 0.1f;
+		break;
+	case NEUTRAL:
+		gearYOffset = -0.35f;
+		break;
+	case DRIVE:
+		gearYOffset = -0.75f;
+		break;
+	}
+
 	if (true)
 	{
-		T = glm::translate(T, glm::vec3(0.6, -0.1, 0.1));
+		T = glm::translate(T, glm::vec3(0.6, gearYOffset, 0.1));
 		Rx = glm::rotate(Rx, glm::radians(90.0f), glm::vec3(1.0, 0.0, 0.0));
 	}
 
@@ -533,17 +561,25 @@ void TimerFunction_UpdateMove(int value)
 	front_wheels_rotateY = (handle_rotateZ / 900.0f) * 30.0f;
 
 	// 속도 계산
-	if (isAcceleratingForward)
+	if (currentGear == PARK || currentGear == NEUTRAL)
 	{
-		car_speed += acceleration;
-		if (car_speed > MAX_SPEED)
-			car_speed = MAX_SPEED;
+		car_speed = 0.0f; // 정지
 	}
-	if (isAcceleratingBackward)
+
+	// 후진 처리
+	if (currentGear == REVERSE && isAcceleratingBackward)
 	{
 		car_speed -= acceleration;
 		if (car_speed < -MAX_SPEED)
 			car_speed = -MAX_SPEED;
+	}
+
+	// 전진 처리
+	if (currentGear == DRIVE && isAcceleratingForward)
+	{
+		car_speed += acceleration;
+		if (car_speed > MAX_SPEED)
+			car_speed = MAX_SPEED;
 	}
 	if (isBraking)
 	{
@@ -995,15 +1031,21 @@ GLvoid Keyboard(unsigned char key, int x, int y)
 {
 	switch (key)
 	{
-	case 'q':		// 프로그램 종료
-	{
-		std::cout << "--Quit--\n";
-		glutLeaveMainLoop(); // OpenGL 메인 루프 종료
+	case 'q': // 이전 기어
+		if (currentGear > PARK)
+			currentGear = static_cast<GearState>(currentGear - 1);
 		break;
-	}
-	case 'w': // 엑셀: 자동차 앞으로 이동
-		isAcceleratingForward = true;
-		isAcceleratingBackward = false;
+	case 'e': // 다음 기어
+		if (currentGear < DRIVE)
+			currentGear = static_cast<GearState>(currentGear + 1);
+		break;
+	case 'w': // 액셀
+		if (currentGear == DRIVE) {
+			isAcceleratingForward = true; // 전진
+		}
+		else if (currentGear == REVERSE) {
+			isAcceleratingBackward = true; // 후진
+		}
 		break;
 	case 's':
 		// isAcceleratingForward = false;
@@ -1085,8 +1127,8 @@ GLvoid KeyboardUp(unsigned char key, int x, int y) {
 	{
 	case 'w': // 액셀 해제
 		isAcceleratingForward = false;
+		isAcceleratingBackward = false;
 		break;
-
 	case 's': // 액셀 해제
 		// isAcceleratingBackward = false;
 		isBraking = false;
