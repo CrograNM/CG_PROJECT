@@ -67,6 +67,21 @@ GLfloat handle_rect_color[6][3] = {
 	{0.3f, 0.0f, 1.0f},
 };
 
+// 기어 초기화
+GLfloat gear_rect[6][3] = {
+	{-0.3f, 0, -1.0f}, {0.3f, 0, -1.0f}, {-0.3f, 0, 1.0f},
+	{-0.3f, 0, 1.0f}, {0.3f, 0, -1.0f}, {0.3f, 0, 1.0f}
+};
+GLfloat gear_rect_color[6][3] = {
+	{0.5f, 0.5f, 0.5f},
+	{0.5f, 0.5f, 0.5f},
+	{0.5f, 0.5f, 0.5f},
+				 
+	{0.5f, 0.5f, 0.5f},
+	{0.5f, 0.5f, 0.5f},
+	{0.5f, 0.5f, 0.5f},
+};
+
 // 바퀴 (육면체) 초기화
 #define WHEEL_SIZE CAR_SIZE / 4
 #define WHEEL_RECT_SIZE WHEEL_SIZE / 8
@@ -216,6 +231,22 @@ glm::mat4 Handle()
 
 	return Rz * T * Rx;
 }
+
+glm::mat4 Gear()
+{
+	glm::mat4 T = glm::mat4(1.0f);			//--- 이동 행렬 선언
+	glm::mat4 Rx = glm::mat4(1.0f);			//--- 회전 행렬 선언
+
+	if (true)
+	{
+		T = glm::translate(T, glm::vec3(0.5, -0.2, 0.1));
+		Rx = glm::rotate(Rx, glm::radians(90.0f), glm::vec3(1.0, 0.0, 0.0));
+	}
+
+	return T * Rx;
+}
+
+
 
 // 차체의 변환 - 이를 기준으로 헤드라이트, 바퀴 등의 위치가 정해진다.
 float car_dx = 0.0f, car_dy = WHEEL_SIZE, car_dz = 0.0f;
@@ -629,6 +660,14 @@ void draw_handle(int modelLoc, int num)
 	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(Handle()));
 	glDrawArrays(GL_TRIANGLES, 0, 6);
 }
+void draw_gear(int modelLoc, int num)
+{
+	glBindVertexArray(vao[6]); // 기어용 VAO 사용
+	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(Gear()));
+	glDrawArrays(GL_TRIANGLES, 0, 6); // 사각형 그리기
+}
+
+
 void draw_wheels(int modelLoc, int num)
 {
 	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(Wheel_on_000(num, 0)));
@@ -795,6 +834,28 @@ void drawScene()
 		// 핸들 그리기
 		draw_handle(modelLoc, 0);
 	}
+
+	if (true) // 기어 그리기
+	{
+		int miniMapWidth = clientWidth / 3;
+		int miniMapHeight = clientHeight / 3;
+		int miniMapX = clientWidth - miniMapWidth;
+		int miniMapY = clientHeight - miniMapHeight;
+		glViewport(miniMapX, miniMapY, miniMapWidth, miniMapHeight);
+
+		glm::mat4 topViewTransform = glm::lookAt(
+			glm::vec3(0.0f, 0.0f, 1.0f), // 카메라 위치
+			glm::vec3(0.0f, 0.0f, 0.0f), // 바라보는 위치
+			glm::vec3(0.0f, 1.0f, 0.0f)  // 업 벡터
+		);
+		glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(topViewTransform));
+
+		glm::mat4 orthoTransform = glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f, -0.1f, 1.5f);
+		glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(orthoTransform));
+
+		draw_gear(modelLoc, 0);
+	}
+
 
 	glutSwapBuffers();
 }
@@ -1097,8 +1158,8 @@ void make_shaderProgram()
 void InitBuffer()
 {
 
-	glGenVertexArrays(6, vao);
-	glGenBuffers(12, vbo);
+	glGenVertexArrays(7, vao);
+	glGenBuffers(14, vbo);
 
 	// 땅
 	glBindVertexArray(vao[0]);
@@ -1171,6 +1232,19 @@ void InitBuffer()
 	glBufferData(GL_ARRAY_BUFFER, sizeof(finish_rect_color), finish_rect_color, GL_DYNAMIC_DRAW); // 변경: GL_DYNAMIC_DRAW
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (void*)0);
 	glEnableVertexAttribArray(1);
+
+	// 기어 데이터 초기화
+	glBindVertexArray(vao[6]);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[12]);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(gear_rect), gear_rect, GL_STATIC_DRAW);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (void*)0);
+	glEnableVertexAttribArray(0);
+
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[13]);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(gear_rect_color), gear_rect_color, GL_STATIC_DRAW);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (void*)0);
+	glEnableVertexAttribArray(1);
+
 }
 
 // 자동차 초기화
