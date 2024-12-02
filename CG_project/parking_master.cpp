@@ -82,6 +82,18 @@ GLfloat gear_rect_color[6][3] = {
 	{0.5f, 0.5f, 0.5f},
 };
 
+// 텍스트 렌더링 함수
+void RenderBitmapString(float x, float y, void* font, const char* string)
+{
+	glRasterPos2f(x, y);
+	while (*string)
+	{
+		glutBitmapCharacter(font, *string);
+		string++;
+	}
+}
+
+
 // 바퀴 (육면체) 초기화
 #define WHEEL_SIZE CAR_SIZE / 4
 #define WHEEL_RECT_SIZE WHEEL_SIZE / 8
@@ -854,6 +866,62 @@ void drawScene()
 		glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(orthoTransform));
 
 		draw_gear(modelLoc, 0);
+
+		// 텍스트 그리기
+		// 텍스트 렌더링을 위해 쉐이더 프로그램 비활성화
+		glUseProgram(0);
+		glMatrixMode(GL_PROJECTION);
+		glPushMatrix();
+		glLoadIdentity();
+		gluOrtho2D(0, miniMapWidth, 0, miniMapHeight);
+
+		glMatrixMode(GL_MODELVIEW);
+		glPushMatrix();
+		glLoadIdentity();
+
+		// 텍스트 색상 설정
+		glColor3f(1.0f, 1.0f, 1.0f); // 흰색
+
+		// 텍스트 위치 계산 (픽셀 단위)
+		float textScale = 1.0f; // 텍스트 크기 조절
+		float p_x = miniMapWidth * 0.65f;
+		float r_x = miniMapWidth * 0.65f;
+		float n_x = miniMapWidth * 0.65f;
+		float d_x = miniMapWidth * 0.65f;
+		float y = miniMapHeight * 0.5f;
+
+		// OpenGL의 기본 행렬을 사용하여 텍스트를 그립니다.
+		// 글씨 하나씩 위치를 조절하며 그립니다.
+		glPushMatrix();
+		glTranslatef(p_x, y + 50, 0.0f);
+		glScalef(textScale, textScale, textScale);
+		RenderBitmapString(0, 0, GLUT_BITMAP_HELVETICA_18, "P");
+		glPopMatrix();
+
+		glPushMatrix();
+		glTranslatef(r_x, y + 5, 0.0f);
+		glScalef(textScale, textScale, textScale);
+		RenderBitmapString(0, 0, GLUT_BITMAP_HELVETICA_18, "R");
+		glPopMatrix();
+
+		glPushMatrix();
+		glTranslatef(n_x, y - 40, 0.0f);
+		glScalef(textScale, textScale, textScale);
+		RenderBitmapString(0, 0, GLUT_BITMAP_HELVETICA_18, "N");
+		glPopMatrix();
+
+		glPushMatrix();
+		glTranslatef(d_x, y - 80, 0.0f);
+		glScalef(textScale, textScale, textScale);
+		RenderBitmapString(0, 0, GLUT_BITMAP_HELVETICA_18, "D");
+		glPopMatrix();
+
+		glPopMatrix(); // 모델뷰
+		glMatrixMode(GL_PROJECTION);
+		glPopMatrix();
+
+		glMatrixMode(GL_MODELVIEW);
+		glUseProgram(shaderProgramID); // 쉐이더 프로그램 재활성화
 	}
 
 
