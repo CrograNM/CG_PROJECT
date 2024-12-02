@@ -440,6 +440,24 @@ glm::mat4 Wheel_on_000(int num, int type) //num은 4개 바퀴의 번호, type�
 	return Wheels(num) * Ry2 * Ry * T;
 }
 
+glm::mat4 RearCameraView() {
+	// 자동차의 위치와 방향을 기준으로 후방 카메라 뷰 설정
+	glm::vec3 carPosition(car_dx, car_dy, car_dz); // 자동차 위치
+	float radians = glm::radians(car_rotateY);     // 자동차 회전 각도
+	glm::vec3 carDirection(-sin(radians), 0.0f, -cos(radians)); // 자동차 뒤쪽 방향
+
+	// 카메라를 자동차 바로 뒤쪽에 배치
+	glm::vec3 cameraPosition = carPosition + carDirection * 0.45f + glm::vec3(0.0f, 0.15f, 0.0f);
+
+
+	glm::vec3 lookAtTarget = carPosition + carDirection * 1.5f;
+	glm::vec3 upVector(0.0f, 1.0f, 0.0f); // 월드 업 벡터
+
+	return glm::lookAt(cameraPosition, lookAtTarget, upVector);
+}
+
+
+
 // 자동차 이동-회전 애니메이션 관련
 float car_speed = 0.0f;						// 현재 자동차 속도
 bool isAcceleratingForward = false;
@@ -1017,7 +1035,29 @@ void drawScene()
 		glUseProgram(shaderProgramID); // 쉐이더 프로그램 재활성화
 	}
 
-	
+	if (currentGear == REVERSE) {
+		// 후방 카메라 뷰포트 설정
+		int rearViewWidth = clientWidth / 3;
+		int rearViewHeight = clientHeight / 3;
+		int rearViewX = (clientWidth - rearViewWidth) / 2; // 화면 중앙 상단
+		int rearViewY = clientHeight - rearViewHeight;
+
+		glViewport(rearViewX, rearViewY, rearViewWidth, rearViewHeight);
+
+		// 후방 카메라 뷰 행렬 설정
+		glm::mat4 rearViewTransform = RearCameraView();
+		glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(rearViewTransform));
+
+		// 동일한 투영 행렬 사용
+		glm::mat4 rearProjTransform = glm::perspective(glm::radians(45.0f), (float)rearViewWidth / (float)rearViewHeight, 0.1f, 50.0f);
+		glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(rearProjTransform));
+
+		// 자동차, 바닥, 벽 등 모든 객체를 다시 그리기
+		drawGround(modelLoc);
+		drawCar(modelLoc, 0);
+		drawWalls(modelLoc);
+		drawFinishRect(modelLoc);
+	}
 
 	glutSwapBuffers();
 }
@@ -1034,10 +1074,12 @@ GLvoid Keyboard(unsigned char key, int x, int y)
 	case 'q': // 이전 기어
 		if (currentGear > PARK)
 			currentGear = static_cast<GearState>(currentGear - 1);
+		glutPostRedisplay();
 		break;
 	case 'e': // 다음 기어
 		if (currentGear < DRIVE)
 			currentGear = static_cast<GearState>(currentGear + 1);
+		glutPostRedisplay();
 		break;
 	case 'w': // 액셀
 		if (currentGear == DRIVE) {
