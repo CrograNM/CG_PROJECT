@@ -913,6 +913,36 @@ void drawScene()
 		drawFinishRect(modelLoc);
 	}
 
+	// 후방 카메라 뷰
+	if (currentGear == REVERSE) {
+		// 후방 카메라 뷰포트 설정
+		//int rearViewWidth = clientWidth / 3;
+		//int rearViewHeight = clientHeight / 3;
+		//int rearViewX = (clientWidth - rearViewWidth) / 2; // 화면 중앙 상단
+		//int rearViewY = clientHeight - rearViewHeight;
+
+		int rearViewWidth = clientWidth;
+		int rearViewHeight = clientHeight;
+		int rearViewX = 0;// 화면 중앙 상단
+		int rearViewY = 0;
+
+		glViewport(rearViewX, rearViewY, rearViewWidth, rearViewHeight);
+
+		// 후방 카메라 뷰 행렬 설정
+		glm::mat4 rearViewTransform = RearCameraView();
+		glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(rearViewTransform));
+
+		// 동일한 투영 행렬 사용
+		glm::mat4 rearProjTransform = glm::perspective(glm::radians(45.0f), (float)rearViewWidth / (float)rearViewHeight, 0.1f, 50.0f);
+		glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(rearProjTransform));
+
+		// 자동차, 바닥, 벽 등 모든 객체를 다시 그리기
+		drawGround(modelLoc);
+		drawCar(modelLoc, 0);
+		drawWalls(modelLoc);
+		drawFinishRect(modelLoc);
+	}
+	glDisable(GL_DEPTH_TEST);
 	// 핸들 - 뷰포트 설정으로 그리기
 	if (true)
 	{
@@ -937,29 +967,7 @@ void drawScene()
 		// 핸들 그리기
 		draw_handle(modelLoc, 0);
 	}
-
-	// 기어 스틱 그리기
-	if (true)
-	{
-		int miniMapWidth = clientWidth / 3;
-		int miniMapHeight = clientHeight / 3;
-		int miniMapX = clientWidth - miniMapWidth;
-		int miniMapY = clientHeight - miniMapHeight;
-		glViewport(miniMapX, miniMapY, miniMapWidth, miniMapHeight);
-
-		glm::mat4 topViewTransform = glm::lookAt(
-			glm::vec3(0.0f, 0.0f, 1.0f), // 카메라 위치
-			glm::vec3(0.0f, 0.0f, 0.0f), // 바라보는 위치
-			glm::vec3(0.0f, 1.0f, 0.0f)  // 업 벡터
-		);
-		glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(topViewTransform));
-
-		glm::mat4 orthoTransform = glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f, -0.1f, 1.5f);
-		glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(orthoTransform));
-
-		draw_gear_stick(modelLoc, 0);
-	}
-
+	
 	// 기어 그리기
 	if (true)
 	{
@@ -1037,36 +1045,29 @@ void drawScene()
 		glMatrixMode(GL_MODELVIEW);
 		glUseProgram(shaderProgramID); // 쉐이더 프로그램 재활성화
 	}
+	// 기어 스틱 그리기
+	if (true)
+	{
+		int miniMapWidth = clientWidth / 3;
+		int miniMapHeight = clientHeight / 3;
+		int miniMapX = clientWidth - miniMapWidth;
+		int miniMapY = clientHeight - miniMapHeight;
+		glViewport(miniMapX, miniMapY, miniMapWidth, miniMapHeight);
 
-	// 후방 카메라 뷰
-	if (currentGear == REVERSE) {
-		// 후방 카메라 뷰포트 설정
-		//int rearViewWidth = clientWidth / 3;
-		//int rearViewHeight = clientHeight / 3;
-		//int rearViewX = (clientWidth - rearViewWidth) / 2; // 화면 중앙 상단
-		//int rearViewY = clientHeight - rearViewHeight;
+		glm::mat4 topViewTransform = glm::lookAt(
+			glm::vec3(0.0f, 0.0f, 1.0f), // 카메라 위치
+			glm::vec3(0.0f, 0.0f, 0.0f), // 바라보는 위치
+			glm::vec3(0.0f, 1.0f, 0.0f)  // 업 벡터
+		);
+		glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(topViewTransform));
 
-		int rearViewWidth = clientWidth;
-		int rearViewHeight = clientHeight;
-		int rearViewX = 0;// 화면 중앙 상단
-		int rearViewY = 0;
+		glm::mat4 orthoTransform = glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f, -0.1f, 1.5f);
+		glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(orthoTransform));
 
-		glViewport(rearViewX, rearViewY, rearViewWidth, rearViewHeight);
-
-		// 후방 카메라 뷰 행렬 설정
-		glm::mat4 rearViewTransform = RearCameraView();
-		glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(rearViewTransform));
-
-		// 동일한 투영 행렬 사용
-		glm::mat4 rearProjTransform = glm::perspective(glm::radians(45.0f), (float)rearViewWidth / (float)rearViewHeight, 0.1f, 50.0f);
-		glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(rearProjTransform));
-
-		// 자동차, 바닥, 벽 등 모든 객체를 다시 그리기
-		drawGround(modelLoc);
-		drawCar(modelLoc, 0);
-		drawWalls(modelLoc);
-		drawFinishRect(modelLoc);
+		draw_gear_stick(modelLoc, 0);
 	}
+	glEnable(GL_DEPTH_TEST);
+	
 
 	glutSwapBuffers();
 }
