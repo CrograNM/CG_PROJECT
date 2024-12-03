@@ -135,14 +135,26 @@ GLfloat obstacle_color[4][TRI_COUNT * 3][3];
 const float fheight = 0.75f;
 const float fy = 0.0001f;
 const float fy2 = 0.00015f;
+// 도착 지점 위치 설정
+const float FINISH_OFFSET_X = 3.0f; // X축 오프셋
+const float FINISH_OFFSET_Z = 0.0f; // Z축 오프셋
+
 GLfloat finish_rect[2][6][3] = {
 	{	//바깥쪽 (z길이가 x길이의 두배로 설정)
-		{-FINISH_SIZE/2, fy, -FINISH_SIZE * fheight}, {FINISH_SIZE/2, fy, -FINISH_SIZE * fheight}, {-FINISH_SIZE/2, fy, FINISH_SIZE * fheight},
-		{-FINISH_SIZE/2, fy, FINISH_SIZE * fheight},  {FINISH_SIZE/2, fy, -FINISH_SIZE * fheight}, { FINISH_SIZE/2, fy, FINISH_SIZE * fheight}
+		{-FINISH_SIZE/2 + FINISH_OFFSET_X, fy, -FINISH_SIZE * fheight + FINISH_OFFSET_Z},
+		{ FINISH_SIZE/2 + FINISH_OFFSET_X, fy, -FINISH_SIZE * fheight + FINISH_OFFSET_Z},
+		{-FINISH_SIZE/2 + FINISH_OFFSET_X, fy,  FINISH_SIZE * fheight + FINISH_OFFSET_Z},
+		{-FINISH_SIZE/2 + FINISH_OFFSET_X, fy,  FINISH_SIZE * fheight + FINISH_OFFSET_Z}, 
+		{ FINISH_SIZE/2 + FINISH_OFFSET_X, fy, -FINISH_SIZE * fheight + FINISH_OFFSET_Z},
+		{ FINISH_SIZE/2 + FINISH_OFFSET_X, fy,  FINISH_SIZE * fheight + FINISH_OFFSET_Z}
 	},
 	{	//안쪽
-		{-FINISH_SIZE_2 / 2, fy2, -FINISH_SIZE_2 * fheight}, {FINISH_SIZE_2 / 2, fy2, -FINISH_SIZE_2 * fheight}, {-FINISH_SIZE_2 / 2, fy2, FINISH_SIZE_2 * fheight},
-		{-FINISH_SIZE_2 / 2, fy2, FINISH_SIZE_2 * fheight},  {FINISH_SIZE_2 / 2, fy2, -FINISH_SIZE_2 * fheight}, { FINISH_SIZE_2 / 2, fy2, FINISH_SIZE_2 * fheight}
+		{-FINISH_SIZE_2 / 2 + FINISH_OFFSET_X, fy2, -FINISH_SIZE_2 * fheight + FINISH_OFFSET_Z},
+		{ FINISH_SIZE_2 / 2 + FINISH_OFFSET_X, fy2, -FINISH_SIZE_2 * fheight + FINISH_OFFSET_Z},
+		{-FINISH_SIZE_2 / 2 + FINISH_OFFSET_X, fy2,  FINISH_SIZE_2 * fheight + FINISH_OFFSET_Z},
+		{-FINISH_SIZE_2 / 2 + FINISH_OFFSET_X, fy2,  FINISH_SIZE_2 * fheight + FINISH_OFFSET_Z},
+		{ FINISH_SIZE_2 / 2 + FINISH_OFFSET_X, fy2, -FINISH_SIZE_2 * fheight + FINISH_OFFSET_Z},
+		{ FINISH_SIZE_2 / 2 + FINISH_OFFSET_X, fy2,  FINISH_SIZE_2 * fheight + FINISH_OFFSET_Z}
 	}
 };
 GLfloat finish_rect_color[2][6][3] = {
@@ -161,10 +173,10 @@ bool isParked = false;
 void UpdateParkingStatus();
 
 // 주차 공간의 경계 정의
-const float PARKING_X_MIN = -FINISH_SIZE / 2;
-const float PARKING_X_MAX = FINISH_SIZE / 2;
-const float PARKING_Z_MIN = -FINISH_SIZE * fheight;
-const float PARKING_Z_MAX = FINISH_SIZE * fheight;
+const float PARKING_X_MIN = -FINISH_SIZE / 2 + FINISH_OFFSET_X;
+const float PARKING_X_MAX = FINISH_SIZE / 2 + FINISH_OFFSET_X;
+const float PARKING_Z_MIN = -FINISH_SIZE * fheight + FINISH_OFFSET_Z;
+const float PARKING_Z_MAX = FINISH_SIZE * fheight + FINISH_OFFSET_Z;
 
 // 땅바닥 초기화
 #define GROUND_SIZE 5.0f
@@ -317,7 +329,7 @@ glm::mat4 Gear_Stick()
 
 
 // 차체의 변환 - 이를 기준으로 헤드라이트, 바퀴 등의 위치가 정해진다.
-float car_dx = 0.0f, car_dy = WHEEL_SIZE, car_dz = 0.0f;
+float car_dx = 0.0f, car_dy = WHEEL_SIZE, car_dz = -3.0f;
 float car_rotateY = 0.0f;
 glm::mat4 Car_Body()
 {
@@ -663,7 +675,7 @@ void TimerFunction_UpdateMove(int value)
 		if (!isColliding)
 		{
 			// 회전 업데이트 (바퀴 회전에 따라 차량 회전)
-			car_rotateY += front_wheels_rotateY * 0.1f;
+			car_rotateY += front_wheels_rotateY * car_speed * 20;
 			car_dx = new_dx;
 			car_dz = new_dz;
 			wheel_rect_rotateX += car_speed * 100.0f;
@@ -833,6 +845,7 @@ void drawGround(int modelLoc)
 	glBindVertexArray(vao[0]);
 	glDrawArrays(GL_TRIANGLES, 0, 6);
 }
+
 void drawFinishRect(int modelLoc)
 {
 	// 바닥
@@ -1068,7 +1081,6 @@ void drawScene()
 	}
 	glEnable(GL_DEPTH_TEST);
 	
-
 	glutSwapBuffers();
 }
 
