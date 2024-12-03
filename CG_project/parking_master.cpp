@@ -170,13 +170,31 @@ GLfloat finish_rect_color[2][6][3] = {
 
 // 주차 상태를 나타내는 변수
 bool isParked = false;
-void UpdateParkingStatus();
+void UpdateParkingStatus(const std::vector<std::pair<float, float>>& carCorners);
 
 // 주차 공간의 경계 정의
 const float PARKING_X_MIN = -FINISH_SIZE / 2 + FINISH_OFFSET_X;
 const float PARKING_X_MAX = FINISH_SIZE / 2 + FINISH_OFFSET_X;
 const float PARKING_Z_MIN = -FINISH_SIZE * fheight + FINISH_OFFSET_Z;
 const float PARKING_Z_MAX = FINISH_SIZE * fheight + FINISH_OFFSET_Z;
+
+// 장식용 주차공간의 위치를 저장하는 벡터
+std::vector<glm::vec3> notParkingPositions = {
+	glm::vec3(0.0f, fy, 1.8f),
+	glm::vec3(0.0f, fy, -1.8f)
+};
+// 장식용 주차공간 컬러 데이터
+GLfloat not_finish_rect_color[2][6][3] = {
+	{	//바깥쪽 (흰색)
+		{1.0f, 1.0f, 1.0f},		{1.0f, 1.0f, 1.0f},		{1.0f, 1.0f, 1.0f},
+		{1.0f, 1.0f, 1.0f},		{1.0f, 1.0f, 1.0f},		{1.0f, 1.0f, 1.0f}
+	},
+	{	//안쪽 (회색)
+		{0.8f, 0.8f, 0.8f},		{0.8f, 0.8f, 0.8f},		{0.8f, 0.8f, 0.8f},
+		{0.8f, 0.8f, 0.8f},		{0.8f, 0.8f, 0.8f},		{0.8f, 0.8f, 0.8f}
+	}
+};
+
 
 // 땅바닥 초기화
 #define GROUND_SIZE 5.0f
@@ -853,6 +871,20 @@ void drawFinishRect(int modelLoc)
 	glBindVertexArray(vao[5]);
 	glDrawArrays(GL_TRIANGLES, 0, 12);
 }
+
+void drawNotParkingSpaces(int modelLoc)
+{
+	glBindVertexArray(vao[8]); // 장식용 주차공간의 VAO 사용
+	for (const auto& pos : notParkingPositions) {
+		// 위치 변환 행렬 적용
+		glm::mat4 model = glm::translate(glm::mat4(1.0f), pos);
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+
+		// 주차공간 그리기
+		glDrawArrays(GL_TRIANGLES, 0, 12);
+	}
+}
+
 void drawScene()
 {
 	glViewport(0, 0, clientWidth, clientHeight);
@@ -924,6 +956,9 @@ void drawScene()
 
 		// 도착지점 그리기
 		drawFinishRect(modelLoc);
+
+		// 장식용 주차공간 그리기
+		drawNotParkingSpaces(modelLoc);
 	}
 
 	// 후방 카메라 뷰
@@ -954,6 +989,7 @@ void drawScene()
 		drawCar(modelLoc, 0);
 		drawWalls(modelLoc);
 		drawFinishRect(modelLoc);
+		drawNotParkingSpaces(modelLoc);
 	}
 	glDisable(GL_DEPTH_TEST);
 	// 핸들 - 뷰포트 설정으로 그리기
@@ -1390,8 +1426,8 @@ void make_shaderProgram()
 void InitBuffer()
 {
 
-	glGenVertexArrays(8, vao);
-	glGenBuffers(16, vbo);
+	glGenVertexArrays(9, vao);
+	glGenBuffers(19, vbo);
 
 	// 땅
 	glBindVertexArray(vao[0]);
@@ -1486,6 +1522,18 @@ void InitBuffer()
 
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[15]);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(gear_stick_rect_color), gear_stick_rect_color, GL_STATIC_DRAW);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (void*)0);
+	glEnableVertexAttribArray(1);
+
+	// InitBuffer 함수에서 장식용 주차공간 추가
+	glBindVertexArray(vao[8]);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[16]); // 장식용 주차공간 정점 데이터
+	glBufferData(GL_ARRAY_BUFFER, sizeof(finish_rect), finish_rect, GL_STATIC_DRAW);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (void*)0);
+	glEnableVertexAttribArray(0);
+
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[17]); // 장식용 주차공간 색상 데이터
+	glBufferData(GL_ARRAY_BUFFER, sizeof(not_finish_rect_color), not_finish_rect_color, GL_STATIC_DRAW);
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (void*)0);
 	glEnableVertexAttribArray(1);
 }
