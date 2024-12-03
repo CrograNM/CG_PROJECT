@@ -50,6 +50,11 @@ void initCar();
 GLfloat Block[4][TRI_COUNT * 3][3];
 GLfloat	Block_Color[4][TRI_COUNT * 3][3];
 
+void initObstacleCar();
+GLfloat obstacle_car[TRI_COUNT * 3][3];
+GLfloat obstacle_car_color[TRI_COUNT * 3][3];
+
+
 // 핸들 초기화
 #define HANDLE_SIZE 0.7f
 #define HAND_RECT_SIZE HANDLE_SIZE / 4
@@ -126,6 +131,9 @@ enum GearState {
 GearState currentGear = DRIVE;
 
 // 장애물
+#define OBSTACEL_WIDTH CAR_SIZE * 0.7
+#define OBSTACEL_HEIGHT CAR_SIZE * 1.1
+
 GLfloat obstacle[4][TRI_COUNT * 3][3];
 GLfloat obstacle_color[4][TRI_COUNT * 3][3];
 
@@ -179,9 +187,13 @@ const float PARKING_Z_MIN = -FINISH_SIZE * fheight + FINISH_OFFSET_Z;
 const float PARKING_Z_MAX = FINISH_SIZE * fheight + FINISH_OFFSET_Z;
 
 // 장식용 주차공간의 위치를 저장하는 벡터
+float not_park_x1 = 0.0f;
+float not_park_x2 = 0.0f;
+float not_park_z1 = 1.55f;
+float not_park_z2 = -1.55f;
 std::vector<glm::vec3> notParkingPositions = {
-	glm::vec3(0.0f, fy, 1.8f),
-	glm::vec3(0.0f, fy, -1.8f)
+	glm::vec3(not_park_x1, fy, not_park_z1),
+	glm::vec3(not_park_x2, fy, not_park_z2)
 };
 // 장식용 주차공간 컬러 데이터
 GLfloat not_finish_rect_color[2][6][3] = {
@@ -245,7 +257,7 @@ GLint width, height;
 GLchar* vertexSource, * fragmentSource;		
 GLuint vertexShader, fragmentShader;		
 GLuint shaderProgramID;						
-GLuint vao[10], vbo[20];						
+GLuint vao[20], vbo[40];						
 
 // 필수 함수 정의
 GLvoid drawScene(GLvoid);
@@ -298,7 +310,6 @@ glm::mat4 Handle()
 
 	return Rz * T * Rx;
 }
-
 glm::mat4 Gear()
 {
 	glm::mat4 T = glm::mat4(1.0f);			//--- 이동 행렬 선언
@@ -312,7 +323,6 @@ glm::mat4 Gear()
 
 	return T * Rx;
 }
-
 glm::mat4 Gear_Stick()
 {
 	glm::mat4 T = glm::mat4(1.0f);			//--- 이동 행렬 선언
@@ -343,8 +353,6 @@ glm::mat4 Gear_Stick()
 
 	return T * Rx;
 }
-
-
 
 // 차체의 변환 - 이를 기준으로 헤드라이트, 바퀴 등의 위치가 정해진다.
 float car_dx = 0.0f, car_dy = WHEEL_SIZE, car_dz = -3.0f;
@@ -486,7 +494,16 @@ glm::mat4 RearCameraView() {
 	return glm::lookAt(cameraPosition, lookAtTarget, upVector);
 }
 
-
+glm::mat4 ObstacleCar(int index) {
+	glm::mat4 T = glm::mat4(1.0f);
+	glm::vec3 positions[] = {
+		glm::vec3(FINISH_OFFSET_X + not_park_x1, 0.0f, FINISH_OFFSET_Z + not_park_z1),
+		glm::vec3(FINISH_OFFSET_X + not_park_x2, 0.0f, FINISH_OFFSET_Z + not_park_z2)
+	};
+	
+	T = glm::translate(T, positions[index]);
+	return T;
+}
 
 // 자동차 이동-회전 애니메이션 관련
 float car_speed = 0.0f;						// 현재 자동차 속도
@@ -693,7 +710,7 @@ void TimerFunction_UpdateMove(int value)
 		if (!isColliding)
 		{
 			// 회전 업데이트 (바퀴 회전에 따라 차량 회전)
-			car_rotateY += front_wheels_rotateY * car_speed * 20;
+			car_rotateY += front_wheels_rotateY * 0.1f;
 			car_dx = new_dx;
 			car_dz = new_dz;
 			wheel_rect_rotateX += car_speed * 100.0f;
@@ -753,12 +770,14 @@ int main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정
 
 	glEnable(GL_DEPTH_TEST);
 	initCar();
+	initObstacleCar();
 	// 자동체 액셀 브레이크 감지 - 이동 애니메이션
 	glutTimerFunc(TIMER_VELOCITY, TimerFunction_UpdateMove, 1);
 
 	//--- 세이더 읽어와서 세이더 프로그램 만들기
 	make_shaderProgram();
 	InitBuffer();
+	
 
 	glutDisplayFunc(drawScene);					//--- 출력 콜백함수의 지정
 	glutReshapeFunc(Reshape);					//--- 다시 그리기 콜백함수 지정
@@ -784,22 +803,18 @@ void draw_handle(int modelLoc, int num)
 	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(Handle()));
 	glDrawArrays(GL_TRIANGLES, 0, 6);
 }
-
 void draw_gear(int modelLoc, int num)
 {
 	glBindVertexArray(vao[6]); // 기어용 VAO 사용
 	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(Gear()));
 	glDrawArrays(GL_TRIANGLES, 0, 6); // 사각형 그리기
 }
-
 void draw_gear_stick(int modelLoc, int num)
 {
 	glBindVertexArray(vao[7]);
 	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(Gear_Stick()));
 	glDrawArrays(GL_TRIANGLES, 0, 6); // 사각형 그리기
 }
-
-
 void draw_wheels(int modelLoc, int num)
 {
 	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(Wheel_on_000(num, 0)));
@@ -885,6 +900,15 @@ void drawNotParkingSpaces(int modelLoc)
 	}
 }
 
+void drawObstacleCars(int modelLoc)
+{
+	glBindVertexArray(vao[9]);
+	for (int i = 0; i < 2; ++i) {  // Draw two obstacle cars
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(ObstacleCar(i)));
+		glDrawArrays(GL_TRIANGLES, 0, TRI_COUNT * 3);
+	}
+}
+
 void drawScene()
 {
 	glViewport(0, 0, clientWidth, clientHeight);
@@ -951,6 +975,9 @@ void drawScene()
 		// 모델 그리기
 		drawCar(modelLoc, 0);
 
+		// 장애물 차 그리기
+		drawObstacleCars(modelLoc);
+
 		// 벽 그리기
 		drawWalls(modelLoc);
 
@@ -987,6 +1014,7 @@ void drawScene()
 		// 자동차, 바닥, 벽 등 모든 객체를 다시 그리기
 		drawGround(modelLoc);
 		drawCar(modelLoc, 0);
+		drawObstacleCars(modelLoc);
 		drawWalls(modelLoc);
 		drawFinishRect(modelLoc);
 		drawNotParkingSpaces(modelLoc);
@@ -1426,8 +1454,8 @@ void make_shaderProgram()
 void InitBuffer()
 {
 
-	glGenVertexArrays(9, vao);
-	glGenBuffers(19, vbo);
+	glGenVertexArrays(10, vao);
+	glGenBuffers(20, vbo);
 
 	// 땅
 	glBindVertexArray(vao[0]);
@@ -1525,17 +1553,30 @@ void InitBuffer()
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (void*)0);
 	glEnableVertexAttribArray(1);
 
-	// InitBuffer 함수에서 장식용 주차공간 추가
+	//장식용 주차공간
 	glBindVertexArray(vao[8]);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo[16]); // 장식용 주차공간 정점 데이터
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[16]);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(finish_rect), finish_rect, GL_STATIC_DRAW);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (void*)0);
 	glEnableVertexAttribArray(0);
 
-	glBindBuffer(GL_ARRAY_BUFFER, vbo[17]); // 장식용 주차공간 색상 데이터
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[17]);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(not_finish_rect_color), not_finish_rect_color, GL_STATIC_DRAW);
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (void*)0);
 	glEnableVertexAttribArray(1);
+
+	// 장애물 차
+	glBindVertexArray(vao[9]);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[18]);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(obstacle_car), obstacle_car, GL_STATIC_DRAW);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (void*)0);
+	glEnableVertexAttribArray(0);
+
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[19]);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(obstacle_car_color), obstacle_car_color, GL_STATIC_DRAW);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (void*)0);
+	glEnableVertexAttribArray(1);
+
 }
 
 // 자동차 초기화
@@ -1763,6 +1804,62 @@ void initCar()
 				wheel_rect_color[i][j][1] = 0.0f;
 				wheel_rect_color[i][j][2] = 1.0f;
 			}
+		}
+	}
+}
+
+
+void initObstacleCar() {
+	if (true)
+	{
+		GLfloat vertices[8][3] = {
+			{-OBSTACEL_WIDTH,	0.0f,			-OBSTACEL_HEIGHT },	// Vertex 0
+			{ OBSTACEL_WIDTH,	0.0f,			-OBSTACEL_HEIGHT },	// Vertex 1
+			{ OBSTACEL_WIDTH,	CAR_SIZE,		-OBSTACEL_HEIGHT },   // Vertex 2
+			{-OBSTACEL_WIDTH,	CAR_SIZE,		-OBSTACEL_HEIGHT },  // Vertex 3
+			{-OBSTACEL_WIDTH,	0.0f,			 OBSTACEL_HEIGHT },  // Vertex 4
+			{ OBSTACEL_WIDTH,	0.0f,			 OBSTACEL_HEIGHT },  // Vertex 5
+			{ OBSTACEL_WIDTH,	CAR_SIZE,		 OBSTACEL_HEIGHT },  // Vertex 6
+			{-OBSTACEL_WIDTH,	CAR_SIZE,		 OBSTACEL_HEIGHT }   // Vertex 7
+		};
+		//큐브 데이터 초기화
+		GLfloat CubeFigure[1][TRI_COUNT * 3][3] = {
+			{
+				// Front face - 2tri	012 023 -02
+				{vertices[0][0], vertices[0][1], vertices[0][2]}, {vertices[1][0], vertices[1][1], vertices[1][2]}, {vertices[2][0], vertices[2][1], vertices[2][2]},
+				{vertices[0][0], vertices[0][1], vertices[0][2]}, {vertices[2][0], vertices[2][1], vertices[2][2]}, {vertices[3][0], vertices[3][1], vertices[3][2]},
+
+				// Back face - 2tri		456 467 -46
+				{vertices[4][0], vertices[4][1], vertices[4][2]}, {vertices[5][0], vertices[5][1], vertices[5][2]}, {vertices[6][0], vertices[6][1], vertices[6][2]},
+				{vertices[4][0], vertices[4][1], vertices[4][2]}, {vertices[6][0], vertices[6][1], vertices[6][2]}, {vertices[7][0], vertices[7][1], vertices[7][2]},
+
+				// Left face - 2tri		047 073 -07
+				{vertices[0][0], vertices[0][1], vertices[0][2]}, {vertices[4][0], vertices[4][1], vertices[4][2]}, {vertices[7][0], vertices[7][1], vertices[7][2]},
+				{vertices[0][0], vertices[0][1], vertices[0][2]}, {vertices[7][0], vertices[7][1], vertices[7][2]}, {vertices[3][0], vertices[3][1], vertices[3][2]},
+
+				// Right face - 2tri	156 162 -16
+				{vertices[1][0], vertices[1][1], vertices[1][2]}, {vertices[5][0], vertices[5][1], vertices[5][2]}, {vertices[6][0], vertices[6][1], vertices[6][2]},
+				{vertices[1][0], vertices[1][1], vertices[1][2]}, {vertices[6][0], vertices[6][1], vertices[6][2]}, {vertices[2][0], vertices[2][1], vertices[2][2]},
+
+				// Top face - 2tri		326 367 -36
+				{vertices[3][0], vertices[3][1], vertices[3][2]}, {vertices[2][0], vertices[2][1], vertices[2][2]}, {vertices[6][0], vertices[6][1], vertices[6][2]},
+				{vertices[3][0], vertices[3][1], vertices[3][2]}, {vertices[6][0], vertices[6][1], vertices[6][2]}, {vertices[7][0], vertices[7][1], vertices[7][2]},
+
+				// Bottom face - 2tri	015 054 -05
+				{vertices[0][0], vertices[0][1], vertices[0][2]}, {vertices[1][0], vertices[1][1], vertices[1][2]}, {vertices[5][0], vertices[5][1], vertices[5][2]},
+				{vertices[0][0], vertices[0][1], vertices[0][2]}, {vertices[5][0], vertices[5][1], vertices[5][2]}, {vertices[4][0], vertices[4][1], vertices[4][2]}
+			}
+		};
+
+		for (int j = 0; j < TRI_COUNT * 3; j++)
+		{
+			for (int k = 0; k < 3; k++)
+			{
+				obstacle_car[j][k] = CubeFigure[0][j][k];
+			}
+			obstacle_car_color[j][0] = 0.3f;
+			obstacle_car_color[j][1] = 0.3f;
+			obstacle_car_color[j][2] = 0.3f;
 		}
 	}
 }
