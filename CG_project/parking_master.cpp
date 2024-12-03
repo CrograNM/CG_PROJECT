@@ -509,7 +509,7 @@ glm::mat4 ObstacleCar(int index) {
 float car_speed = 0.0f;						// 현재 자동차 속도
 bool isAcceleratingForward = false;
 bool isAcceleratingBackward = false;
-const float MAX_SPEED = 0.05f;				// 최대 속도
+const float MAX_SPEED = 0.01f;				// 최대 속도
 const float acceleration = 0.001f;			// 가속도
 const float deceleration = 0.002f;			// 감속도 (브레이크)
 const float friction = 0.001f;				// 마찰력 (자연 감속)
@@ -710,7 +710,8 @@ void TimerFunction_UpdateMove(int value)
 		if (!isColliding)
 		{
 			// 회전 업데이트 (바퀴 회전에 따라 차량 회전)
-			car_rotateY += front_wheels_rotateY * 0.1f;
+			float n = 0.1f / MAX_SPEED;
+			car_rotateY += front_wheels_rotateY * n * car_speed; // n*MAX_SPEED = 0.1f 고정
 			car_dx = new_dx;
 			car_dz = new_dz;
 			wheel_rect_rotateX += car_speed * 100.0f;
