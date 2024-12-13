@@ -144,8 +144,8 @@ const float fheight = 0.75f;
 const float fy = 0.0001f;
 const float fy2 = 0.00015f;
 // 도착 지점 위치 설정
-const float FINISH_OFFSET_X = 3.0f; // X축 오프셋
-const float FINISH_OFFSET_Z = 0.0f; // Z축 오프셋
+float FINISH_OFFSET_X = 0.0f; // X축 오프셋
+float FINISH_OFFSET_Z = 0.0f; // Z축 오프셋
 
 GLfloat finish_rect[2][6][3] = {
 	{	//바깥쪽 (z길이가 x길이의 두배로 설정)
@@ -574,10 +574,10 @@ bool checkCollision(const std::vector<std::pair<float, float>>& carCorners, floa
 }
 
 // 주차 상태를 업데이트하는 함수
-const float PARKING_X_MIN = -FINISH_SIZE / 2 + FINISH_OFFSET_X;
-const float PARKING_X_MAX = FINISH_SIZE / 2 + FINISH_OFFSET_X;
-const float PARKING_Z_MIN = -FINISH_SIZE * fheight + FINISH_OFFSET_Z;
-const float PARKING_Z_MAX = FINISH_SIZE * fheight + FINISH_OFFSET_Z;
+float PARKING_X_MIN = -FINISH_SIZE / 2 + FINISH_OFFSET_X;
+float PARKING_X_MAX = FINISH_SIZE / 2 + FINISH_OFFSET_X;
+float PARKING_Z_MIN = -FINISH_SIZE * fheight + FINISH_OFFSET_Z;
+float PARKING_Z_MAX = FINISH_SIZE * fheight + FINISH_OFFSET_Z;
 void UpdateParkingStatus(const std::vector<std::pair<float, float>>& carCorners) {
 	bool newIsParked = false;
 	int checkCount = 0;
@@ -748,7 +748,13 @@ void TimerFunction_UpdateMove(int value)
 }
 
 void nextStage() {
+	FINISH_OFFSET_X = 3.0f;
+	FINISH_OFFSET_Z = 0.0f;
 
+	PARKING_X_MIN = -FINISH_SIZE / 2 + FINISH_OFFSET_X;
+	PARKING_X_MAX = FINISH_SIZE / 2 + FINISH_OFFSET_X;
+	PARKING_Z_MIN = -FINISH_SIZE * fheight + FINISH_OFFSET_Z;
+	PARKING_Z_MAX = FINISH_SIZE * fheight + FINISH_OFFSET_Z;
 }
 
 float c_dx = 0.0f;
@@ -1157,94 +1163,38 @@ GLvoid Keyboard(unsigned char key, int x, int y)
 {
 	switch (key)
 	{
+	case 'n': // 다음 스테이지 기능 테스트
+		nextStage();
+		break;
 	case 'q': // 이전 기어
+	{
 		if (currentGear > PARK)
 			currentGear = static_cast<GearState>(currentGear - 1);
-		glutPostRedisplay();
 		break;
+	}
 	case 'e': // 다음 기어
+	{
 		if (currentGear < DRIVE)
 			currentGear = static_cast<GearState>(currentGear + 1);
-		glutPostRedisplay();
 		break;
+	}
 	case 'w': // 액셀
-		if (currentGear == DRIVE) {
+	{
+		if (currentGear == DRIVE)
+		{
 			isAcceleratingForward = true; // 전진
 		}
-		else if (currentGear == REVERSE) {
+		else if (currentGear == REVERSE)
+		{
 			isAcceleratingBackward = true; // 후진
 		}
 		break;
-	case 's':
+	}
+	case 's': // 브레이크
+	{
 		// isAcceleratingForward = false;
 		// isAcceleratingBackward = true;
 		isBraking = true;
-		break;
-	//case 'b': 
-	//	isBraking = true;
-	//	break;
-		//은면제거
-	case 'h':
-	{
-		if (isCull)
-		{
-			isCull = false;
-		}
-		else
-		{
-			isCull = true;
-		}
-		break;
-	}
-	//직각/원근 투영
-	case 'p':
-	{
-		if (isProspect)
-		{
-			isProspect = false;
-		}
-		else
-		{
-			isProspect = true;
-		}
-		break;
-	}
-	//카메라 이동
-	case 'z': case 'Z':
-	{
-		if (key == 'z')
-		{
-			c_dz += 0.1f;
-		}
-		else if (key == 'Z')
-		{
-			c_dz -= 0.1f;
-		}
-		break;
-	}
-	case 'x': case 'X':
-	{
-		if (key == 'x')
-		{
-			c_dx += 0.1f;
-		}
-		else if (key == 'X')
-		{
-			c_dx -= 0.1f;
-		}
-		break;
-	}
-	//카메라 공전
-	case 'y': case 'Y':
-	{
-		if (key == 'y')
-		{
-			c_rotateY += 5.0f;
-		}
-		else if (key == 'Y')
-		{
-			c_rotateY -= 5.0f;
-		}
 		break;
 	}
 	}
