@@ -525,6 +525,7 @@ const float HANDLE_RETURN_SPEED = 3.0f;		// 복원 속도
 const float CAR_SPEED = 0.05f;				// 자동차 이동 속도
 float lastAngle = 0.0f;						// 이전 프레임의 각도
 float cumulativeAngle = 0.0f;				// 누적된 핸들 회전 각도
+
 std::vector<std::pair<float, float>> getRotatedCarCorners(float carX, float carZ, float carSize, float carRotateY)
 {
 	float halfWidth = CAR_SIZE / 2;
@@ -551,6 +552,7 @@ std::vector<std::pair<float, float>> getRotatedCarCorners(float carX, float carZ
 	}
 	return rotatedCorners;
 }
+
 bool checkCollisionWalls(const std::vector<std::pair<float, float>>& carCorners, float wallX, float wallZ, float wallWidth, float wallHeight)
 {
 	// 벽의 AABB
@@ -584,7 +586,6 @@ float PARKING_Z_MAX = FINISH_SIZE * fheight + FINISH_OFFSET_Z;
 void UpdateParkingStatus(const std::vector<std::pair<float, float>>& carCorners) {
 	bool newIsParked = false;
 	int checkCount = 0;
-	// 차량 꼭짓점 중 하나라도 충돌하면 true
 	//std::cout << "==============================\n";
 	for (const auto& corner : carCorners)
 	{
@@ -632,7 +633,8 @@ void UpdateParkingStatus(const std::vector<std::pair<float, float>>& carCorners)
 
 bool checkCollisionObstacle(const std::vector<std::pair<float, float>>& carCorners)
 {
-	bool isCollision = false;
+	bool isCollision = true;
+	int checkCount = 0;
 	// 차량 꼭짓점 중 하나라도 충돌하면 true
 	for (const auto& corner : carCorners)
 	{
@@ -641,23 +643,34 @@ bool checkCollisionObstacle(const std::vector<std::pair<float, float>>& carCorne
 		if (obstacle_xz[0][0] - OBSTACLE_WIDTH <= cornerX && cornerX <= obstacle_xz[0][0] + OBSTACLE_WIDTH &&
 			obstacle_xz[0][1] - OBSTACLE_HEIGHT <= cornerZ && cornerZ <= obstacle_xz[0][1] + OBSTACLE_HEIGHT)
 		{
-			isCollision = true;
+			checkCount++;
+			break;
 		}
-		if (obstacle_xz[1][0] - OBSTACLE_WIDTH <= cornerX && cornerX <= obstacle_xz[1][0] + OBSTACLE_WIDTH &&
-			obstacle_xz[1][1] - OBSTACLE_HEIGHT <= cornerZ && cornerZ <= obstacle_xz[1][1] + OBSTACLE_HEIGHT)
+		else if (obstacle_xz[1][0] - OBSTACLE_WIDTH <= cornerX && cornerX <= obstacle_xz[1][0] + OBSTACLE_WIDTH &&
+				 obstacle_xz[1][1] - OBSTACLE_HEIGHT <= cornerZ && cornerZ <= obstacle_xz[1][1] + OBSTACLE_HEIGHT)
 		{
 			isCollision = true;
+			checkCount++;
+			break;
 		}
-		if (obstacle_xz[2][0] - OBSTACLE_WIDTH <= cornerX && cornerX <= obstacle_xz[2][0] + OBSTACLE_WIDTH &&
-			obstacle_xz[2][1] - OBSTACLE_HEIGHT <= cornerZ && cornerZ <= obstacle_xz[2][1] + OBSTACLE_HEIGHT)
+		else if (obstacle_xz[2][0] - OBSTACLE_WIDTH <= cornerX && cornerX <= obstacle_xz[2][0] + OBSTACLE_WIDTH &&
+				 obstacle_xz[2][1] - OBSTACLE_HEIGHT <= cornerZ && cornerZ <= obstacle_xz[2][1] + OBSTACLE_HEIGHT)
 		{
 			isCollision = true;
+			checkCount++;
+			break;
 		}
-		if (obstacle_xz[3][0] - OBSTACLE_WIDTH <= cornerX && cornerX <= obstacle_xz[3][0] + OBSTACLE_WIDTH &&
-			obstacle_xz[3][1] - OBSTACLE_HEIGHT <= cornerZ && cornerZ <= obstacle_xz[3][1] + OBSTACLE_HEIGHT)
+		else if (obstacle_xz[3][0] - OBSTACLE_WIDTH <= cornerX && cornerX <= obstacle_xz[3][0] + OBSTACLE_WIDTH &&
+				 obstacle_xz[3][1] - OBSTACLE_HEIGHT <= cornerZ && cornerZ <= obstacle_xz[3][1] + OBSTACLE_HEIGHT)
 		{
 			isCollision = true;
+			checkCount++;
+			break;
 		}
+	}
+	if (checkCount == 0)
+	{
+		isCollision = false;
 	}
 	return isCollision;
 }
@@ -984,6 +997,24 @@ void drawObstacleCars(int modelLoc)
 	glDrawArrays(GL_TRIANGLES, 0, TRI_COUNT * 3);
 }
 
+void drawCarCorners(int modelLoc)
+{
+	auto carCorners = getRotatedCarCorners(car_dx, car_dz, CAR_SIZE, car_rotateY);
+	for (const auto& corner : carCorners)
+	{
+		float cornerX = corner.first;
+		float cornerZ = corner.second;
+	
+		glm::mat4 T = glm::mat4(1.0f);
+		T = glm::translate(T, glm::vec3(cornerX, CAR_SIZE*0.75, cornerZ));
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(T));
+		GLUquadricObj* qobj1;
+		qobj1 = gluNewQuadric();						// 객체 생성하기
+		gluSphere(qobj1, WHEEL_SIZE/3, 10, 10);
+		gluDeleteQuadric(qobj1);
+	}
+}
+
 void drawScene()
 {
 	glViewport(0, 0, clientWidth, clientHeight);
@@ -1058,6 +1089,8 @@ void drawScene()
 
 		// 도착지점 그리기
 		drawFinishRect(modelLoc);
+
+		drawCarCorners(modelLoc);
 	}
 	// 후방 카메라 뷰
 	if (currentGear == REVERSE) {
