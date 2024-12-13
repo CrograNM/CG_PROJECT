@@ -1,41 +1,41 @@
 ﻿  test1.cpp
-C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\test1.cpp(544,8): warning C4267: '초기화 중': 'size_t'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\test1.cpp(652,22): warning C4244: '초기화 중': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\test1.cpp(653,22): warning C4244: '초기화 중': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\test1.cpp(654,22): warning C4244: '초기화 중': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\test1.cpp(655,22): warning C4244: '초기화 중': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\test1.cpp(685,15): warning C4267: '초기화 중': 'size_t'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\test1.cpp(686,20): warning C4267: '초기화 중': 'size_t'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\test1.cpp(516,8): warning C4267: '초기화 중': 'size_t'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\test1.cpp(624,22): warning C4244: '초기화 중': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\test1.cpp(625,22): warning C4244: '초기화 중': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\test1.cpp(626,22): warning C4244: '초기화 중': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\test1.cpp(627,22): warning C4244: '초기화 중': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\test1.cpp(657,15): warning C4267: '초기화 중': 'size_t'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\test1.cpp(658,20): warning C4267: '초기화 중': 'size_t'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\test1.cpp(758,39): warning C4244: '=': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\test1.cpp(761,39): warning C4244: '=': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\test1.cpp(783,39): warning C4244: '=': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
 C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\test1.cpp(786,39): warning C4244: '=': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\test1.cpp(789,39): warning C4244: '=': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\test1.cpp(811,39): warning C4244: '=': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\test1.cpp(814,39): warning C4244: '=': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\test1.cpp(820,39): warning C4244: '=': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\test1.cpp(823,39): warning C4244: '=': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\test1.cpp(1045,45): warning C4305: '인수': 'double'에서 'GLfloat'(으)로 잘립니다.
-C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\test1.cpp(1045,40): warning C4305: '인수': 'double'에서 'GLfloat'(으)로 잘립니다.
-C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\test1.cpp(1045,35): warning C4305: '인수': 'double'에서 'GLfloat'(으)로 잘립니다.
-C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\test1.cpp(1055,42): warning C4305: '인수': 'double'에서 'GLfloat'(으)로 잘립니다.
-C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\test1.cpp(1542,16): warning C4244: '초기화 중': 'double'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\test1.cpp(1543,16): warning C4244: '초기화 중': 'double'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\test1.cpp(1572,12): warning C4244: '초기화 중': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\test1.cpp(1573,12): warning C4244: '초기화 중': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\test1.cpp(1818,22): warning C4244: '초기화 중': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\test1.cpp(2054,42): warning C4305: '인수': 'double'에서 'GLfloat'(으)로 잘립니다.
-C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\test1.cpp(2297,6): warning C4305: '초기화 중': 'double'에서 'GLfloat'(으)로 잘립니다.
-C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\test1.cpp(2297,31): warning C4305: '초기화 중': 'double'에서 'GLfloat'(으)로 잘립니다.
-C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\test1.cpp(2298,6): warning C4305: '초기화 중': 'double'에서 'GLfloat'(으)로 잘립니다.
-C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\test1.cpp(2298,31): warning C4305: '초기화 중': 'double'에서 'GLfloat'(으)로 잘립니다.
-C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\test1.cpp(2299,6): warning C4305: '초기화 중': 'double'에서 'GLfloat'(으)로 잘립니다.
-C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\test1.cpp(2299,34): warning C4305: '초기화 중': 'double'에서 'GLfloat'(으)로 잘립니다.
-C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\test1.cpp(2300,6): warning C4305: '초기화 중': 'double'에서 'GLfloat'(으)로 잘립니다.
-C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\test1.cpp(2300,34): warning C4305: '초기화 중': 'double'에서 'GLfloat'(으)로 잘립니다.
-C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\test1.cpp(2301,6): warning C4305: '초기화 중': 'double'에서 'GLfloat'(으)로 잘립니다.
-C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\test1.cpp(2301,31): warning C4305: '초기화 중': 'double'에서 'GLfloat'(으)로 잘립니다.
-C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\test1.cpp(2302,6): warning C4305: '초기화 중': 'double'에서 'GLfloat'(으)로 잘립니다.
-C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\test1.cpp(2302,31): warning C4305: '초기화 중': 'double'에서 'GLfloat'(으)로 잘립니다.
-C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\test1.cpp(2303,6): warning C4305: '초기화 중': 'double'에서 'GLfloat'(으)로 잘립니다.
-C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\test1.cpp(2303,34): warning C4305: '초기화 중': 'double'에서 'GLfloat'(으)로 잘립니다.
-C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\test1.cpp(2304,6): warning C4305: '초기화 중': 'double'에서 'GLfloat'(으)로 잘립니다.
-C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\test1.cpp(2304,34): warning C4305: '초기화 중': 'double'에서 'GLfloat'(으)로 잘립니다.
+C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\test1.cpp(792,39): warning C4244: '=': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\test1.cpp(795,39): warning C4244: '=': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\test1.cpp(1017,45): warning C4305: '인수': 'double'에서 'GLfloat'(으)로 잘립니다.
+C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\test1.cpp(1017,40): warning C4305: '인수': 'double'에서 'GLfloat'(으)로 잘립니다.
+C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\test1.cpp(1017,35): warning C4305: '인수': 'double'에서 'GLfloat'(으)로 잘립니다.
+C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\test1.cpp(1027,42): warning C4305: '인수': 'double'에서 'GLfloat'(으)로 잘립니다.
+C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\test1.cpp(1514,16): warning C4244: '초기화 중': 'double'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\test1.cpp(1515,16): warning C4244: '초기화 중': 'double'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\test1.cpp(1544,12): warning C4244: '초기화 중': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\test1.cpp(1545,12): warning C4244: '초기화 중': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\test1.cpp(1790,22): warning C4244: '초기화 중': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\test1.cpp(2026,42): warning C4305: '인수': 'double'에서 'GLfloat'(으)로 잘립니다.
+C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\test1.cpp(2264,6): warning C4305: '초기화 중': 'double'에서 'GLfloat'(으)로 잘립니다.
+C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\test1.cpp(2264,31): warning C4305: '초기화 중': 'double'에서 'GLfloat'(으)로 잘립니다.
+C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\test1.cpp(2265,6): warning C4305: '초기화 중': 'double'에서 'GLfloat'(으)로 잘립니다.
+C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\test1.cpp(2265,31): warning C4305: '초기화 중': 'double'에서 'GLfloat'(으)로 잘립니다.
+C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\test1.cpp(2266,6): warning C4305: '초기화 중': 'double'에서 'GLfloat'(으)로 잘립니다.
+C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\test1.cpp(2266,34): warning C4305: '초기화 중': 'double'에서 'GLfloat'(으)로 잘립니다.
+C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\test1.cpp(2267,6): warning C4305: '초기화 중': 'double'에서 'GLfloat'(으)로 잘립니다.
+C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\test1.cpp(2267,34): warning C4305: '초기화 중': 'double'에서 'GLfloat'(으)로 잘립니다.
+C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\test1.cpp(2268,6): warning C4305: '초기화 중': 'double'에서 'GLfloat'(으)로 잘립니다.
+C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\test1.cpp(2268,31): warning C4305: '초기화 중': 'double'에서 'GLfloat'(으)로 잘립니다.
+C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\test1.cpp(2269,6): warning C4305: '초기화 중': 'double'에서 'GLfloat'(으)로 잘립니다.
+C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\test1.cpp(2269,31): warning C4305: '초기화 중': 'double'에서 'GLfloat'(으)로 잘립니다.
+C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\test1.cpp(2270,6): warning C4305: '초기화 중': 'double'에서 'GLfloat'(으)로 잘립니다.
+C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\test1.cpp(2270,34): warning C4305: '초기화 중': 'double'에서 'GLfloat'(으)로 잘립니다.
+C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\test1.cpp(2271,6): warning C4305: '초기화 중': 'double'에서 'GLfloat'(으)로 잘립니다.
+C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\test1.cpp(2271,34): warning C4305: '초기화 중': 'double'에서 'GLfloat'(으)로 잘립니다.
   CG_project.vcxproj -> C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\x64\Debug\CG_project.exe

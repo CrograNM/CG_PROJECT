@@ -57,13 +57,12 @@ bool isCull = false;
 // Car 초기화
 void initCar();
 #define CAR_SIZE 0.5f
-GLfloat Block[4][TRI_COUNT * 3][3];
+GLfloat Block[4][TRI_COUNT * 3][6];
 GLfloat	Block_Color[4][TRI_COUNT * 3][3];
 
 void initObstacleCar();
-GLfloat obstacle_car[TRI_COUNT * 3][3];
+GLfloat obstacle_car[TRI_COUNT * 3][6];
 GLfloat obstacle_car_color[TRI_COUNT * 3][3];
-
 
 // 핸들 초기화
 #define HANDLE_SIZE 0.7f
@@ -72,44 +71,17 @@ GLfloat handle_rect[6][3] = {
 	{-HAND_RECT_SIZE, 0, -HAND_RECT_SIZE}, {HAND_RECT_SIZE, 0, -HAND_RECT_SIZE}, {-HAND_RECT_SIZE, 0, HAND_RECT_SIZE},
 	{-HAND_RECT_SIZE, 0, HAND_RECT_SIZE},  {HAND_RECT_SIZE, 0, -HAND_RECT_SIZE}, { HAND_RECT_SIZE, 0, HAND_RECT_SIZE}
 };
-GLfloat handle_rect_color[6][3] = {
-	{0.5f, 0.5f, 0.5f},
-	{0.5f, 0.5f, 0.5f},
-	{0.5f, 0.5f, 0.5f},
-
-	{0.5f, 0.5f, 0.5f},
-	{0.5f, 0.5f, 0.5f},
-	{0.5f, 0.5f, 0.5f}
-};
 
 // 기어 초기화
 GLfloat gear_rect[6][3] = {
 	{-0.3f, 0, -1.0f}, {0.3f, 0, -1.0f}, {-0.3f, 0, 1.0f},
 	{-0.3f, 0, 1.0f}, {0.3f, 0, -1.0f}, {0.3f, 0, 1.0f}
 };
-GLfloat gear_rect_color[6][3] = {
-	{0.5f, 0.5f, 0.5f},
-	{0.5f, 0.5f, 0.5f},
-	{0.5f, 0.5f, 0.5f},
-
-	{0.5f, 0.5f, 0.5f},
-	{0.5f, 0.5f, 0.5f},
-	{0.5f, 0.5f, 0.5f}
-};
 
 // 기어 봉 초기화
 GLfloat gear_stick_rect[6][3] = {
 	{-0.1f, 0, -0.1f}, {0.1f, 0, -0.1f}, {-0.1f, 0, 0.1f},
 	{-0.1f, 0, 0.1f}, {0.1f, 0, -0.1f}, {0.1f, 0, 0.1f}
-};
-GLfloat gear_stick_rect_color[6][3] = {
-	{0.25f, 0.25f, 0.25f},
-	{0.25f, 0.25f, 0.25f},
-	{0.25f, 0.25f, 0.25f},
-
-	{0.25f, 0.25f, 0.25f},
-	{0.25f, 0.25f, 0.25f},
-	{0.25f, 0.25f, 0.25f}
 };
 
 // 텍스트 렌더링 함수
@@ -126,7 +98,7 @@ void RenderBitmapString(float x, float y, void* font, const char* string)
 // 바퀴 (육면체) 초기화
 #define WHEEL_SIZE CAR_SIZE / 4
 #define WHEEL_RECT_SIZE WHEEL_SIZE / 8
-GLfloat wheel_rect[4][TRI_COUNT * 3][3];
+GLfloat wheel_rect[4][TRI_COUNT * 3][6];
 GLfloat wheel_rect_color[4][TRI_COUNT * 3][3];
 
 // 기어 상태를 나타내는 열거형
@@ -1136,7 +1108,7 @@ void drawCar(int modelLoc, int mod)
 	glDrawArrays(GL_TRIANGLES, 0, 6 * 6);
 
 	objColorLocation = glGetUniformLocation(shaderProgramID, "objectColor");
-	glUniform3f(objColorLocation, 0.0f, 0.0f, 0.6f);
+	glUniform3f(objColorLocation, 0.0f, 0.9f, 0.9f);
 	glDrawArrays(GL_TRIANGLES, 36, 6 * 6);
 
 	// 헤드라이트
@@ -1658,11 +1630,11 @@ GLvoid Reshape(int w, int h) //--- 콜백 함수: 다시 그리기 콜백 함수
 
 GLvoid Keyboard(unsigned char key, int x, int y)
 {
-	//if (key == 'b')
-	//{
-	//	//디버그
-	//	nextStage();
-	//}
+	if (key == 'b')
+	{
+		//디버그
+		nextStage();
+	}
 	if (key == 'n')
 	{
 		if (isClear)
@@ -2060,9 +2032,48 @@ void InitBuffer()
 	glUniform3f(viewPosLocation, c_dx, c_dy, c_dz);
 }
 
+// 함수: 두 벡터의 외적을 계산
+void calculateNormal(const GLfloat* v1, const GLfloat* v2, const GLfloat* v3, GLfloat* normal, bool reverse = false)
+{
+	GLfloat u[3] = { v2[0] - v1[0], v2[1] - v1[1], v2[2] - v1[2] };
+	GLfloat v[3] = { v3[0] - v1[0], v3[1] - v1[1], v3[2] - v1[2] };
+	normal[0] = u[1] * v[2] - u[2] * v[1];
+	normal[1] = u[2] * v[0] - u[0] * v[2];
+	normal[2] = u[0] * v[1] - u[1] * v[0];
+
+	if (reverse)
+	{ // 뒷면 노말 방향 반전
+		normal[0] = -normal[0];
+		normal[1] = -normal[1];
+		normal[2] = -normal[2];
+	}
+
+	GLfloat magnitude = sqrt(normal[0] * normal[0] + normal[1] * normal[1] + normal[2] * normal[2]);
+	if (magnitude != 0.0f)
+	{
+		normal[0] /= magnitude;
+		normal[1] /= magnitude;
+		normal[2] /= magnitude;
+	}
+}
 // 자동차 초기화
 void initCar()
-{
+{	
+	//큐브 데이터 초기화
+	GLuint CubeIndices[] = {
+		// Front face
+		0, 1, 2, 0, 2, 3,
+		// Back face
+		4, 5, 6, 4, 6, 7,
+		// Right face
+		1, 5, 6, 1, 6, 2,
+		// Left face
+		0, 4, 7, 0, 7, 3,
+		// Top face
+		3, 2, 6, 3, 6, 7,
+		// Bottom face
+		0, 1, 5, 0, 5, 4
+	};
 	//아래 몸체
 	if (true)
 	{
@@ -2076,44 +2087,31 @@ void initCar()
 			{ CAR_SIZE / 2,	CAR_SIZE / 2,  CAR_SIZE },  // Vertex 6
 			{-CAR_SIZE / 2,	CAR_SIZE / 2,  CAR_SIZE }   // Vertex 7
 		};
-		//큐브 데이터 초기화
-		GLfloat CubeFigure[1][TRI_COUNT * 3][3] = {
-			{
-				// Front face - 2tri	012 023 -02
-				{vertices[0][0], vertices[0][1], vertices[0][2]}, {vertices[1][0], vertices[1][1], vertices[1][2]}, {vertices[2][0], vertices[2][1], vertices[2][2]},
-				{vertices[0][0], vertices[0][1], vertices[0][2]}, {vertices[2][0], vertices[2][1], vertices[2][2]}, {vertices[3][0], vertices[3][1], vertices[3][2]},
-
-				// Back face - 2tri		456 467 -46
-				{vertices[4][0], vertices[4][1], vertices[4][2]}, {vertices[5][0], vertices[5][1], vertices[5][2]}, {vertices[6][0], vertices[6][1], vertices[6][2]},
-				{vertices[4][0], vertices[4][1], vertices[4][2]}, {vertices[6][0], vertices[6][1], vertices[6][2]}, {vertices[7][0], vertices[7][1], vertices[7][2]},
-
-				// Left face - 2tri		047 073 -07
-				{vertices[0][0], vertices[0][1], vertices[0][2]}, {vertices[4][0], vertices[4][1], vertices[4][2]}, {vertices[7][0], vertices[7][1], vertices[7][2]},
-				{vertices[0][0], vertices[0][1], vertices[0][2]}, {vertices[7][0], vertices[7][1], vertices[7][2]}, {vertices[3][0], vertices[3][1], vertices[3][2]},
-
-				// Right face - 2tri	156 162 -16
-				{vertices[1][0], vertices[1][1], vertices[1][2]}, {vertices[5][0], vertices[5][1], vertices[5][2]}, {vertices[6][0], vertices[6][1], vertices[6][2]},
-				{vertices[1][0], vertices[1][1], vertices[1][2]}, {vertices[6][0], vertices[6][1], vertices[6][2]}, {vertices[2][0], vertices[2][1], vertices[2][2]},
-
-				// Top face - 2tri		326 367 -36
-				{vertices[3][0], vertices[3][1], vertices[3][2]}, {vertices[2][0], vertices[2][1], vertices[2][2]}, {vertices[6][0], vertices[6][1], vertices[6][2]},
-				{vertices[3][0], vertices[3][1], vertices[3][2]}, {vertices[6][0], vertices[6][1], vertices[6][2]}, {vertices[7][0], vertices[7][1], vertices[7][2]},
-
-				// Bottom face - 2tri	015 054 -05
-				{vertices[0][0], vertices[0][1], vertices[0][2]}, {vertices[1][0], vertices[1][1], vertices[1][2]}, {vertices[5][0], vertices[5][1], vertices[5][2]},
-				{vertices[0][0], vertices[0][1], vertices[0][2]}, {vertices[5][0], vertices[5][1], vertices[5][2]}, {vertices[4][0], vertices[4][1], vertices[4][2]}
+		GLfloat CubeFigureWithNormals[TRI_COUNT * 3][6];
+		// 정점 데이터와 법선 데이터 초기화
+		for (int i = 0; i < TRI_COUNT * 3; i += 3)
+		{
+			GLfloat normal[3];
+			bool reverse = (i / 6) % 2 == 0; // i가 6개씩 그룹화되었을 때 홀수 그룹은 뒷면
+			calculateNormal(vertices[CubeIndices[i]], vertices[CubeIndices[i + 1]], vertices[CubeIndices[i + 2]], normal, reverse);
+			for (int j = 0; j < 3; ++j)
+			{ // 각 삼각형의 정점
+				int idx = CubeIndices[i + j];
+				CubeFigureWithNormals[i + j][0] = vertices[idx][0]; // x
+				CubeFigureWithNormals[i + j][1] = vertices[idx][1]; // y
+				CubeFigureWithNormals[i + j][2] = vertices[idx][2]; // z
+				CubeFigureWithNormals[i + j][3] = normal[0];        // nx
+				CubeFigureWithNormals[i + j][4] = normal[1];        // ny
+				CubeFigureWithNormals[i + j][5] = normal[2];        // nz
 			}
-		};
-
+		}
+		//아래 몸통 
 		for (int j = 0; j < TRI_COUNT * 3; j++)
 		{
-			for (int k = 0; k < 3; k++)
+			for (int k = 0; k < 6; k++)
 			{
-				Block[0][j][k] = CubeFigure[0][j][k];
+				Block[0][j][k] = CubeFigureWithNormals[j][k];
 			}
-			Block_Color[0][j][0] = 0.0f;
-			Block_Color[0][j][1] = 0.0f;
-			Block_Color[0][j][2] = 1.0f;
 		}
 	}
 
@@ -2130,44 +2128,30 @@ void initCar()
 			{ CAR_SIZE / 3,	CAR_SIZE / 2 + CAR_SIZE / 3,	CAR_SIZE / 3 * 2 },  // Vertex 6
 			{-CAR_SIZE / 3,	CAR_SIZE / 2 + CAR_SIZE / 3,	CAR_SIZE / 3 * 2 }   // Vertex 7
 		};
-		//큐브 데이터 초기화
-		GLfloat CubeFigure[1][TRI_COUNT * 3][3] = {
-			{
-				// Front face - 2tri	012 023 -02
-				{vertices[0][0], vertices[0][1], vertices[0][2]}, {vertices[1][0], vertices[1][1], vertices[1][2]}, {vertices[2][0], vertices[2][1], vertices[2][2]},
-				{vertices[0][0], vertices[0][1], vertices[0][2]}, {vertices[2][0], vertices[2][1], vertices[2][2]}, {vertices[3][0], vertices[3][1], vertices[3][2]},
-
-				// Back face - 2tri		456 467 -46
-				{vertices[4][0], vertices[4][1], vertices[4][2]}, {vertices[5][0], vertices[5][1], vertices[5][2]}, {vertices[6][0], vertices[6][1], vertices[6][2]},
-				{vertices[4][0], vertices[4][1], vertices[4][2]}, {vertices[6][0], vertices[6][1], vertices[6][2]}, {vertices[7][0], vertices[7][1], vertices[7][2]},
-
-				// Left face - 2tri		047 073 -07
-				{vertices[0][0], vertices[0][1], vertices[0][2]}, {vertices[4][0], vertices[4][1], vertices[4][2]}, {vertices[7][0], vertices[7][1], vertices[7][2]},
-				{vertices[0][0], vertices[0][1], vertices[0][2]}, {vertices[7][0], vertices[7][1], vertices[7][2]}, {vertices[3][0], vertices[3][1], vertices[3][2]},
-
-				// Right face - 2tri	156 162 -16
-				{vertices[1][0], vertices[1][1], vertices[1][2]}, {vertices[5][0], vertices[5][1], vertices[5][2]}, {vertices[6][0], vertices[6][1], vertices[6][2]},
-				{vertices[1][0], vertices[1][1], vertices[1][2]}, {vertices[6][0], vertices[6][1], vertices[6][2]}, {vertices[2][0], vertices[2][1], vertices[2][2]},
-
-				// Top face - 2tri		326 367 -36
-				{vertices[3][0], vertices[3][1], vertices[3][2]}, {vertices[2][0], vertices[2][1], vertices[2][2]}, {vertices[6][0], vertices[6][1], vertices[6][2]},
-				{vertices[3][0], vertices[3][1], vertices[3][2]}, {vertices[6][0], vertices[6][1], vertices[6][2]}, {vertices[7][0], vertices[7][1], vertices[7][2]},
-
-				// Bottom face - 2tri	015 054 -05
-				{vertices[0][0], vertices[0][1], vertices[0][2]}, {vertices[1][0], vertices[1][1], vertices[1][2]}, {vertices[5][0], vertices[5][1], vertices[5][2]},
-				{vertices[0][0], vertices[0][1], vertices[0][2]}, {vertices[5][0], vertices[5][1], vertices[5][2]}, {vertices[4][0], vertices[4][1], vertices[4][2]}
+		GLfloat CubeFigureWithNormals[TRI_COUNT * 3][6];
+		// 정점 데이터와 법선 데이터 초기화
+		for (int i = 0; i < TRI_COUNT * 3; i += 3)
+		{
+			GLfloat normal[3];
+			bool reverse = (i / 6) % 2 == 0; // i가 6개씩 그룹화되었을 때 홀수 그룹은 뒷면
+			calculateNormal(vertices[CubeIndices[i]], vertices[CubeIndices[i + 1]], vertices[CubeIndices[i + 2]], normal, reverse);
+			for (int j = 0; j < 3; ++j)
+			{ // 각 삼각형의 정점
+				int idx = CubeIndices[i + j];
+				CubeFigureWithNormals[i + j][0] = vertices[idx][0]; // x
+				CubeFigureWithNormals[i + j][1] = vertices[idx][1]; // y
+				CubeFigureWithNormals[i + j][2] = vertices[idx][2]; // z
+				CubeFigureWithNormals[i + j][3] = normal[0];        // nx
+				CubeFigureWithNormals[i + j][4] = normal[1];        // ny
+				CubeFigureWithNormals[i + j][5] = normal[2];        // nz
 			}
-		};
-
+		}
 		for (int j = 0; j < TRI_COUNT * 3; j++)
 		{
-			for (int k = 0; k < 3; k++)
+			for (int k = 0; k < 6; k++)
 			{
-				Block[1][j][k] = CubeFigure[0][j][k];
+				Block[1][j][k] = CubeFigureWithNormals[j][k];
 			}
-			Block_Color[1][j][0] = 0.0f;
-			Block_Color[1][j][1] = 1.0f;
-			Block_Color[1][j][2] = 1.0f;
 		}
 	}
 
@@ -2184,50 +2168,32 @@ void initCar()
 			{ CAR_SIZE / 8,	CAR_SIZE / 8, CAR_SIZE / 8},	// Vertex 6
 			{-CAR_SIZE / 8,	CAR_SIZE / 8, CAR_SIZE / 8}	// Vertex 7
 		};
-		//큐브 데이터 초기화
-		GLfloat CubeFigure[1][TRI_COUNT * 3][3] = {
-			{
-				// Front face - 2tri	012 023 -02
-				{vertices[0][0], vertices[0][1], vertices[0][2]}, {vertices[1][0], vertices[1][1], vertices[1][2]}, {vertices[2][0], vertices[2][1], vertices[2][2]},
-				{vertices[0][0], vertices[0][1], vertices[0][2]}, {vertices[2][0], vertices[2][1], vertices[2][2]}, {vertices[3][0], vertices[3][1], vertices[3][2]},
-
-				// Back face - 2tri		456 467 -46
-				{vertices[4][0], vertices[4][1], vertices[4][2]}, {vertices[5][0], vertices[5][1], vertices[5][2]}, {vertices[6][0], vertices[6][1], vertices[6][2]},
-				{vertices[4][0], vertices[4][1], vertices[4][2]}, {vertices[6][0], vertices[6][1], vertices[6][2]}, {vertices[7][0], vertices[7][1], vertices[7][2]},
-
-				// Left face - 2tri		047 073 -07
-				{vertices[0][0], vertices[0][1], vertices[0][2]}, {vertices[4][0], vertices[4][1], vertices[4][2]}, {vertices[7][0], vertices[7][1], vertices[7][2]},
-				{vertices[0][0], vertices[0][1], vertices[0][2]}, {vertices[7][0], vertices[7][1], vertices[7][2]}, {vertices[3][0], vertices[3][1], vertices[3][2]},
-
-				// Right face - 2tri	156 162 -16
-				{vertices[1][0], vertices[1][1], vertices[1][2]}, {vertices[5][0], vertices[5][1], vertices[5][2]}, {vertices[6][0], vertices[6][1], vertices[6][2]},
-				{vertices[1][0], vertices[1][1], vertices[1][2]}, {vertices[6][0], vertices[6][1], vertices[6][2]}, {vertices[2][0], vertices[2][1], vertices[2][2]},
-
-				// Top face - 2tri		326 367 -36
-				{vertices[3][0], vertices[3][1], vertices[3][2]}, {vertices[2][0], vertices[2][1], vertices[2][2]}, {vertices[6][0], vertices[6][1], vertices[6][2]},
-				{vertices[3][0], vertices[3][1], vertices[3][2]}, {vertices[6][0], vertices[6][1], vertices[6][2]}, {vertices[7][0], vertices[7][1], vertices[7][2]},
-
-				// Bottom face - 2tri	015 054 -05
-				{vertices[0][0], vertices[0][1], vertices[0][2]}, {vertices[1][0], vertices[1][1], vertices[1][2]}, {vertices[5][0], vertices[5][1], vertices[5][2]},
-				{vertices[0][0], vertices[0][1], vertices[0][2]}, {vertices[5][0], vertices[5][1], vertices[5][2]}, {vertices[4][0], vertices[4][1], vertices[4][2]}
+		GLfloat CubeFigureWithNormals[TRI_COUNT * 3][6];
+		// 정점 데이터와 법선 데이터 초기화
+		for (int i = 0; i < TRI_COUNT * 3; i += 3)
+		{
+			GLfloat normal[3];
+			bool reverse = (i / 6) % 2 == 0; // i가 6개씩 그룹화되었을 때 홀수 그룹은 뒷면
+			calculateNormal(vertices[CubeIndices[i]], vertices[CubeIndices[i + 1]], vertices[CubeIndices[i + 2]], normal, reverse);
+			for (int j = 0; j < 3; ++j)
+			{ // 각 삼각형의 정점
+				int idx = CubeIndices[i + j];
+				CubeFigureWithNormals[i + j][0] = vertices[idx][0]; // x
+				CubeFigureWithNormals[i + j][1] = vertices[idx][1]; // y
+				CubeFigureWithNormals[i + j][2] = vertices[idx][2]; // z
+				CubeFigureWithNormals[i + j][3] = normal[0];        // nx
+				CubeFigureWithNormals[i + j][4] = normal[1];        // ny
+				CubeFigureWithNormals[i + j][5] = normal[2];        // nz
 			}
-		};
-
+		}
 		for (int j = 0; j < TRI_COUNT * 3; j++)
 		{
-			for (int k = 0; k < 3; k++)
+			for (int k = 0; k < 6; k++)
 			{
-				Block[2][j][k] = CubeFigure[0][j][k];
+				Block[2][j][k] = CubeFigureWithNormals[j][k];
 
-				Block[3][j][k] = CubeFigure[0][j][k];
+				Block[3][j][k] = CubeFigureWithNormals[j][k];
 			}
-			Block_Color[2][j][0] = 1.0f;
-			Block_Color[2][j][1] = 1.0f;
-			Block_Color[2][j][2] = 0.0f;
-
-			Block_Color[3][j][0] = 1.0f;
-			Block_Color[3][j][1] = 1.0f;
-			Block_Color[3][j][2] = 0.0f;
 		}
 	}
 
@@ -2244,46 +2210,32 @@ void initCar()
 				{ WHEEL_SIZE / 4,	 WHEEL_SIZE / 8, 	 WHEEL_SIZE },		// Vertex 6
 				{-WHEEL_SIZE / 4,	 WHEEL_SIZE / 8, 	 WHEEL_SIZE }		// Vertex 7
 		};
-		//큐브 데이터 초기화
-		GLfloat CubeFigure[1][TRI_COUNT * 3][3] = {
-			{
-				// Front face - 2tri	012 023 -02
-				{vertices[0][0], vertices[0][1], vertices[0][2]}, {vertices[1][0], vertices[1][1], vertices[1][2]}, {vertices[2][0], vertices[2][1], vertices[2][2]},
-				{vertices[0][0], vertices[0][1], vertices[0][2]}, {vertices[2][0], vertices[2][1], vertices[2][2]}, {vertices[3][0], vertices[3][1], vertices[3][2]},
-
-				// Back face - 2tri		456 467 -46
-				{vertices[4][0], vertices[4][1], vertices[4][2]}, {vertices[5][0], vertices[5][1], vertices[5][2]}, {vertices[6][0], vertices[6][1], vertices[6][2]},
-				{vertices[4][0], vertices[4][1], vertices[4][2]}, {vertices[6][0], vertices[6][1], vertices[6][2]}, {vertices[7][0], vertices[7][1], vertices[7][2]},
-
-				// Left face - 2tri		047 073 -07
-				{vertices[0][0], vertices[0][1], vertices[0][2]}, {vertices[4][0], vertices[4][1], vertices[4][2]}, {vertices[7][0], vertices[7][1], vertices[7][2]},
-				{vertices[0][0], vertices[0][1], vertices[0][2]}, {vertices[7][0], vertices[7][1], vertices[7][2]}, {vertices[3][0], vertices[3][1], vertices[3][2]},
-
-				// Right face - 2tri	156 162 -16
-				{vertices[1][0], vertices[1][1], vertices[1][2]}, {vertices[5][0], vertices[5][1], vertices[5][2]}, {vertices[6][0], vertices[6][1], vertices[6][2]},
-				{vertices[1][0], vertices[1][1], vertices[1][2]}, {vertices[6][0], vertices[6][1], vertices[6][2]}, {vertices[2][0], vertices[2][1], vertices[2][2]},
-
-				// Top face - 2tri		326 367 -36
-				{vertices[3][0], vertices[3][1], vertices[3][2]}, {vertices[2][0], vertices[2][1], vertices[2][2]}, {vertices[6][0], vertices[6][1], vertices[6][2]},
-				{vertices[3][0], vertices[3][1], vertices[3][2]}, {vertices[6][0], vertices[6][1], vertices[6][2]}, {vertices[7][0], vertices[7][1], vertices[7][2]},
-
-				// Bottom face - 2tri	015 054 -05
-				{vertices[0][0], vertices[0][1], vertices[0][2]}, {vertices[1][0], vertices[1][1], vertices[1][2]}, {vertices[5][0], vertices[5][1], vertices[5][2]},
-				{vertices[0][0], vertices[0][1], vertices[0][2]}, {vertices[5][0], vertices[5][1], vertices[5][2]}, {vertices[4][0], vertices[4][1], vertices[4][2]}
+		GLfloat CubeFigureWithNormals[TRI_COUNT * 3][6];
+		// 정점 데이터와 법선 데이터 초기화
+		for (int i = 0; i < TRI_COUNT * 3; i += 3)
+		{
+			GLfloat normal[3];
+			bool reverse = (i / 6) % 2 == 0; // i가 6개씩 그룹화되었을 때 홀수 그룹은 뒷면
+			calculateNormal(vertices[CubeIndices[i]], vertices[CubeIndices[i + 1]], vertices[CubeIndices[i + 2]], normal, reverse);
+			for (int j = 0; j < 3; ++j)
+			{ // 각 삼각형의 정점
+				int idx = CubeIndices[i + j];
+				CubeFigureWithNormals[i + j][0] = vertices[idx][0]; // x
+				CubeFigureWithNormals[i + j][1] = vertices[idx][1]; // y
+				CubeFigureWithNormals[i + j][2] = vertices[idx][2]; // z
+				CubeFigureWithNormals[i + j][3] = normal[0];        // nx
+				CubeFigureWithNormals[i + j][4] = normal[1];        // ny
+				CubeFigureWithNormals[i + j][5] = normal[2];        // nz
 			}
-		};
-
+		}
 		for (int i = 0; i < 4; i++)
 		{
 			for (int j = 0; j < TRI_COUNT * 3; j++)
 			{
-				for (int k = 0; k < 3; k++)
+				for (int k = 0; k < 6; k++)
 				{
-					wheel_rect[i][j][k] = CubeFigure[0][j][k];
+					wheel_rect[i][j][k] = CubeFigureWithNormals[j][k];
 				}
-				wheel_rect_color[i][j][0] = 0.0f;
-				wheel_rect_color[i][j][1] = 0.0f;
-				wheel_rect_color[i][j][2] = 1.0f;
 			}
 		}
 	}
@@ -2291,6 +2243,21 @@ void initCar()
 // 장애물 초기화
 void initObstacleCar()
 {
+	//큐브 데이터 초기화
+	GLuint CubeIndices[] = {
+		// Front face
+		0, 1, 2, 0, 2, 3,
+		// Back face
+		4, 5, 6, 4, 6, 7,
+		// Right face
+		1, 5, 6, 1, 6, 2,
+		// Left face
+		0, 4, 7, 0, 7, 3,
+		// Top face
+		3, 2, 6, 3, 6, 7,
+		// Bottom face
+		0, 1, 5, 0, 5, 4
+	};
 	if (true)
 	{
 		GLfloat vertices[8][3] = {
@@ -2303,44 +2270,30 @@ void initObstacleCar()
 			{ OBSTACLE_WIDTH,	CAR_SIZE,		 OBSTACLE_HEIGHT },  // Vertex 6
 			{-OBSTACLE_WIDTH,	CAR_SIZE,		 OBSTACLE_HEIGHT }   // Vertex 7
 		};
-		//큐브 데이터 초기화
-		GLfloat CubeFigure[1][TRI_COUNT * 3][3] = {
-			{
-				// Front face - 2tri	012 023 -02
-				{vertices[0][0], vertices[0][1], vertices[0][2]}, {vertices[1][0], vertices[1][1], vertices[1][2]}, {vertices[2][0], vertices[2][1], vertices[2][2]},
-				{vertices[0][0], vertices[0][1], vertices[0][2]}, {vertices[2][0], vertices[2][1], vertices[2][2]}, {vertices[3][0], vertices[3][1], vertices[3][2]},
-
-				// Back face - 2tri		456 467 -46
-				{vertices[4][0], vertices[4][1], vertices[4][2]}, {vertices[5][0], vertices[5][1], vertices[5][2]}, {vertices[6][0], vertices[6][1], vertices[6][2]},
-				{vertices[4][0], vertices[4][1], vertices[4][2]}, {vertices[6][0], vertices[6][1], vertices[6][2]}, {vertices[7][0], vertices[7][1], vertices[7][2]},
-
-				// Left face - 2tri		047 073 -07
-				{vertices[0][0], vertices[0][1], vertices[0][2]}, {vertices[4][0], vertices[4][1], vertices[4][2]}, {vertices[7][0], vertices[7][1], vertices[7][2]},
-				{vertices[0][0], vertices[0][1], vertices[0][2]}, {vertices[7][0], vertices[7][1], vertices[7][2]}, {vertices[3][0], vertices[3][1], vertices[3][2]},
-
-				// Right face - 2tri	156 162 -16
-				{vertices[1][0], vertices[1][1], vertices[1][2]}, {vertices[5][0], vertices[5][1], vertices[5][2]}, {vertices[6][0], vertices[6][1], vertices[6][2]},
-				{vertices[1][0], vertices[1][1], vertices[1][2]}, {vertices[6][0], vertices[6][1], vertices[6][2]}, {vertices[2][0], vertices[2][1], vertices[2][2]},
-
-				// Top face - 2tri		326 367 -36
-				{vertices[3][0], vertices[3][1], vertices[3][2]}, {vertices[2][0], vertices[2][1], vertices[2][2]}, {vertices[6][0], vertices[6][1], vertices[6][2]},
-				{vertices[3][0], vertices[3][1], vertices[3][2]}, {vertices[6][0], vertices[6][1], vertices[6][2]}, {vertices[7][0], vertices[7][1], vertices[7][2]},
-
-				// Bottom face - 2tri	015 054 -05
-				{vertices[0][0], vertices[0][1], vertices[0][2]}, {vertices[1][0], vertices[1][1], vertices[1][2]}, {vertices[5][0], vertices[5][1], vertices[5][2]},
-				{vertices[0][0], vertices[0][1], vertices[0][2]}, {vertices[5][0], vertices[5][1], vertices[5][2]}, {vertices[4][0], vertices[4][1], vertices[4][2]}
+		GLfloat CubeFigureWithNormals[TRI_COUNT * 3][6];
+		// 정점 데이터와 법선 데이터 초기화
+		for (int i = 0; i < TRI_COUNT * 3; i += 3)
+		{
+			GLfloat normal[3];
+			bool reverse = (i / 6) % 2 == 0; // i가 6개씩 그룹화되었을 때 홀수 그룹은 뒷면
+			calculateNormal(vertices[CubeIndices[i]], vertices[CubeIndices[i + 1]], vertices[CubeIndices[i + 2]], normal, reverse);
+			for (int j = 0; j < 3; ++j)
+			{ // 각 삼각형의 정점
+				int idx = CubeIndices[i + j];
+				CubeFigureWithNormals[i + j][0] = vertices[idx][0]; // x
+				CubeFigureWithNormals[i + j][1] = vertices[idx][1]; // y
+				CubeFigureWithNormals[i + j][2] = vertices[idx][2]; // z
+				CubeFigureWithNormals[i + j][3] = normal[0];        // nx
+				CubeFigureWithNormals[i + j][4] = normal[1];        // ny
+				CubeFigureWithNormals[i + j][5] = normal[2];        // nz
 			}
-		};
-
+		}
 		for (int j = 0; j < TRI_COUNT * 3; j++)
 		{
-			for (int k = 0; k < 3; k++)
+			for (int k = 0; k < 6; k++)
 			{
-				obstacle_car[j][k] = CubeFigure[0][j][k];
+				obstacle_car[j][k] = CubeFigureWithNormals[j][k];
 			}
-			obstacle_car_color[j][0] = 0.3f;
-			obstacle_car_color[j][1] = 0.3f;
-			obstacle_car_color[j][2] = 0.3f;
 		}
 	}
 }
