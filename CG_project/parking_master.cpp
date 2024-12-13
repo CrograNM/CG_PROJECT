@@ -756,7 +756,8 @@ void UpdateParkingStatus(const std::vector<std::pair<float, float>>& carCorners)
 // 자동차 이동 및 회전 애니메이션
 // 다음 스테이지 (수치 변경)
 int current_stage = 1;
-bool point_mode = false;
+bool pause_mode = false;
+bool isClear = false;
 void nextStage()
 {
 	if (current_stage == 1)
@@ -788,6 +789,8 @@ void nextStage()
 
 		car_dx = 2.0f;
 		car_dz = -4.0f;
+
+		// 각도 초기화
 		car_rotateY = 0.0f;
 		front_wheels_rotateY = 0.0f;
 		wheel_rect_rotateX = 0.0f;
@@ -796,9 +799,14 @@ void nextStage()
 		handle_rotateZ = 0.0f;
 		lastAngle = 0.0f;
 
+		// 기어 초기화
 		currentGear = DRIVE;
 
+		// 시간 초기화
 		startTime = time(nullptr);
+		pauseTime = startTime - time(nullptr);
+
+		// 충돌여부 초기화
 		crushed = false;
 	}
 	else if (current_stage == 2)
@@ -816,7 +824,7 @@ void TimerFunction_UpdateMove(int value)
 	front_wheels_rotateY = (handle_rotateZ / 900.0f) * 30.0f;
 
 	currentTime = time(nullptr);
-	if (!point_mode)
+	if (!pause_mode)
 	{
 		elapsedSeconds = static_cast<int>(currentTime - pauseTime - startTime);
 	}
@@ -1401,7 +1409,7 @@ void drawScene()
 	}
 	glEnable(GL_DEPTH_TEST);
 
-	if (point_mode)
+	if (pause_mode)
 	{
 		int miniMapWidth = clientWidth / 2;
 		int miniMapHeight = clientHeight / 2;
@@ -1437,52 +1445,72 @@ void drawScene()
 		float textScale = 1.0f; // 텍스트 크기 조절
 		float mx = miniMapWidth * 0.5;
 		float my = miniMapHeight * 0.5;
-
-		glColor3f(1.0f, 1.0f, 1.0f); // 흰색
-		std::string String = "stage " + std::to_string(current_stage) + " clear!!";
-
-		glPushMatrix();
-		glTranslatef(mx - 50, my + 50, 0.0f);
-		glScalef(textScale, textScale, textScale);
-		RenderBitmapString(0, 0, GLUT_BITMAP_HELVETICA_18, String.c_str());
-		glPopMatrix();
-
-		glColor3f(1.0f, 1.0f, 0.0f); // 노란색
-		int star_count = 1;
-		if (elapsedSeconds <= 60)
+	
+		if (!isClear) // 정지 모드
 		{
-			star_count++;
-		}
-		if (!crushed)
-		{
-			star_count++;
-		}
+			glColor3f(1.0f, 1.0f, 1.0f); // 흰색
+			std::string String = "PAUSE";
+			glPushMatrix();
+			glTranslatef(mx - 20, my + 50, 0.0f);
+			glScalef(textScale, textScale, textScale);
+			RenderBitmapString(0, 0, GLUT_BITMAP_HELVETICA_18, String.c_str());
+			glPopMatrix();
 
-		String = "your star count : " + std::to_string(star_count);
-		glPushMatrix();
-		glTranslatef(mx - 65, my, 0.0f);
-		glScalef(textScale, textScale, textScale);
-		RenderBitmapString(0, 0, GLUT_BITMAP_HELVETICA_18, String.c_str());
-		glPopMatrix();
-
-		glColor3f(1.0f, 1.0f, 1.0f); // 흰색
-		if (current_stage == 1)
-		{
-			String = "Press 'n' to next stage";
+			String = "Press 'ESC' to resume";
 			glPushMatrix();
 			glTranslatef(mx - 80, my - 50, 0.0f);
 			glScalef(textScale, textScale, textScale);
 			RenderBitmapString(0, 0, GLUT_BITMAP_HELVETICA_18, String.c_str());
 			glPopMatrix();
 		}
-		else
+		else // 클리어 표시
 		{
-			String = "Press 'n' to quit game";
+			glColor3f(1.0f, 1.0f, 1.0f); // 흰색
+			std::string String = "stage " + std::to_string(current_stage) + " clear!!";
+
 			glPushMatrix();
-			glTranslatef(mx - 80, my - 50, 0.0f);
+			glTranslatef(mx - 50, my + 50, 0.0f);
 			glScalef(textScale, textScale, textScale);
 			RenderBitmapString(0, 0, GLUT_BITMAP_HELVETICA_18, String.c_str());
 			glPopMatrix();
+
+			glColor3f(1.0f, 1.0f, 0.0f); // 노란색
+			int star_count = 1;
+			if (elapsedSeconds <= 60)
+			{
+				star_count++;
+			}
+			if (!crushed)
+			{
+				star_count++;
+			}
+
+			String = "your star count : " + std::to_string(star_count);
+			glPushMatrix();
+			glTranslatef(mx - 65, my, 0.0f);
+			glScalef(textScale, textScale, textScale);
+			RenderBitmapString(0, 0, GLUT_BITMAP_HELVETICA_18, String.c_str());
+			glPopMatrix();
+
+			glColor3f(1.0f, 1.0f, 1.0f); // 흰색
+			if (current_stage == 1)
+			{
+				String = "Press 'n' to next stage";
+				glPushMatrix();
+				glTranslatef(mx - 80, my - 50, 0.0f);
+				glScalef(textScale, textScale, textScale);
+				RenderBitmapString(0, 0, GLUT_BITMAP_HELVETICA_18, String.c_str());
+				glPopMatrix();
+			}
+			else
+			{
+				String = "Press 'n' to quit game";
+				glPushMatrix();
+				glTranslatef(mx - 80, my - 50, 0.0f);
+				glScalef(textScale, textScale, textScale);
+				RenderBitmapString(0, 0, GLUT_BITMAP_HELVETICA_18, String.c_str());
+				glPopMatrix();
+			}
 		}
 
 		glPopMatrix(); // 모델뷰
@@ -1506,27 +1534,31 @@ GLvoid Keyboard(unsigned char key, int x, int y)
 {
 	if (key == 'n')
 	{
-		if (point_mode)
+		if (isClear)
 		{
 			nextStage();
-			point_mode = false;
+			pause_mode = false;
+			isClear = false;
 		}
 	}
-	if (key == 27) // ESC 키
+	if (!isClear)
 	{
-		if (point_mode) //해제
+		if (key == 27) // ESC 키
 		{
-			//startTime = time(nullptr) - (pauseTime - startTime); // 정지 시간만큼 보정
-			pauseTime += time(nullptr) - tempTime;
-			point_mode = false;
-		}
-		else //정지
-		{
-			tempTime = currentTime;
-			point_mode = true;
+			if (pause_mode) //해제
+			{
+				//startTime = time(nullptr) - (pauseTime - startTime); // 정지 시간만큼 보정
+				pauseTime += time(nullptr) - tempTime;
+				pause_mode = false;
+			}
+			else //정지
+			{
+				tempTime = currentTime;
+				pause_mode = true;
+			}
 		}
 	}
-	if (!point_mode)
+	if (!pause_mode)
 	{
 		switch (key)
 		{
@@ -1547,7 +1579,8 @@ GLvoid Keyboard(unsigned char key, int x, int y)
 			{
 				if (isParked)
 				{
-					point_mode = true;
+					pause_mode = true;
+					isClear = true;
 				}
 			}
 			break;
@@ -1597,7 +1630,7 @@ GLvoid KeyboardUp(unsigned char key, int x, int y) {
 
 void MouseButton(int button, int state, int x, int y)
 {
-	if (!point_mode)
+	if (!pause_mode)
 	{
 		if (button == GLUT_LEFT_BUTTON)
 		{ // 좌클릭
