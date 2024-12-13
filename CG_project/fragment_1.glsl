@@ -45,30 +45,24 @@ void main()
 
     // -------------------------
     // 헤드라이트(스포트라이트) 계산
-    // 스포트라이트는 headLightPos에서 FragPos로 향하는 벡터와 headLightDir 사이의 각도를 비교
     vec3 spotLightDir = normalize(headLightPos - FragPos);
     float theta = dot(spotLightDir, normalize(-headLightDir));
 
     // 컷오프 각도에 따라 빛이 닿는지 판단
-    // headLightCutOff: 스포트라이트 중심 각도
-    // headLightOuterCutOff: 그 외곽의 부드러운 경계
     float epsilon = headLightCutOff - headLightOuterCutOff;
     float intensity = clamp((theta - headLightOuterCutOff) / epsilon, 0.0, 1.0);
 
-    // Diffuse for headLight
     float diffHL = max(dot(norm, spotLightDir), 0.0);
     vec3 diffuseHL = diffHL * headLightColor;
 
-    // Specular for headLight
     vec3 reflectDirHL = reflect(-spotLightDir, norm);
     float specHL = pow(max(dot(viewDir, reflectDirHL), 0.0), shininess);
     vec3 specularHL = specHL * headLightColor;
 
     // ambient는 굳이 헤드라이트에 추가하지 않아도 됨(스포트라이트는 주로 특정 방향성 빛)
-    // 필요하면 ambientHL = ambientLight * headLightColor; 추가 가능
     vec3 headLightResult = (diffuseHL + specularHL) * intensity * objectColor;
-
     // -------------------------
+
     // 두 광원 합산
     vec3 finalColor = result + headLightResult;
 

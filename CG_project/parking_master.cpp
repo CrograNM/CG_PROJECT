@@ -736,7 +736,6 @@ void UpdateParkingStatus(const std::vector<std::pair<float, float>>& carCorners)
 	}
 }
 
-// 자동차 이동 및 회전 애니메이션
 // 다음 스테이지 (수치 변경)
 int current_stage = 1;
 bool pause_mode = false;
@@ -835,6 +834,7 @@ void nextStage()
 	}
 }
 
+// 자동차 이동 및 회전 애니메이션
 time_t currentTime;
 void TimerFunction_UpdateMove(int value)
 {
@@ -1035,15 +1035,13 @@ int main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정
 //그리기 함수
 void headLight(int modecLoc)
 {
-	// 헤드라이트 위치: 자동차 앞쪽 라이트의 월드 좌표를 구한다.
-	// Headlights(0) 또는 Headlights(1)을 통해 모델 행렬을 얻을 수 있음
+	// 헤드라이트 위치
 	glm::mat4 headLightModelLeft = Headlights(0);
 	glm::vec3 headLightWorldPosLeft = glm::vec3(headLightModelLeft[3]);
 
 	glm::mat4 headLightModelRight = Headlights(1);
 	glm::vec3 headLightWorldPosRight = glm::vec3(headLightModelRight[3]);
 
-	// 두 헤드라이트 위치 평균을 광원 위치로 사용할 수도 있고(양쪽 라이트를 하나의 광원으로 단순 처리)
 	glm::vec3 headLightPos = (headLightWorldPosLeft + headLightWorldPosRight) * 0.5f;
 
 	// 자동차가 바라보는 방향 계산 (car_rotateY 이용)
@@ -1058,7 +1056,7 @@ void headLight(int modecLoc)
 
 	glUniform3f(headLightPosLoc, headLightPos.x, headLightPos.y, headLightPos.z);
 	glUniform3f(headLightDirLoc, headLightDir.x, headLightDir.y, headLightDir.z);
-	glUniform3f(headLightColorLoc, 1.0f, 1.0f, 0.8f); // 약간 노란빛의 라이트
+	glUniform3f(headLightColorLoc, 1.0f, 1.0f, 0.8f); // 약간 노란빛
 
 	glUniform1f(glGetUniformLocation(shaderProgramID, "headLightCutOff"), cos(glm::radians(15.0f)));
 	glUniform1f(glGetUniformLocation(shaderProgramID, "headLightOuterCutOff"), cos(glm::radians(20.0f)));
@@ -1136,7 +1134,6 @@ void draw_pointMode(int modelLoc, int num)
 
 void draw_wheels(int modelLoc, int num)
 {
-	// shaderProgramID에 바인딩된 쉐이더 프로그램 사용 중이라고 가정
 	int objColorLocation = glGetUniformLocation(shaderProgramID, "objectColor");
 	glUniform3f(objColorLocation, 0.25f, 0.25f, 0.25f);
 
@@ -1298,7 +1295,7 @@ void drawObstacleCars(int modelLoc)
 void drawCarCorners(int modelLoc)
 {
 	int objColorLocation = glGetUniformLocation(shaderProgramID, "objectColor");
-	glUniform3f(objColorLocation, 1.0f, 1.0f, 1.0f);
+	glUniform3f(objColorLocation, 1.0f, 0.0f, 0.0f);
 	// 충돌체크용 차 꼭짓점 그리기
 	auto carCorners = getRotatedCarCorners(car_dx, car_dz, CAR_SIZE, car_rotateY);
 	for (const auto& corner : carCorners)
@@ -1399,7 +1396,9 @@ void drawScene()
 
 		// 차 꼭지점 (좌표에 따라) 그리기 (디버깅, 무적)
 		if (invincible)
+		{
 			drawCarCorners(modelLoc);
+		}
 	}
 	// 후방 카메라 뷰
 	if (currentGear == REVERSE)
@@ -1690,7 +1689,6 @@ GLvoid Reshape(int w, int h) //--- 콜백 함수: 다시 그리기 콜백 함수
 {
 	glViewport(0, 0, w, h);
 }
-
 GLvoid Keyboard(unsigned char key, int x, int y)
 {
 	if (key == 'b')
@@ -1785,16 +1783,19 @@ GLvoid KeyboardUp(unsigned char key, int x, int y)
 	switch (key)
 	{
 	case 'w': // 액셀 해제
+	{
 		isAcceleratingForward = false;
 		isAcceleratingBackward = false;
 		break;
+	}
 	case ' ': // 액셀 해제
+	{
 		isBraking = false;
 		break;
 	}
+	}
 	glutPostRedisplay(); //--- refresh
 }
-
 void MouseButton(int button, int state, int x, int y)
 {
 	if (!pause_mode)
@@ -1986,7 +1987,7 @@ void make_shaderProgram()
 void InitBuffer()
 {
 	glGenVertexArrays(10, vao);
-	glGenBuffers(20, vbo);
+	glGenBuffers(10, vbo);
 
 	// 땅
 	glBindVertexArray(vao[0]);

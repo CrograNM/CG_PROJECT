@@ -1,45 +1,45 @@
-﻿  parking_master_LIGHT.cpp
-C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\parking_master_LIGHT.cpp(34,16): warning C4305: '초기화 중': 'double'에서 'GLfloat'(으)로 잘립니다.
-C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\parking_master_LIGHT.cpp(544,8): warning C4267: '초기화 중': 'size_t'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\parking_master_LIGHT.cpp(652,22): warning C4244: '초기화 중': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\parking_master_LIGHT.cpp(653,22): warning C4244: '초기화 중': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\parking_master_LIGHT.cpp(654,22): warning C4244: '초기화 중': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\parking_master_LIGHT.cpp(655,22): warning C4244: '초기화 중': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\parking_master_LIGHT.cpp(685,15): warning C4267: '초기화 중': 'size_t'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\parking_master_LIGHT.cpp(686,20): warning C4267: '초기화 중': 'size_t'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\parking_master_LIGHT.cpp(786,39): warning C4244: '=': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\parking_master_LIGHT.cpp(789,39): warning C4244: '=': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\parking_master_LIGHT.cpp(811,39): warning C4244: '=': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\parking_master_LIGHT.cpp(814,39): warning C4244: '=': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\parking_master_LIGHT.cpp(820,39): warning C4244: '=': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\parking_master_LIGHT.cpp(823,39): warning C4244: '=': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\parking_master_LIGHT.cpp(1075,45): warning C4305: '인수': 'double'에서 'GLfloat'(으)로 잘립니다.
-C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\parking_master_LIGHT.cpp(1075,40): warning C4305: '인수': 'double'에서 'GLfloat'(으)로 잘립니다.
-C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\parking_master_LIGHT.cpp(1075,35): warning C4305: '인수': 'double'에서 'GLfloat'(으)로 잘립니다.
-C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\parking_master_LIGHT.cpp(1081,45): warning C4305: '인수': 'double'에서 'GLfloat'(으)로 잘립니다.
-C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\parking_master_LIGHT.cpp(1081,40): warning C4305: '인수': 'double'에서 'GLfloat'(으)로 잘립니다.
-C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\parking_master_LIGHT.cpp(1081,35): warning C4305: '인수': 'double'에서 'GLfloat'(으)로 잘립니다.
-C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\parking_master_LIGHT.cpp(1085,42): warning C4305: '인수': 'double'에서 'GLfloat'(으)로 잘립니다.
-C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\parking_master_LIGHT.cpp(1577,16): warning C4244: '초기화 중': 'double'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\parking_master_LIGHT.cpp(1578,16): warning C4244: '초기화 중': 'double'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\parking_master_LIGHT.cpp(1607,12): warning C4244: '초기화 중': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\parking_master_LIGHT.cpp(1608,12): warning C4244: '초기화 중': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\parking_master_LIGHT.cpp(1853,22): warning C4244: '초기화 중': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\parking_master_LIGHT.cpp(2088,42): warning C4305: '인수': 'double'에서 'GLfloat'(으)로 잘립니다.
-C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\parking_master_LIGHT.cpp(2326,6): warning C4305: '초기화 중': 'double'에서 'GLfloat'(으)로 잘립니다.
-C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\parking_master_LIGHT.cpp(2326,31): warning C4305: '초기화 중': 'double'에서 'GLfloat'(으)로 잘립니다.
-C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\parking_master_LIGHT.cpp(2327,6): warning C4305: '초기화 중': 'double'에서 'GLfloat'(으)로 잘립니다.
-C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\parking_master_LIGHT.cpp(2327,31): warning C4305: '초기화 중': 'double'에서 'GLfloat'(으)로 잘립니다.
-C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\parking_master_LIGHT.cpp(2328,6): warning C4305: '초기화 중': 'double'에서 'GLfloat'(으)로 잘립니다.
-C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\parking_master_LIGHT.cpp(2328,34): warning C4305: '초기화 중': 'double'에서 'GLfloat'(으)로 잘립니다.
-C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\parking_master_LIGHT.cpp(2329,6): warning C4305: '초기화 중': 'double'에서 'GLfloat'(으)로 잘립니다.
-C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\parking_master_LIGHT.cpp(2329,34): warning C4305: '초기화 중': 'double'에서 'GLfloat'(으)로 잘립니다.
-C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\parking_master_LIGHT.cpp(2330,6): warning C4305: '초기화 중': 'double'에서 'GLfloat'(으)로 잘립니다.
-C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\parking_master_LIGHT.cpp(2330,31): warning C4305: '초기화 중': 'double'에서 'GLfloat'(으)로 잘립니다.
-C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\parking_master_LIGHT.cpp(2331,6): warning C4305: '초기화 중': 'double'에서 'GLfloat'(으)로 잘립니다.
-C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\parking_master_LIGHT.cpp(2331,31): warning C4305: '초기화 중': 'double'에서 'GLfloat'(으)로 잘립니다.
-C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\parking_master_LIGHT.cpp(2332,6): warning C4305: '초기화 중': 'double'에서 'GLfloat'(으)로 잘립니다.
-C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\parking_master_LIGHT.cpp(2332,34): warning C4305: '초기화 중': 'double'에서 'GLfloat'(으)로 잘립니다.
-C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\parking_master_LIGHT.cpp(2333,6): warning C4305: '초기화 중': 'double'에서 'GLfloat'(으)로 잘립니다.
-C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\parking_master_LIGHT.cpp(2333,34): warning C4305: '초기화 중': 'double'에서 'GLfloat'(으)로 잘립니다.
+﻿  parking_master.cpp
+C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\parking_master.cpp(34,16): warning C4305: '초기화 중': 'double'에서 'GLfloat'(으)로 잘립니다.
+C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\parking_master.cpp(544,8): warning C4267: '초기화 중': 'size_t'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\parking_master.cpp(652,22): warning C4244: '초기화 중': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\parking_master.cpp(653,22): warning C4244: '초기화 중': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\parking_master.cpp(654,22): warning C4244: '초기화 중': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\parking_master.cpp(655,22): warning C4244: '초기화 중': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\parking_master.cpp(685,15): warning C4267: '초기화 중': 'size_t'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\parking_master.cpp(686,20): warning C4267: '초기화 중': 'size_t'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\parking_master.cpp(785,39): warning C4244: '=': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\parking_master.cpp(788,39): warning C4244: '=': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\parking_master.cpp(810,39): warning C4244: '=': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\parking_master.cpp(813,39): warning C4244: '=': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\parking_master.cpp(819,39): warning C4244: '=': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\parking_master.cpp(822,39): warning C4244: '=': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\parking_master.cpp(1073,45): warning C4305: '인수': 'double'에서 'GLfloat'(으)로 잘립니다.
+C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\parking_master.cpp(1073,40): warning C4305: '인수': 'double'에서 'GLfloat'(으)로 잘립니다.
+C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\parking_master.cpp(1073,35): warning C4305: '인수': 'double'에서 'GLfloat'(으)로 잘립니다.
+C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\parking_master.cpp(1079,45): warning C4305: '인수': 'double'에서 'GLfloat'(으)로 잘립니다.
+C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\parking_master.cpp(1079,40): warning C4305: '인수': 'double'에서 'GLfloat'(으)로 잘립니다.
+C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\parking_master.cpp(1079,35): warning C4305: '인수': 'double'에서 'GLfloat'(으)로 잘립니다.
+C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\parking_master.cpp(1083,42): warning C4305: '인수': 'double'에서 'GLfloat'(으)로 잘립니다.
+C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\parking_master.cpp(1576,16): warning C4244: '초기화 중': 'double'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\parking_master.cpp(1577,16): warning C4244: '초기화 중': 'double'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\parking_master.cpp(1606,12): warning C4244: '초기화 중': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\parking_master.cpp(1607,12): warning C4244: '초기화 중': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\parking_master.cpp(1854,22): warning C4244: '초기화 중': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\parking_master.cpp(2089,42): warning C4305: '인수': 'double'에서 'GLfloat'(으)로 잘립니다.
+C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\parking_master.cpp(2327,6): warning C4305: '초기화 중': 'double'에서 'GLfloat'(으)로 잘립니다.
+C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\parking_master.cpp(2327,31): warning C4305: '초기화 중': 'double'에서 'GLfloat'(으)로 잘립니다.
+C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\parking_master.cpp(2328,6): warning C4305: '초기화 중': 'double'에서 'GLfloat'(으)로 잘립니다.
+C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\parking_master.cpp(2328,31): warning C4305: '초기화 중': 'double'에서 'GLfloat'(으)로 잘립니다.
+C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\parking_master.cpp(2329,6): warning C4305: '초기화 중': 'double'에서 'GLfloat'(으)로 잘립니다.
+C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\parking_master.cpp(2329,34): warning C4305: '초기화 중': 'double'에서 'GLfloat'(으)로 잘립니다.
+C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\parking_master.cpp(2330,6): warning C4305: '초기화 중': 'double'에서 'GLfloat'(으)로 잘립니다.
+C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\parking_master.cpp(2330,34): warning C4305: '초기화 중': 'double'에서 'GLfloat'(으)로 잘립니다.
+C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\parking_master.cpp(2331,6): warning C4305: '초기화 중': 'double'에서 'GLfloat'(으)로 잘립니다.
+C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\parking_master.cpp(2331,31): warning C4305: '초기화 중': 'double'에서 'GLfloat'(으)로 잘립니다.
+C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\parking_master.cpp(2332,6): warning C4305: '초기화 중': 'double'에서 'GLfloat'(으)로 잘립니다.
+C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\parking_master.cpp(2332,31): warning C4305: '초기화 중': 'double'에서 'GLfloat'(으)로 잘립니다.
+C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\parking_master.cpp(2333,6): warning C4305: '초기화 중': 'double'에서 'GLfloat'(으)로 잘립니다.
+C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\parking_master.cpp(2333,34): warning C4305: '초기화 중': 'double'에서 'GLfloat'(으)로 잘립니다.
+C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\parking_master.cpp(2334,6): warning C4305: '초기화 중': 'double'에서 'GLfloat'(으)로 잘립니다.
+C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\parking_master.cpp(2334,34): warning C4305: '초기화 중': 'double'에서 'GLfloat'(으)로 잘립니다.
   CG_project.vcxproj -> C:\Users\ASUS\source\repos\CG_PROJECT\CG_project\x64\Debug\CG_project.exe
