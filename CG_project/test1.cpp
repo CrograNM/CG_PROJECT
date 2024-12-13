@@ -1048,7 +1048,7 @@ void illuminate(int modelLoc)
 	{
 		glUseProgram(shaderProgramID);
 		int lightColorLocation = glGetUniformLocation(shaderProgramID, "lightColor");
-		glUniform3f(lightColorLocation, 1.0, 1.0, 1.0);
+		glUniform3f(lightColorLocation, 0.5, 0.5, 0.5);
 	}
 
 	unsigned int objColorLocation = glGetUniformLocation(shaderProgramID, "objectColor");
@@ -1345,6 +1345,33 @@ void drawScene()
 			}
 			glUniformMatrix4fv(projLoc, 1, GL_FALSE, &pTransform[0][0]);
 		}
+		// 헤드라이트 위치: 자동차 앞쪽 라이트의 월드 좌표를 구한다.
+// Headlights(0) 또는 Headlights(1)을 통해 모델 행렬을 얻을 수 있음
+		glm::mat4 headLightModelLeft = Headlights(0);
+		glm::vec3 headLightWorldPosLeft = glm::vec3(headLightModelLeft[3]);
+
+		glm::mat4 headLightModelRight = Headlights(1);
+		glm::vec3 headLightWorldPosRight = glm::vec3(headLightModelRight[3]);
+
+		// 두 헤드라이트 위치 평균을 광원 위치로 사용할 수도 있고(양쪽 라이트를 하나의 광원으로 단순 처리)
+		glm::vec3 headLightPos = (headLightWorldPosLeft + headLightWorldPosRight) * 0.5f;
+
+		// 자동차가 바라보는 방향 계산 (car_rotateY 이용)
+		float radians = glm::radians(car_rotateY);
+		glm::vec3 carForwardDir(-sin(radians), 0.0f, -cos(radians));
+		glm::vec3 headLightDir = glm::normalize(-carForwardDir);
+
+		// 유니폼 전달
+		GLuint headLightPosLoc = glGetUniformLocation(shaderProgramID, "headLightPos");
+		GLuint headLightDirLoc = glGetUniformLocation(shaderProgramID, "headLightDir");
+		GLuint headLightColorLoc = glGetUniformLocation(shaderProgramID, "headLightColor");
+
+		glUniform3f(headLightPosLoc, headLightPos.x, headLightPos.y, headLightPos.z);
+		glUniform3f(headLightDirLoc, headLightDir.x, headLightDir.y, headLightDir.z);
+		glUniform3f(headLightColorLoc, 1.0f, 1.0f, 0.8f); // 약간 노란빛의 라이트
+		glUniform1f(glGetUniformLocation(shaderProgramID, "headLightCutOff"), cos(glm::radians(15.0f)));
+		glUniform1f(glGetUniformLocation(shaderProgramID, "headLightOuterCutOff"), cos(glm::radians(20.0f)));
+
 
 		// 조명 설정
 		illuminate(modelLoc);
