@@ -20,6 +20,7 @@
 #include <string>
 
 time_t startTime;
+int elapsedSeconds = 0;
 
 #define M_PI 3.14159265358979323846
 
@@ -741,6 +742,9 @@ void TimerFunction_UpdateMove(int value)
 {
 	front_wheels_rotateY = (handle_rotateZ / 900.0f) * 30.0f;
 
+	time_t currentTime = time(nullptr);
+	elapsedSeconds = static_cast<int>(currentTime - startTime);
+
 	// 속도 계산
 	if (currentGear == PARK || currentGear == NEUTRAL)
 	{
@@ -867,6 +871,7 @@ void TimerFunction_UpdateMove(int value)
 }
 
 // 다음 스테이지 (수치 변경)
+bool point_mode = false;
 int current_stage = 1;
 void nextStage()
 {
@@ -897,8 +902,9 @@ void nextStage()
 		obstacle_xz[3][0] = FINISH_OFFSET_X - 1.05 * 2;
 		obstacle_xz[3][1] = FINISH_OFFSET_Z - 1.55f;
 
-		car_dx = 0.0f;
-		car_dz = -3.0f;
+		car_dx = 2.0f;
+		car_dz = -4.0f;
+		car_rotateY = 0.0f;
 		front_wheels_rotateY = 0.0f;
 		wheel_rect_rotateX = 0.0f;
 
@@ -907,6 +913,8 @@ void nextStage()
 		lastAngle = 0.0f;
 
 		currentGear = DRIVE;
+
+		startTime = time(nullptr);
 	}
 	else if (current_stage == 2)
 	{
@@ -1119,239 +1127,264 @@ void drawScene()
 	int modelLoc = glGetUniformLocation(shaderProgramID, "model");
 	int viewLoc = glGetUniformLocation(shaderProgramID, "view");
 	int projLoc = glGetUniformLocation(shaderProgramID, "projection");
-
-	// 쿼터뷰
-	if (currentGear != REVERSE)
+	
+	if (point_mode)
 	{
 		if (true)
 		{
-			if (isCull)
-			{
-				glDisable(GL_DEPTH_TEST);
-			}
-			else
-			{
-				glEnable(GL_DEPTH_TEST);
-			}
+			int miniMapWidth = clientWidth / 3;
+			int miniMapHeight = clientHeight / 3;
+			int miniMapX = clientWidth - miniMapWidth * 2;
+			int miniMapY = clientHeight - miniMapHeight * 2;
+			glViewport(miniMapX, miniMapY, miniMapWidth, miniMapHeight);
 
-			// 차체 중심을 공전 중심으로 설정
-			glm::vec3 orbitCenter = glm::vec3(car_dx, car_dy, car_dz);
+			glm::mat4 topViewTransform = glm::lookAt(
+				glm::vec3(0.0f, 0.0f, 1.0f), // 카메라 위치
+				glm::vec3(0.0f, 0.0f, 0.0f), // 바라보는 위치
+				glm::vec3(0.0f, 1.0f, 0.0f)  // 업 벡터
+			);
+			glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(topViewTransform));
 
-			// 카메라 위치 계산
-			float cameraDistance = c_dz; // `c_dz`를 카메라 거리로 사용
-			glm::vec3 cameraDirection = glm::vec3(0.0f, 0.0f, -1.0f);
-			glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
+			glm::mat4 orthoTransform = glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f, -0.1f, 1.5f);
+			glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(orthoTransform));
 
-			glm::mat4 cameraRotateMat = glm::rotate(glm::mat4(1.0f), glm::radians(c_rotateY), glm::vec3(0.0, 1.0, 0.0));
-			glm::vec3 cameraOffset = glm::vec3(cameraRotateMat * glm::vec4(0.0f, 1.9f, cameraDistance, 1.0f)); // Y축으로 살짝 올림
-			glm::vec3 cameraPos = orbitCenter + cameraOffset;
-
-			// 카메라 방향 업데이트 (살짝 아래로 보기)
-			glm::vec3 lookTarget = orbitCenter + glm::vec3(0.0f, -0.2f, 0.0f); // 아래로 약간 이동
-			cameraDirection = glm::normalize(lookTarget - cameraPos);
-
-			// 뷰 행렬 설정
-			glm::mat4 vTransform = glm::lookAt(cameraPos, lookTarget, cameraUp);
-			glUniformMatrix4fv(viewLoc, 1, GL_FALSE, &vTransform[0][0]);
-
-			// 투영변환
-			glm::mat4 pTransform = glm::mat4(1.0f);
-			if (!isProspect)
-			{
-				pTransform = glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f, -0.1f, 100.0f);
-			}
-			else
-			{
-				pTransform = glm::perspective(glm::radians(45.0f), (float)clientWidth / (float)clientHeight, 0.1f, 50.0f);
-			}
-			glUniformMatrix4fv(projLoc, 1, GL_FALSE, &pTransform[0][0]);
+			draw_gear(modelLoc, 0);
 		}
-
-		// 바닥 그리기
-		drawGround(modelLoc);
-
-		// 모델 그리기
-		drawCar(modelLoc, 0);
-
-		// 장애물 차 그리기
-		drawObstacleCars(modelLoc);
-
-		// 벽 그리기
-		drawWalls(modelLoc);
-
-		// 도착지점 그리기
-		drawFinishRect(modelLoc);
-
-		// 차 꼭지점 (좌표에 따라) 그리기
-		drawCarCorners(modelLoc);
 	}
-	// 후방 카메라 뷰
-	if (currentGear == REVERSE) {
-		// 후방 카메라 뷰포트 설정
-		//int rearViewWidth = clientWidth / 3;
-		//int rearViewHeight = clientHeight / 3;
-		//int rearViewX = (clientWidth - rearViewWidth) / 2; // 화면 중앙 상단
-		//int rearViewY = clientHeight - rearViewHeight;
-
-		int rearViewWidth = clientWidth;
-		int rearViewHeight = clientHeight;
-		int rearViewX = 0;// 화면 중앙 상단
-		int rearViewY = 0;
-
-		glViewport(rearViewX, rearViewY, rearViewWidth, rearViewHeight);
-
-		// 후방 카메라 뷰 행렬 설정
-		glm::mat4 rearViewTransform = RearCameraView();
-		glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(rearViewTransform));
-
-		// 동일한 투영 행렬 사용
-		glm::mat4 rearProjTransform = glm::perspective(glm::radians(45.0f), (float)rearViewWidth / (float)rearViewHeight, 0.1f, 50.0f);
-		glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(rearProjTransform));
-
-		// 자동차, 바닥, 벽 등 모든 객체를 다시 그리기
-		drawGround(modelLoc);
-		drawCar(modelLoc, 0);
-		drawObstacleCars(modelLoc);
-		drawWalls(modelLoc);
-		drawFinishRect(modelLoc);
-	}
-	glDisable(GL_DEPTH_TEST);
-	// 핸들 - 뷰포트 설정으로 그리기
-	if (true)
+	else
 	{
-		int miniMapWidth = 900 / 3;
-		int miniMapHeight = 900 / 3;
-		int miniMapX = 900 - miniMapWidth;
-		int miniMapY = 900 - miniMapHeight;
-		glViewport(miniMapX, 0, miniMapWidth, miniMapHeight);
+		// 쿼터뷰
+		if (currentGear != REVERSE)
+		{
+			if (true)
+			{
+				if (isCull)
+				{
+					glDisable(GL_DEPTH_TEST);
+				}
+				else
+				{
+					glEnable(GL_DEPTH_TEST);
+				}
 
-		// 정면 뷰용 카메라 설정
-		glm::mat4 topViewTransform = glm::lookAt(
-			glm::vec3(0.0f, 0.0f, 1.0f),	// 카메라 위치
-			glm::vec3(0.0f, 0.0f, 0.0f),	// 어디를 바라볼 것인가
-			glm::vec3(0.0f, 1.0f, 0.0f)		// 업 벡터
-		);
-		glUniformMatrix4fv(viewLoc, 1, GL_FALSE, &topViewTransform[0][0]);
+				// 차체 중심을 공전 중심으로 설정
+				glm::vec3 orbitCenter = glm::vec3(car_dx, car_dy, car_dz);
 
-		// 투영 변환 (직교 투영)
-		glm::mat4 orthoTransform = glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f, -0.1f, 1.5f);
-		glUniformMatrix4fv(projLoc, 1, GL_FALSE, &orthoTransform[0][0]);
+				// 카메라 위치 계산
+				float cameraDistance = c_dz; // `c_dz`를 카메라 거리로 사용
+				glm::vec3 cameraDirection = glm::vec3(0.0f, 0.0f, -1.0f);
+				glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
 
-		// 핸들 그리기
-		draw_handle(modelLoc, 0);
-	}	
-	// 기어 그리기
-	if (true)
-	{
-		int miniMapWidth = clientWidth / 3;
-		int miniMapHeight = clientHeight / 3;
-		int miniMapX = clientWidth - miniMapWidth;
-		int miniMapY = clientHeight - miniMapHeight;
-		glViewport(miniMapX, miniMapY, miniMapWidth, miniMapHeight);
+				glm::mat4 cameraRotateMat = glm::rotate(glm::mat4(1.0f), glm::radians(c_rotateY), glm::vec3(0.0, 1.0, 0.0));
+				glm::vec3 cameraOffset = glm::vec3(cameraRotateMat * glm::vec4(0.0f, 1.9f, cameraDistance, 1.0f)); // Y축으로 살짝 올림
+				glm::vec3 cameraPos = orbitCenter + cameraOffset;
 
-		glm::mat4 topViewTransform = glm::lookAt(
-			glm::vec3(0.0f, 0.0f, 1.0f), // 카메라 위치
-			glm::vec3(0.0f, 0.0f, 0.0f), // 바라보는 위치
-			glm::vec3(0.0f, 1.0f, 0.0f)  // 업 벡터
-		);
-		glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(topViewTransform));
+				// 카메라 방향 업데이트 (살짝 아래로 보기)
+				glm::vec3 lookTarget = orbitCenter + glm::vec3(0.0f, -0.2f, 0.0f); // 아래로 약간 이동
+				cameraDirection = glm::normalize(lookTarget - cameraPos);
 
-		glm::mat4 orthoTransform = glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f, -0.1f, 1.5f);
-		glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(orthoTransform));
+				// 뷰 행렬 설정
+				glm::mat4 vTransform = glm::lookAt(cameraPos, lookTarget, cameraUp);
+				glUniformMatrix4fv(viewLoc, 1, GL_FALSE, &vTransform[0][0]);
 
-		draw_gear(modelLoc, 0);
+				// 투영변환
+				glm::mat4 pTransform = glm::mat4(1.0f);
+				if (!isProspect)
+				{
+					pTransform = glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f, -0.1f, 100.0f);
+				}
+				else
+				{
+					pTransform = glm::perspective(glm::radians(45.0f), (float)clientWidth / (float)clientHeight, 0.1f, 50.0f);
+				}
+				glUniformMatrix4fv(projLoc, 1, GL_FALSE, &pTransform[0][0]);
+			}
 
-		// 텍스트 그리기
-		// 텍스트 렌더링을 위해 쉐이더 프로그램 비활성화
-		glUseProgram(0);
-		glMatrixMode(GL_PROJECTION);
-		glPushMatrix();
-		glLoadIdentity();
-		gluOrtho2D(0, miniMapWidth, 0, miniMapHeight);
+			// 바닥 그리기
+			drawGround(modelLoc);
 
-		glMatrixMode(GL_MODELVIEW);
-		glPushMatrix();
-		glLoadIdentity();
+			// 모델 그리기
+			drawCar(modelLoc, 0);
 
-		// 텍스트 색상 설정
-		glColor3f(1.0f, 1.0f, 1.0f); // 흰색
+			// 장애물 차 그리기
+			drawObstacleCars(modelLoc);
 
-		// 텍스트 위치 계산 (픽셀 단위)
-		float textScale = 1.0f; // 텍스트 크기 조절
-		float p_x = miniMapWidth * 0.65f;
-		float r_x = miniMapWidth * 0.65f;
-		float n_x = miniMapWidth * 0.65f;
-		float d_x = miniMapWidth * 0.65f;
-		float y = miniMapHeight * 0.5f;
+			// 벽 그리기
+			drawWalls(modelLoc);
 
-		
-		glColor3f(1.0f, 0.0f, 0.0f); // 흰색
-		time_t currentTime = time(nullptr);
-		int elapsedSeconds = static_cast<int>(currentTime - startTime); // 경과 시간 계산
-		std::string timeString = std::to_string(elapsedSeconds) + "s";
+			// 도착지점 그리기
+			drawFinishRect(modelLoc);
 
-		glPushMatrix();
-		glTranslatef(p_x + 25, y + 84, 0.0f);
-		glScalef(textScale, textScale, textScale);
-		RenderBitmapString(0, 0, GLUT_BITMAP_HELVETICA_18, timeString.c_str());
-		glPopMatrix();
+			// 차 꼭지점 (좌표에 따라) 그리기
+			drawCarCorners(modelLoc);
+		}
+		// 후방 카메라 뷰
+		if (currentGear == REVERSE)
+		{
+			// 후방 카메라 뷰포트 설정
+			//int rearViewWidth = clientWidth / 3;
+			//int rearViewHeight = clientHeight / 3;
+			//int rearViewX = (clientWidth - rearViewWidth) / 2; // 화면 중앙 상단
+			//int rearViewY = clientHeight - rearViewHeight;
 
-		// OpenGL의 기본 행렬을 사용하여 텍스트를 그립니다.
-		// 글씨 하나씩 위치를 조절하며 그립니다.
-		glColor3f(1.0f, 1.0f, 1.0f); // 흰색
-		glPushMatrix();
-		glTranslatef(p_x, y + 50, 0.0f);
-		glScalef(textScale, textScale, textScale);
-		RenderBitmapString(0, 0, GLUT_BITMAP_HELVETICA_18, "P");
-		glPopMatrix();
+			int rearViewWidth = clientWidth;
+			int rearViewHeight = clientHeight;
+			int rearViewX = 0;// 화면 중앙 상단
+			int rearViewY = 0;
 
-		glPushMatrix();
-		glTranslatef(r_x, y + 5, 0.0f);
-		glScalef(textScale, textScale, textScale);
-		RenderBitmapString(0, 0, GLUT_BITMAP_HELVETICA_18, "R");
-		glPopMatrix();
+			glViewport(rearViewX, rearViewY, rearViewWidth, rearViewHeight);
 
-		glPushMatrix();
-		glTranslatef(n_x, y - 40, 0.0f);
-		glScalef(textScale, textScale, textScale);
-		RenderBitmapString(0, 0, GLUT_BITMAP_HELVETICA_18, "N");
-		glPopMatrix();
+			// 후방 카메라 뷰 행렬 설정
+			glm::mat4 rearViewTransform = RearCameraView();
+			glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(rearViewTransform));
 
-		glPushMatrix();
-		glTranslatef(d_x, y - 80, 0.0f);
-		glScalef(textScale, textScale, textScale);
-		RenderBitmapString(0, 0, GLUT_BITMAP_HELVETICA_18, "D");
-		glPopMatrix();
+			// 동일한 투영 행렬 사용
+			glm::mat4 rearProjTransform = glm::perspective(glm::radians(45.0f), (float)rearViewWidth / (float)rearViewHeight, 0.1f, 50.0f);
+			glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(rearProjTransform));
 
-		glPopMatrix(); // 모델뷰
-		glMatrixMode(GL_PROJECTION);
-		glPopMatrix();
+			// 자동차, 바닥, 벽 등 모든 객체를 다시 그리기
+			drawGround(modelLoc);
+			drawCar(modelLoc, 0);
+			drawObstacleCars(modelLoc);
+			drawWalls(modelLoc);
+			drawFinishRect(modelLoc);
+		}
+		glDisable(GL_DEPTH_TEST);
+		// 핸들 - 뷰포트 설정으로 그리기
+		if (true)
+		{
+			int miniMapWidth = 900 / 3;
+			int miniMapHeight = 900 / 3;
+			int miniMapX = 900 - miniMapWidth;
+			int miniMapY = 900 - miniMapHeight;
+			glViewport(miniMapX, 0, miniMapWidth, miniMapHeight);
 
-		glMatrixMode(GL_MODELVIEW);
-		glUseProgram(shaderProgramID); // 쉐이더 프로그램 재활성화
+			// 정면 뷰용 카메라 설정
+			glm::mat4 topViewTransform = glm::lookAt(
+				glm::vec3(0.0f, 0.0f, 1.0f),	// 카메라 위치
+				glm::vec3(0.0f, 0.0f, 0.0f),	// 어디를 바라볼 것인가
+				glm::vec3(0.0f, 1.0f, 0.0f)		// 업 벡터
+			);
+			glUniformMatrix4fv(viewLoc, 1, GL_FALSE, &topViewTransform[0][0]);
+
+			// 투영 변환 (직교 투영)
+			glm::mat4 orthoTransform = glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f, -0.1f, 1.5f);
+			glUniformMatrix4fv(projLoc, 1, GL_FALSE, &orthoTransform[0][0]);
+
+			// 핸들 그리기
+			draw_handle(modelLoc, 0);
+		}
+		// 기어 그리기
+		if (true)
+		{
+			int miniMapWidth = clientWidth / 3;
+			int miniMapHeight = clientHeight / 3;
+			int miniMapX = clientWidth - miniMapWidth;
+			int miniMapY = clientHeight - miniMapHeight;
+			glViewport(miniMapX, miniMapY, miniMapWidth, miniMapHeight);
+
+			glm::mat4 topViewTransform = glm::lookAt(
+				glm::vec3(0.0f, 0.0f, 1.0f), // 카메라 위치
+				glm::vec3(0.0f, 0.0f, 0.0f), // 바라보는 위치
+				glm::vec3(0.0f, 1.0f, 0.0f)  // 업 벡터
+			);
+			glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(topViewTransform));
+
+			glm::mat4 orthoTransform = glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f, -0.1f, 1.5f);
+			glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(orthoTransform));
+
+			draw_gear(modelLoc, 0);
+
+			// 텍스트 그리기
+			// 텍스트 렌더링을 위해 쉐이더 프로그램 비활성화
+			glUseProgram(0);
+			glMatrixMode(GL_PROJECTION);
+			glPushMatrix();
+			glLoadIdentity();
+			gluOrtho2D(0, miniMapWidth, 0, miniMapHeight);
+
+			glMatrixMode(GL_MODELVIEW);
+			glPushMatrix();
+			glLoadIdentity();
+
+			// 텍스트 색상 설정
+			glColor3f(1.0f, 1.0f, 1.0f); // 흰색
+
+			// 텍스트 위치 계산 (픽셀 단위)
+			float textScale = 1.0f; // 텍스트 크기 조절
+			float p_x = miniMapWidth * 0.65f;
+			float r_x = miniMapWidth * 0.65f;
+			float n_x = miniMapWidth * 0.65f;
+			float d_x = miniMapWidth * 0.65f;
+			float y = miniMapHeight * 0.5f;
+
+
+			glColor3f(1.0f, 0.0f, 0.0f); // 흰색
+			std::string timeString = std::to_string(elapsedSeconds) + "s";
+
+			glPushMatrix();
+			glTranslatef(p_x + 25, y + 84, 0.0f);
+			glScalef(textScale, textScale, textScale);
+			RenderBitmapString(0, 0, GLUT_BITMAP_HELVETICA_18, timeString.c_str());
+			glPopMatrix();
+
+			// OpenGL의 기본 행렬을 사용하여 텍스트를 그립니다.
+			// 글씨 하나씩 위치를 조절하며 그립니다.
+			glColor3f(1.0f, 1.0f, 1.0f); // 흰색
+			glPushMatrix();
+			glTranslatef(p_x, y + 50, 0.0f);
+			glScalef(textScale, textScale, textScale);
+			RenderBitmapString(0, 0, GLUT_BITMAP_HELVETICA_18, "P");
+			glPopMatrix();
+
+			glPushMatrix();
+			glTranslatef(r_x, y + 5, 0.0f);
+			glScalef(textScale, textScale, textScale);
+			RenderBitmapString(0, 0, GLUT_BITMAP_HELVETICA_18, "R");
+			glPopMatrix();
+
+			glPushMatrix();
+			glTranslatef(n_x, y - 40, 0.0f);
+			glScalef(textScale, textScale, textScale);
+			RenderBitmapString(0, 0, GLUT_BITMAP_HELVETICA_18, "N");
+			glPopMatrix();
+
+			glPushMatrix();
+			glTranslatef(d_x, y - 80, 0.0f);
+			glScalef(textScale, textScale, textScale);
+			RenderBitmapString(0, 0, GLUT_BITMAP_HELVETICA_18, "D");
+			glPopMatrix();
+
+			glPopMatrix(); // 모델뷰
+			glMatrixMode(GL_PROJECTION);
+			glPopMatrix();
+
+			glMatrixMode(GL_MODELVIEW);
+			glUseProgram(shaderProgramID); // 쉐이더 프로그램 재활성화
+		}
+		// 기어 스틱 그리기
+		if (true)
+		{
+			int miniMapWidth = clientWidth / 3;
+			int miniMapHeight = clientHeight / 3;
+			int miniMapX = clientWidth - miniMapWidth;
+			int miniMapY = clientHeight - miniMapHeight;
+			glViewport(miniMapX, miniMapY, miniMapWidth, miniMapHeight);
+
+			glm::mat4 topViewTransform = glm::lookAt(
+				glm::vec3(0.0f, 0.0f, 1.0f), // 카메라 위치
+				glm::vec3(0.0f, 0.0f, 0.0f), // 바라보는 위치
+				glm::vec3(0.0f, 1.0f, 0.0f)  // 업 벡터
+			);
+			glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(topViewTransform));
+
+			glm::mat4 orthoTransform = glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f, -0.1f, 1.5f);
+			glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(orthoTransform));
+
+			draw_gear_stick(modelLoc, 0);
+		}
+		glEnable(GL_DEPTH_TEST);
 	}
-	// 기어 스틱 그리기
-	if (true)
-	{
-		int miniMapWidth = clientWidth / 3;
-		int miniMapHeight = clientHeight / 3;
-		int miniMapX = clientWidth - miniMapWidth;
-		int miniMapY = clientHeight - miniMapHeight;
-		glViewport(miniMapX, miniMapY, miniMapWidth, miniMapHeight);
-
-		glm::mat4 topViewTransform = glm::lookAt(
-			glm::vec3(0.0f, 0.0f, 1.0f), // 카메라 위치
-			glm::vec3(0.0f, 0.0f, 0.0f), // 바라보는 위치
-			glm::vec3(0.0f, 1.0f, 0.0f)  // 업 벡터
-		);
-		glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(topViewTransform));
-
-		glm::mat4 orthoTransform = glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f, -0.1f, 1.5f);
-		glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(orthoTransform));
-
-		draw_gear_stick(modelLoc, 0);
-	}
-	glEnable(GL_DEPTH_TEST);
 	
 	glutSwapBuffers();
 }
@@ -1361,12 +1394,17 @@ GLvoid Reshape(int w, int h) //--- 콜백 함수: 다시 그리기 콜백 함수
 {
 	glViewport(0, 0, w, h);
 }
+
 GLvoid Keyboard(unsigned char key, int x, int y)
 {
 	switch (key)
 	{
 	case 'n': // 다음 스테이지 기능 테스트
-		nextStage();
+		if (point_mode)
+		{
+			nextStage();
+			point_mode = false;
+		}
 		break;
 	case 'q': // 이전 기어
 	{
@@ -1377,7 +1415,7 @@ GLvoid Keyboard(unsigned char key, int x, int y)
 		{
 			if (isParked)
 			{
-				nextStage();
+				point_mode = true;
 			}
 		}
 		break;
