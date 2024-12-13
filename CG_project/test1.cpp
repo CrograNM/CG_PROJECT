@@ -67,21 +67,33 @@ GLfloat obstacle_car_color[TRI_COUNT * 3][3];
 // 핸들 초기화
 #define HANDLE_SIZE 0.7f
 #define HAND_RECT_SIZE HANDLE_SIZE / 4
-GLfloat handle_rect[6][3] = {
-	{-HAND_RECT_SIZE, 0, -HAND_RECT_SIZE}, {HAND_RECT_SIZE, 0, -HAND_RECT_SIZE}, {-HAND_RECT_SIZE, 0, HAND_RECT_SIZE},
-	{-HAND_RECT_SIZE, 0, HAND_RECT_SIZE},  {HAND_RECT_SIZE, 0, -HAND_RECT_SIZE}, { HAND_RECT_SIZE, 0, HAND_RECT_SIZE}
+GLfloat handle_rect[] = {
+	-HAND_RECT_SIZE, 0, -HAND_RECT_SIZE, 0.0f, 0.0f, 0.0f,
+	HAND_RECT_SIZE, 0, -HAND_RECT_SIZE,  0.0f, 0.0f, 0.0f,
+	-HAND_RECT_SIZE, 0, HAND_RECT_SIZE,	 0.0f, 0.0f, 0.0f,
+	-HAND_RECT_SIZE, 0, HAND_RECT_SIZE,  0.0f, 0.0f, 0.0f,
+	HAND_RECT_SIZE, 0, -HAND_RECT_SIZE,  0.0f, 0.0f, 0.0f,
+	 HAND_RECT_SIZE, 0, HAND_RECT_SIZE,	 0.0f, 0.0f, 0.0f,
 };
 
 // 기어 초기화
-GLfloat gear_rect[6][3] = {
-	{-0.3f, 0, -1.0f}, {0.3f, 0, -1.0f}, {-0.3f, 0, 1.0f},
-	{-0.3f, 0, 1.0f}, {0.3f, 0, -1.0f}, {0.3f, 0, 1.0f}
+GLfloat gear_rect[] = {
+	-0.3f, 0, -1.0f, 0.0f, 0.0f, 0.0f,
+	0.3f, 0, -1.0f,  0.0f, 0.0f, 0.0f,
+	-0.3f, 0, 1.0f,	 0.0f, 0.0f, 0.0f,
+	-0.3f, 0, 1.0f,  0.0f, 0.0f, 0.0f,
+	0.3f, 0, -1.0f,  0.0f, 0.0f, 0.0f,
+	0.3f, 0, 1.0f,	 0.0f, 0.0f, 0.0f,
 };
 
 // 기어 봉 초기화
-GLfloat gear_stick_rect[6][3] = {
-	{-0.1f, 0, -0.1f}, {0.1f, 0, -0.1f}, {-0.1f, 0, 0.1f},
-	{-0.1f, 0, 0.1f}, {0.1f, 0, -0.1f}, {0.1f, 0, 0.1f}
+GLfloat gear_stick_rect[] = {
+	-0.1f, 0, -0.1f, 0.0f, 0.0f, 0.0f,
+	0.1f, 0, -0.1f,  0.0f, 0.0f, 0.0f,
+	-0.1f, 0, 0.1f,	 0.0f, 0.0f, 0.0f,
+	-0.1f, 0, 0.1f,  0.0f, 0.0f, 0.0f,
+	0.1f, 0, -0.1f,  0.0f, 0.0f, 0.0f,
+	0.1f, 0, 0.1f, 	 0.0f, 0.0f, 0.0f,
 };
 
 // 텍스트 렌더링 함수
@@ -174,19 +186,35 @@ GLfloat ground[] = {
 // 벽 초기화
 #define WALL_HEIGHT 0.5f
 #define WALL_THICKNESS 0.1f
-GLfloat walls[24][3] = {
-	// Front Wall
-	{-GROUND_SIZE, 0.0f, -GROUND_SIZE}, {GROUND_SIZE, 0.0f, -GROUND_SIZE}, {-GROUND_SIZE, WALL_HEIGHT, -GROUND_SIZE},
-	{-GROUND_SIZE, WALL_HEIGHT, -GROUND_SIZE}, {GROUND_SIZE, 0.0f, -GROUND_SIZE}, {GROUND_SIZE, WALL_HEIGHT, -GROUND_SIZE},
+GLfloat walls[] = {
+	 // Front Wall
+	-GROUND_SIZE, 0.0f, -GROUND_SIZE, 				  0.0f,	1.0f,	0.0f,
+	GROUND_SIZE, 0.0f, -GROUND_SIZE, 				  0.0f,	1.0f,	0.0f,
+	-GROUND_SIZE, WALL_HEIGHT, -GROUND_SIZE,		  0.0f,	1.0f,	0.0f,
+	-GROUND_SIZE, WALL_HEIGHT, -GROUND_SIZE, 		  0.0f,	1.0f,	0.0f,
+	GROUND_SIZE, 0.0f, -GROUND_SIZE, 				  0.0f,	1.0f,	0.0f,
+	GROUND_SIZE, WALL_HEIGHT, -GROUND_SIZE,			  0.0f,	1.0f,	0.0f,
 	// Back Wall
-	{-GROUND_SIZE, 0.0f, GROUND_SIZE}, {GROUND_SIZE, 0.0f, GROUND_SIZE}, {-GROUND_SIZE, WALL_HEIGHT, GROUND_SIZE},
-	{-GROUND_SIZE, WALL_HEIGHT, GROUND_SIZE}, {GROUND_SIZE, 0.0f, GROUND_SIZE}, {GROUND_SIZE, WALL_HEIGHT, GROUND_SIZE},
+	-GROUND_SIZE, 0.0f, GROUND_SIZE, 				  0.0f,	1.0f,	0.0f,
+	GROUND_SIZE, 0.0f, GROUND_SIZE, 				  0.0f,	1.0f,	0.0f,
+	-GROUND_SIZE, WALL_HEIGHT, GROUND_SIZE,			  0.0f,	1.0f,	0.0f,
+	-GROUND_SIZE, WALL_HEIGHT, GROUND_SIZE, 		  0.0f,	1.0f,	0.0f,
+	GROUND_SIZE, 0.0f, GROUND_SIZE, 				  0.0f,	1.0f,	0.0f,
+	GROUND_SIZE, WALL_HEIGHT, GROUND_SIZE,			  0.0f,	1.0f,	0.0f,
 	// Left Wall
-	{-GROUND_SIZE, 0.0f, -GROUND_SIZE}, {-GROUND_SIZE, 0.0f, GROUND_SIZE}, {-GROUND_SIZE, WALL_HEIGHT, -GROUND_SIZE},
-	{-GROUND_SIZE, WALL_HEIGHT, -GROUND_SIZE}, {-GROUND_SIZE, 0.0f, GROUND_SIZE}, {-GROUND_SIZE, WALL_HEIGHT, GROUND_SIZE},
+	-GROUND_SIZE, 0.0f, -GROUND_SIZE , 				  0.0f,	1.0f,	0.0f,
+	-GROUND_SIZE, 0.0f, GROUND_SIZE , 				  0.0f,	1.0f,	0.0f,
+	-GROUND_SIZE, WALL_HEIGHT, -GROUND_SIZE ,		  0.0f,	1.0f,	0.0f,
+	-GROUND_SIZE, WALL_HEIGHT, -GROUND_SIZE , 		  0.0f,	1.0f,	0.0f,
+	-GROUND_SIZE, 0.0f, GROUND_SIZE , 				  0.0f,	1.0f,	0.0f,
+	-GROUND_SIZE, WALL_HEIGHT, GROUND_SIZE ,		  0.0f,	1.0f,	0.0f,
 	// Right Wall
-	{GROUND_SIZE, 0.0f, -GROUND_SIZE}, {GROUND_SIZE, 0.0f, GROUND_SIZE}, {GROUND_SIZE, WALL_HEIGHT, -GROUND_SIZE},
-	{GROUND_SIZE, WALL_HEIGHT, -GROUND_SIZE}, {GROUND_SIZE, 0.0f, GROUND_SIZE}, {GROUND_SIZE, WALL_HEIGHT, GROUND_SIZE}
+	GROUND_SIZE, 0.0f, -GROUND_SIZE , 				  0.0f,	1.0f,	0.0f,
+	GROUND_SIZE, 0.0f, GROUND_SIZE, 				  0.0f,	1.0f,	0.0f,
+	GROUND_SIZE, WALL_HEIGHT, -GROUND_SIZE,			  0.0f,	1.0f,	0.0f,
+	GROUND_SIZE, WALL_HEIGHT, -GROUND_SIZE, 		  0.0f,	1.0f,	0.0f,
+	GROUND_SIZE, 0.0f, GROUND_SIZE, 				  0.0f,	1.0f,	0.0f,
+	GROUND_SIZE, WALL_HEIGHT, GROUND_SIZE,			  0.0f,	1.0f,	0.0f,
 };
 
 // 필요 변수 선언
@@ -221,7 +249,7 @@ GLvoid InitBuffer();
 bool isLight = true;	// 조명
 float light_rotateY = 90.0f;
 GLfloat lightX = 0.0f;
-GLfloat lightY = 0.5f;
+GLfloat lightY = 5.0f;
 GLfloat lightZ = 1.0f;
 GLfloat lightD = 1.0f;	//distance
 float light = 0.5f;
@@ -1010,7 +1038,7 @@ void illuminate(int modelLoc)
 	unsigned int lightPosLocation = glGetUniformLocation(shaderProgramID, "lightPos");
 	glUniform3f(lightPosLocation, lightX, lightY, lightZ);
 
-	if (!isLight)
+	if (pause_mode)
 	{
 		glUseProgram(shaderProgramID);
 		int lightColorLocation = glGetUniformLocation(shaderProgramID, "lightColor");
@@ -1043,6 +1071,8 @@ void draw_handle(int modelLoc, int num)
 	gluDisk(qobj1, HANDLE_SIZE - HANDLE_SIZE / 2, HANDLE_SIZE, 20, 8);
 	gluDeleteQuadric(qobj1);
 
+	objColorLocation = glGetUniformLocation(shaderProgramID, "objectColor");
+	glUniform3f(objColorLocation, 1.0f, 1.0f, 1.0f);
 	glBindVertexArray(vao[2]);
 	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(Handle()));
 	glDrawArrays(GL_TRIANGLES, 0, 6);
@@ -1150,7 +1180,7 @@ void drawWalls(int modelLoc)
 void drawGround(int modelLoc)
 {
 	int objColorLocation = glGetUniformLocation(shaderProgramID, "objectColor");
-	glUniform3f(objColorLocation, 0.8f, 0.8f, 0.8f);
+	glUniform3f(objColorLocation, 0.5f, 0.5f, 0.5f);
 	// 바닥
 	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(SRT_MATRIX()));
 	glBindVertexArray(vao[0]);
@@ -1170,7 +1200,7 @@ void drawFinishRect(int modelLoc)
 	glDrawArrays(GL_TRIANGLES, 0, 6);
 
 	objColorLocation = glGetUniformLocation(shaderProgramID, "objectColor");
-	glUniform3f(objColorLocation, 0.8f, 0.8f, 0.8f);
+	glUniform3f(objColorLocation, 0.5f, 0.5f, 0.5f);
 	glDrawArrays(GL_TRIANGLES, 6, 6);
 }
 void drawObstacleCars(int modelLoc)
@@ -1183,28 +1213,28 @@ void drawObstacleCars(int modelLoc)
 	glUniform3f(objColorLocation, 1.0f, 1.0f, 1.0f);
 	glDrawArrays(GL_TRIANGLES, 0, 6);
 	objColorLocation = glGetUniformLocation(shaderProgramID, "objectColor");
-	glUniform3f(objColorLocation, 0.8f, 0.8f, 0.8f);
+	glUniform3f(objColorLocation, 0.5f, 0.5f, 0.5f);
 	glDrawArrays(GL_TRIANGLES, 6, 6);
 	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(ObstacleCar(1)));
 	objColorLocation = glGetUniformLocation(shaderProgramID, "objectColor");
 	glUniform3f(objColorLocation, 1.0f, 1.0f, 1.0f);
 	glDrawArrays(GL_TRIANGLES, 0, 6);
 	objColorLocation = glGetUniformLocation(shaderProgramID, "objectColor");
-	glUniform3f(objColorLocation, 0.8f, 0.8f, 0.8f);
+	glUniform3f(objColorLocation, 0.5f, 0.5f, 0.5f);
 	glDrawArrays(GL_TRIANGLES, 6, 6);
 	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(ObstacleCar(2)));
 	objColorLocation = glGetUniformLocation(shaderProgramID, "objectColor");
 	glUniform3f(objColorLocation, 1.0f, 1.0f, 1.0f);
 	glDrawArrays(GL_TRIANGLES, 0, 6);
 	objColorLocation = glGetUniformLocation(shaderProgramID, "objectColor");
-	glUniform3f(objColorLocation, 0.8f, 0.8f, 0.8f);
+	glUniform3f(objColorLocation, 0.5f, 0.5f, 0.5f);
 	glDrawArrays(GL_TRIANGLES, 6, 6);
 	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(ObstacleCar(3)));
 	objColorLocation = glGetUniformLocation(shaderProgramID, "objectColor");
 	glUniform3f(objColorLocation, 1.0f, 1.0f, 1.0f);
 	glDrawArrays(GL_TRIANGLES, 0, 6);
 	objColorLocation = glGetUniformLocation(shaderProgramID, "objectColor");
-	glUniform3f(objColorLocation, 0.8f, 0.8f, 0.8f);
+	glUniform3f(objColorLocation, 0.5f, 0.5f, 0.5f);
 	glDrawArrays(GL_TRIANGLES, 6, 6);
 	if (current_stage == 3)
 	{
@@ -1213,12 +1243,12 @@ void drawObstacleCars(int modelLoc)
 		glUniform3f(objColorLocation, 1.0f, 1.0f, 1.0f);
 		glDrawArrays(GL_TRIANGLES, 0, 6);
 		objColorLocation = glGetUniformLocation(shaderProgramID, "objectColor");
-		glUniform3f(objColorLocation, 0.8f, 0.8f, 0.8f);
+		glUniform3f(objColorLocation, 0.5f, 0.5f, 0.5f);
 		glDrawArrays(GL_TRIANGLES, 6, 6);
 	}
 
 	objColorLocation = glGetUniformLocation(shaderProgramID, "objectColor");
-	glUniform3f(objColorLocation, 0.5f, 0.5f, 0.5f);
+	glUniform3f(objColorLocation, 0.25f, 0.25f, 0.25f);
 	// 장애물
 	glBindVertexArray(vao[9]);
 	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(ObstacleCar(0)));
@@ -1922,7 +1952,6 @@ void make_shaderProgram()
 }
 void InitBuffer()
 {
-
 	glGenVertexArrays(10, vao);
 	glGenBuffers(20, vbo);
 
@@ -2029,7 +2058,7 @@ void InitBuffer()
 	glUniform3f(ablColorLocation, light, light, light);
 
 	unsigned int viewPosLocation = glGetUniformLocation(shaderProgramID, "viewPos");	//--- viewPos 값 전달: 카메라위치
-	glUniform3f(viewPosLocation, c_dx, c_dy, c_dz);
+	glUniform3f(viewPosLocation, c_dx, c_dy, 0.0f);
 }
 
 // 함수: 두 벡터의 외적을 계산
