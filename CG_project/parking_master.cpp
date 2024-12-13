@@ -1305,9 +1305,6 @@ void drawScene()
 		glPushMatrix();
 		glLoadIdentity();
 
-		// 텍스트 색상 설정
-		glColor3f(1.0f, 1.0f, 1.0f); // 흰색
-
 		// 텍스트 위치 계산 (픽셀 단위)
 		float textScale = 1.0f; // 텍스트 크기 조절
 		float p_x = miniMapWidth * 0.65f;
@@ -1317,7 +1314,7 @@ void drawScene()
 		float y = miniMapHeight * 0.5f;
 
 
-		glColor3f(1.0f, 0.0f, 0.0f); // 흰색
+		glColor3f(1.0f, 0.0f, 0.0f); // 빨간색
 		std::string timeString = std::to_string(elapsedSeconds) + "s";
 
 		glPushMatrix();
@@ -1402,6 +1399,39 @@ void drawScene()
 		glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(orthoTransform));
 
 		draw_pointMode(modelLoc, 0);
+
+		// 텍스트 그리기
+		// 텍스트 렌더링을 위해 쉐이더 프로그램 비활성화
+		glUseProgram(0);
+		glMatrixMode(GL_PROJECTION);
+		glPushMatrix();
+		glLoadIdentity();
+		gluOrtho2D(0, miniMapWidth, 0, miniMapHeight);
+
+		glMatrixMode(GL_MODELVIEW);
+		glPushMatrix();
+		glLoadIdentity();
+
+		// 텍스트 위치 계산 (픽셀 단위)
+		float textScale = 1.0f; // 텍스트 크기 조절
+		float mx = miniMapWidth * 0.5;
+		float my = miniMapHeight * 0.5;
+
+		glColor3f(1.0f, 1.0f, 1.0f); // 흰색
+		std::string timeString = "stage " + std::to_string(current_stage) + " clear!!";
+
+		glPushMatrix();
+		glTranslatef(mx - 50, my + 50, 0.0f);
+		glScalef(textScale, textScale, textScale);
+		RenderBitmapString(0, 0, GLUT_BITMAP_HELVETICA_18, timeString.c_str());
+		glPopMatrix();
+
+		glPopMatrix(); // 모델뷰
+		glMatrixMode(GL_PROJECTION);
+		glPopMatrix();
+
+		glMatrixMode(GL_MODELVIEW);
+		glUseProgram(shaderProgramID); // 쉐이더 프로그램 재활성화
 	}
 
 	glutSwapBuffers();
@@ -1490,45 +1520,48 @@ GLvoid KeyboardUp(unsigned char key, int x, int y) {
 }
 void MouseButton(int button, int state, int x, int y)
 {
-	if (button == GLUT_LEFT_BUTTON)
-	{ // 좌클릭
-		if (state == GLUT_DOWN)
-		{
-			if (x > 600 && y > 300) //750, 450이 핸들의 중심좌표
+	if (!point_mode)
+	{
+		if (button == GLUT_LEFT_BUTTON)
+		{ // 좌클릭
+			if (state == GLUT_DOWN)
 			{
-				lastAngle = 0.0f;
-				is_mouse_on_handle = true;
-				//std::cout << "x :" << x << "  y :" << y << std::endl;
+				if (x > 600 && y > 300) //750, 450이 핸들의 중심좌표
+				{
+					lastAngle = 0.0f;
+					is_mouse_on_handle = true;
+					//std::cout << "x :" << x << "  y :" << y << std::endl;
+				}
+				else
+				{
+					is_mouse_on_camera = true; // 마우스 눌림 상태
+					lastMouseX = x;           // 초기 위치 저장
+				}
 			}
-			else
+			else if (state == GLUT_UP)
 			{
-				is_mouse_on_camera = true; // 마우스 눌림 상태
-				lastMouseX = x;           // 초기 위치 저장
+				if (is_mouse_on_handle)
+				{
+					lastAngle = 0.0f;
+					is_mouse_on_handle = false;
+				}
+				if (is_mouse_on_camera)
+				{
+					is_mouse_on_camera = false; // 마우스 떼기 상태
+					lastMouseX = -1;           // 초기화
+				}
 			}
 		}
-		else if (state == GLUT_UP)
-		{
-			if (is_mouse_on_handle)
-			{
-				lastAngle = 0.0f;
-				is_mouse_on_handle = false;
-			}
-			if (is_mouse_on_camera)
-			{
-				is_mouse_on_camera = false; // 마우스 떼기 상태
-				lastMouseX = -1;           // 초기화
-			}
+		else if (button == 3)
+		{ // 휠 위로 스크롤
+			c_dz -= 0.1f;       // 카메라를 앞으로 이동
+			glutPostRedisplay(); // 화면 갱신 요청
 		}
-	}
-	else if (button == 3)
-	{ // 휠 위로 스크롤
-		c_dz -= 0.1f;       // 카메라를 앞으로 이동
-		glutPostRedisplay(); // 화면 갱신 요청
-	}
-	else if (button == 4)
-	{ // 휠 아래로 스크롤
-		c_dz += 0.1f;       // 카메라를 뒤로 이동
-		glutPostRedisplay(); // 화면 갱신 요청
+		else if (button == 4)
+		{ // 휠 아래로 스크롤
+			c_dz += 0.1f;       // 카메라를 뒤로 이동
+			glutPostRedisplay(); // 화면 갱신 요청
+		}
 	}
 }
 void MouseMotion(int x, int y)
