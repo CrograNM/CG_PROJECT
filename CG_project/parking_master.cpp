@@ -180,11 +180,6 @@ GLfloat finish_rect_color[2][6][3] = {
 bool isParked = false;
 void UpdateParkingStatus(const std::vector<std::pair<float, float>>& carCorners);
 
-// 장식용 주차공간의 위치를 저장하는 벡터
-float not_park_x1 = 0.0f;
-float not_park_x2 = 0.0f;
-float not_park_z1 = 1.55f;
-float not_park_z2 = -1.55f;
 // 장식용 주차공간 컬러 데이터
 GLfloat not_finish_rect_color[2][6][3] = {
 	{	//바깥쪽 (흰색)
@@ -485,6 +480,10 @@ glm::mat4 RearCameraView() {
 }
 
 // 장애물 차 변환
+float not_park_x1 = 0.0f;
+float not_park_x2 = 0.0f;
+float not_park_z1 = 1.55f;
+float not_park_z2 = -1.55f;
 glm::mat4 ObstacleCar(int index) {
 
 	glm::mat4 T = glm::mat4(1.0f);
@@ -755,6 +754,13 @@ void nextStage() {
 	PARKING_X_MAX = FINISH_SIZE / 2 + FINISH_OFFSET_X;
 	PARKING_Z_MIN = -FINISH_SIZE * fheight + FINISH_OFFSET_Z;
 	PARKING_Z_MAX = FINISH_SIZE * fheight + FINISH_OFFSET_Z;
+
+	////장애물 1
+	//not_park_x1 = FINISH_OFFSET_X + 0.0f;
+	//not_park_z1 = FINISH_OFFSET_Z + 1.55f;
+	////장애물 2
+	//not_park_x2 = FINISH_OFFSET_X + 0.0f;
+	//not_park_z2 = FINISH_OFFSET_Z - 1.55f;
 }
 
 float c_dx = 0.0f;
