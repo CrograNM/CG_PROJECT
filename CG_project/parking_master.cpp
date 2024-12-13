@@ -20,6 +20,7 @@
 #include <string>
 
 time_t startTime;
+time_t pauseTime;
 int elapsedSeconds = 0;
 bool crushed = false;
 bool invincible = false;
@@ -252,6 +253,7 @@ GLvoid drawScene(GLvoid);
 GLvoid Reshape(int w, int h);
 GLvoid Keyboard(unsigned char key, int x, int y);
 GLvoid KeyboardUp(unsigned char key, int x, int y);
+GLvoid SpecialKeyboard(int key, int x, int y);
 
 // 마우스 관련
 int lastMouseX = -1, lastMouseY = -1;
@@ -807,13 +809,15 @@ void nextStage()
 	}
 }
 
+
 void TimerFunction_UpdateMove(int value)
 {
 	front_wheels_rotateY = (handle_rotateZ / 900.0f) * 30.0f;
 
+	time_t currentTime;
 	if(!point_mode)
 	{
-		time_t currentTime = time(nullptr);
+		currentTime = time(nullptr);
 		elapsedSeconds = static_cast<int>(currentTime - startTime);
 	}
 
@@ -1499,12 +1503,23 @@ GLvoid Reshape(int w, int h) //--- 콜백 함수: 다시 그리기 콜백 함수
 
 GLvoid Keyboard(unsigned char key, int x, int y)
 {
-	if(key == 'n')
+	if (key == 'n')
 	{
 		if (point_mode)
 		{
 			nextStage();
 			point_mode = false;
+		}
+	}
+	else if (key == 27)
+	{
+		if (point_mode)
+		{
+			point_mode = false;
+		}
+		else
+		{
+			point_mode = true;
 		}
 	}
 	if (!point_mode)
@@ -1551,7 +1566,7 @@ GLvoid Keyboard(unsigned char key, int x, int y)
 			}
 			break;
 		}
-		case 's': // 브레이크
+		case ' ': // 브레이크
 		{
 			// isAcceleratingForward = false;
 			// isAcceleratingBackward = true;
@@ -1569,17 +1584,13 @@ GLvoid KeyboardUp(unsigned char key, int x, int y) {
 		isAcceleratingForward = false;
 		isAcceleratingBackward = false;
 		break;
-	case 's': // 액셀 해제
-		// isAcceleratingBackward = false;
+	case ' ': // 액셀 해제
 		isBraking = false;
 		break;
-
-	//case 'b': // 브레이크 해제
-	//	isBraking = false;
-	//	break;
 	}
 	glutPostRedisplay(); //--- refresh
 }
+
 void MouseButton(int button, int state, int x, int y)
 {
 	if (!point_mode)
