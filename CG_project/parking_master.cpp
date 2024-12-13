@@ -516,7 +516,7 @@ const float friction = 0.001f;				// 마찰력 (자연 감속)
 bool isAccelerating = false;				// 액셀 상태
 bool isBraking = false;						// 브레이크 상태
 const float speed = 0.05f;
-const float HANDLE_RETURN_SPEED = 15.0f;	// 복원 속도
+const float HANDLE_RETURN_SPEED = 3.0f;		// 복원 속도
 const float CAR_SPEED = 0.05f;				// 자동차 이동 속도
 float lastAngle = 0.0f;						// 이전 프레임의 각도
 float cumulativeAngle = 0.0f;				// 누적된 핸들 회전 각도
@@ -710,8 +710,8 @@ void TimerFunction_UpdateMove(int value)
 		if (!isColliding)
 		{
 			// 회전 업데이트 (바퀴 회전에 따라 차량 회전)
-			float n = 0.1f / MAX_SPEED;
-			car_rotateY += front_wheels_rotateY * n * car_speed; // n*MAX_SPEED = 0.1f 고정
+			float n = (MAX_SPEED * 2) / MAX_SPEED;
+			car_rotateY += front_wheels_rotateY * n * car_speed; // n * MAX_SPEED = 0.02 가 적당
 			car_dx = new_dx;
 			car_dz = new_dz;
 			wheel_rect_rotateX += car_speed * 100.0f;
@@ -723,7 +723,7 @@ void TimerFunction_UpdateMove(int value)
 			// 핸들 복원
 			if (handle_rotateZ > 0.0f)
 			{
-				handle_rotateZ = std::max(0.0f, handle_rotateZ - HANDLE_RETURN_SPEED);
+				handle_rotateZ = std::max(0.0f, handle_rotateZ - HANDLE_RETURN_SPEED); //HANDLE_RETURN_SPEED -> (MAX_SPEED = 0.01)일때 3.0가 적당
 			}
 			else if (handle_rotateZ < 0.0f)
 			{
