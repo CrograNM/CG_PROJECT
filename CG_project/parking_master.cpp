@@ -16,6 +16,11 @@
 #include <random>
 #include <vector>
 
+#include <ctime>
+#include <string>
+
+time_t startTime;
+
 #define M_PI 3.14159265358979323846
 
 // 클라이언트
@@ -278,6 +283,8 @@ glm::mat4 SRT_MATRIX()
 
 // 핸들 변환 - 마우스에 따라 회전 적용
 float handle_rotateZ = 0.0f;
+float lastAngle = 0.0f;						// 이전 프레임의 각도
+float cumulativeAngle = 0.0f;				// 누적된 핸들 회전 각도
 glm::mat4 Handle()
 {
 	glm::mat4 T = glm::mat4(1.0f);			//--- 이동 행렬 선언
@@ -557,13 +564,10 @@ const float MAX_SPEED = 0.01f;				// 최대 속도
 const float acceleration = 0.001f;			// 가속도
 const float deceleration = 0.002f;			// 감속도 (브레이크)
 const float friction = 0.001f;				// 마찰력 (자연 감속)
-bool isAccelerating = false;				// 액셀 상태
 bool isBraking = false;						// 브레이크 상태
 const float speed = 0.05f;
 const float HANDLE_RETURN_SPEED = 3.0f;		// 복원 속도
 const float CAR_SPEED = 0.05f;				// 자동차 이동 속도
-float lastAngle = 0.0f;						// 이전 프레임의 각도
-float cumulativeAngle = 0.0f;				// 누적된 핸들 회전 각도
 
 // 자동차 꼭짓점 추출 함수
 std::vector<std::pair<float, float>> getRotatedCarCorners(float carX, float carZ, float carSize, float carRotateY)
@@ -892,6 +896,17 @@ void nextStage()
 
 		obstacle_xz[3][0] = FINISH_OFFSET_X - 1.05 * 2;
 		obstacle_xz[3][1] = FINISH_OFFSET_Z - 1.55f;
+
+		car_dx = 0.0f;
+		car_dz = -3.0f;
+		front_wheels_rotateY = 0.0f;
+		wheel_rect_rotateX = 0.0f;
+
+		cumulativeAngle = 0.0f;
+		handle_rotateZ = 0.0f;
+		lastAngle = 0.0f;
+
+		currentGear = DRIVE;
 	}
 	else if (current_stage == 2)
 	{
@@ -927,6 +942,9 @@ int main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정
 	}
 	else
 		std::cout << "GLEW Initialized\n";
+
+	// 시간 초기화
+	startTime = time(nullptr);
 
 	glEnable(GL_DEPTH_TEST);
 	initCar();
@@ -1266,8 +1284,21 @@ void drawScene()
 		float d_x = miniMapWidth * 0.65f;
 		float y = miniMapHeight * 0.5f;
 
+		
+		glColor3f(1.0f, 0.0f, 0.0f); // 흰색
+		time_t currentTime = time(nullptr);
+		int elapsedSeconds = static_cast<int>(currentTime - startTime); // 경과 시간 계산
+		std::string timeString = std::to_string(elapsedSeconds) + "s";
+
+		glPushMatrix();
+		glTranslatef(p_x + 25, y + 84, 0.0f);
+		glScalef(textScale, textScale, textScale);
+		RenderBitmapString(0, 0, GLUT_BITMAP_HELVETICA_18, timeString.c_str());
+		glPopMatrix();
+
 		// OpenGL의 기본 행렬을 사용하여 텍스트를 그립니다.
 		// 글씨 하나씩 위치를 조절하며 그립니다.
+		glColor3f(1.0f, 1.0f, 1.0f); // 흰색
 		glPushMatrix();
 		glTranslatef(p_x, y + 50, 0.0f);
 		glScalef(textScale, textScale, textScale);
