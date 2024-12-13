@@ -1,19 +1,27 @@
-﻿#version 330 core
-//--- in_Position: attribute index 0 
-//--- in_Color: attribute index 1
+﻿
+#version 330 core
+layout (location = 0) in vec3 vPos;      // 버텍스 위치
+layout (location = 1) in vec3 vNormal;   // 버텍스 법선
+layout (location = 2) in vec3 vColor;    // 버텍스 색상
 
-layout (location = 0) in vec3 vPos;	//--- 위치 변수: attribute position 0
-layout (location = 1) in vec3 vColor;		//--- 컬러 변수: attribute position 1
+out vec3 FragPos;        // 프래그먼트 셰이더로 전달될 위치 값
+out vec3 Normal;         // 프래그먼트 셰이더로 전달될 법선 벡터
+out vec3 VertexColor;    // 프래그먼트 셰이더로 전달될 색상
 
-uniform mat4 model;
-uniform mat4 view;
-uniform mat4 projection;
+uniform mat4 modelTransform;
+uniform mat4 viewTransform;
+uniform mat4 projectionTransform;
 
-out vec3 passColor;		//--- 프래그먼트 세이더에게 전달
 
-void main(void) 
+void main()
 {
-	gl_Position = projection * view * model * vec4(vPos, 1.0);
-	//vec4 (vPos.x, vPos.y, vPos.z, 1.0);
-	passColor = vColor;
+    gl_Position = projectionTransform * viewTransform * modelTransform * vec4(vPos, 1.0);
+    FragPos = vec3(modelTransform * vec4(vPos, 1.0));
+    
+    // 법선 변환 (법선 행렬 사용)
+    mat3 normalMatrix = transpose(inverse(mat3(modelTransform)));
+    Normal = normalize(normalMatrix * vNormal);
+
+    // 색상 전달
+    VertexColor = vColor;
 }
