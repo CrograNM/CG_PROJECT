@@ -271,6 +271,30 @@ void make_fragmentShaders();
 void make_shaderProgram();
 GLvoid InitBuffer();
 
+// 조명***
+bool isLight = true;	// 조명
+float light_rotateY = 90.0f;
+GLfloat lightX = 0.0f;
+GLfloat lightY = 0.5f;
+GLfloat lightZ = 1.0f;
+GLfloat lightD = 1.0f;	//distance
+float light = 0.5f;
+glm::mat4 SRT_MATRIX_LIGHT()
+{
+	glm::mat4 T = glm::mat4(1.0f);		//--- 이동 행렬 선언
+	glm::mat4 T2 = glm::mat4(1.0f);		//--- 이동 행렬 선언
+	//glm::mat4 Rx = glm::mat4(1.0f);		//--- 회전 행렬 선언
+	glm::mat4 Ry = glm::mat4(1.0f);		//--- 회전 행렬 선언
+	glm::mat4 S = glm::mat4(1.0f);
+
+
+	T = glm::translate(T, glm::vec3(lightX, lightY, lightZ));
+	S = glm::scale(S, glm::vec3(0.5, 0.5, 0.5));
+	Ry = glm::rotate(Ry, glm::radians(-light_rotateY), glm::vec3(0.0, 1.0, 0.0));		//--- y축에 대하여 회전 행렬
+
+	return T * Ry * S;
+}
+
 // 기본 적용 변환 - 테스트용
 glm::mat4 SRT_MATRIX()
 {
@@ -1061,6 +1085,32 @@ int main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정
 }
 
 //그리기 함수
+void illuminate(int modelLoc)
+{
+	unsigned int lightPosLocation = glGetUniformLocation(shaderProgramID, "lightPos");
+	glUniform3f(lightPosLocation, lightX, lightY, lightZ);
+
+	if (!isLight)
+	{
+		glUseProgram(shaderProgramID);
+		int lightColorLocation = glGetUniformLocation(shaderProgramID, "lightColor");
+		glUniform3f(lightColorLocation, 0.1, 0.1, 0.1);
+	}
+	else
+	{
+		glUseProgram(shaderProgramID);
+		int lightColorLocation = glGetUniformLocation(shaderProgramID, "lightColor");
+		glUniform3f(lightColorLocation, 1.0, 1.0, 1.0);
+	}
+
+	unsigned int objColorLocation = glGetUniformLocation(shaderProgramID, "objectColor");
+	glUniform3f(objColorLocation, 1.0, 0.5, 0.6);
+
+	unsigned int ablColorLocation = glGetUniformLocation(shaderProgramID, "ambientLight");
+	glUniform3f(ablColorLocation, light, light, light);
+
+	modelLoc = glGetUniformLocation(shaderProgramID, "modelTransform");
+}
 void draw_handle(int modelLoc, int num)
 {
 	// 그리기
@@ -1251,11 +1301,11 @@ void drawScene()
 
 	glUseProgram(shaderProgramID);
 
-	int modelLoc = glGetUniformLocation(shaderProgramID, "model");
-	int viewLoc = glGetUniformLocation(shaderProgramID, "view");
-	int projLoc = glGetUniformLocation(shaderProgramID, "projection");
+	int modelLoc = glGetUniformLocation(shaderProgramID, "modelTransform");
+	int viewLoc = glGetUniformLocation(shaderProgramID, "viewTransform");
+	int projLoc = glGetUniformLocation(shaderProgramID, "projectionTransform");
 
-	// 쿼터뷰
+	// 3인칭 뷰
 	if (currentGear != REVERSE)
 	{
 		if (true)
@@ -1301,6 +1351,9 @@ void drawScene()
 			}
 			glUniformMatrix4fv(projLoc, 1, GL_FALSE, &pTransform[0][0]);
 		}
+
+		// 조명 설정
+		illuminate(modelLoc);
 
 		// 바닥 그리기
 		drawGround(modelLoc);
@@ -1839,7 +1892,7 @@ char* filetobuf(const char* file)
 }
 void make_vertexShaders()
 {
-	vertexSource = filetobuf("vertex.glsl");
+	vertexSource = filetobuf("vertex_1.glsl");
 
 	//--- 버텍스 세이더 객체 만들기
 	vertexShader = glCreateShader(GL_VERTEX_SHADER);
@@ -1863,7 +1916,7 @@ void make_vertexShaders()
 }
 void make_fragmentShaders()
 {
-	fragmentSource = filetobuf("fragment.glsl");
+	fragmentSource = filetobuf("fragment_1.glsl");
 
 	//--- 프래그먼트 세이더 객체 만들기
 	fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
@@ -1913,122 +1966,106 @@ void InitBuffer()
 	glBindVertexArray(vao[0]);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(ground), ground, GL_STATIC_DRAW);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (void*)0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);						// 위치 속성
 	glEnableVertexAttribArray(0);
-
-	glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(ground_color), ground_color, GL_STATIC_DRAW);
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (void*)0);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));		// 노말 속성
 	glEnableVertexAttribArray(1);
 
 	// 블록(차체)
 	glBindVertexArray(vao[1]);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo[2]);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(Block), Block, GL_STATIC_DRAW);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (void*)0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);						// 위치 속성
 	glEnableVertexAttribArray(0);
-
-	glBindBuffer(GL_ARRAY_BUFFER, vbo[3]);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(Block_Color), Block_Color, GL_STATIC_DRAW);
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (void*)0);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));		// 노말 속성
 	glEnableVertexAttribArray(1);
 
 	// 핸들
 	glBindVertexArray(vao[2]);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo[4]);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[2]);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(handle_rect), handle_rect, GL_STATIC_DRAW);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (void*)0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);						// 위치 속성
 	glEnableVertexAttribArray(0);
-
-	glBindBuffer(GL_ARRAY_BUFFER, vbo[5]);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(handle_rect_color), handle_rect_color, GL_STATIC_DRAW);
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (void*)0);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));		// 노말 속성
 	glEnableVertexAttribArray(1);
 
 	// 벽
 	glBindVertexArray(vao[3]);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo[6]);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[3]);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(walls), walls, GL_STATIC_DRAW);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (void*)0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);						// 위치 속성
 	glEnableVertexAttribArray(0);
-
-	glBindBuffer(GL_ARRAY_BUFFER, vbo[7]);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(wall_colors), wall_colors, GL_STATIC_DRAW);
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (void*)0);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));		// 노말 속성
 	glEnableVertexAttribArray(1);
 
 	// 바퀴
 	glBindVertexArray(vao[4]);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo[8]);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[4]);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(wheel_rect), wheel_rect, GL_STATIC_DRAW);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (void*)0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);						// 위치 속성
 	glEnableVertexAttribArray(0);
-
-	glBindBuffer(GL_ARRAY_BUFFER, vbo[9]);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(wheel_rect_color), wheel_rect_color, GL_STATIC_DRAW);
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (void*)0);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));		// 노말 속성
 	glEnableVertexAttribArray(1);
 
 	// 도착지점 (주차 공간)
 	glBindVertexArray(vao[5]);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo[10]);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[5]);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(finish_rect), finish_rect, GL_STATIC_DRAW);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (void*)0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);						// 위치 속성
 	glEnableVertexAttribArray(0);
-
-	glBindBuffer(GL_ARRAY_BUFFER, vbo[11]);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(finish_rect_color), finish_rect_color, GL_DYNAMIC_DRAW); // 변경: GL_DYNAMIC_DRAW
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (void*)0);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));		// 노말 속성
 	glEnableVertexAttribArray(1);
 
 	// 기어 데이터 초기화
 	glBindVertexArray(vao[6]);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo[12]);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[6]);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(gear_rect), gear_rect, GL_STATIC_DRAW);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (void*)0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);						// 위치 속성
 	glEnableVertexAttribArray(0);
-
-	glBindBuffer(GL_ARRAY_BUFFER, vbo[13]);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(gear_rect_color), gear_rect_color, GL_STATIC_DRAW);
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (void*)0);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));		// 노말 속성
 	glEnableVertexAttribArray(1);
 
 	// 기어봉 데이터 초기화
 	glBindVertexArray(vao[7]);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo[14]);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[7]);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(gear_stick_rect), gear_stick_rect, GL_STATIC_DRAW);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (void*)0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);						// 위치 속성
 	glEnableVertexAttribArray(0);
-
-	glBindBuffer(GL_ARRAY_BUFFER, vbo[15]);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(gear_stick_rect_color), gear_stick_rect_color, GL_STATIC_DRAW);
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (void*)0);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));		// 노말 속성
 	glEnableVertexAttribArray(1);
 
 	//장식용 주차공간
 	glBindVertexArray(vao[8]);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo[16]);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[8]);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(finish_rect), finish_rect, GL_STATIC_DRAW);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (void*)0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);						// 위치 속성
 	glEnableVertexAttribArray(0);
-
-	glBindBuffer(GL_ARRAY_BUFFER, vbo[17]);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(not_finish_rect_color), not_finish_rect_color, GL_STATIC_DRAW);
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (void*)0);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));		// 노말 속성
 	glEnableVertexAttribArray(1);
 
 	// 장애물 차
 	glBindVertexArray(vao[9]);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo[18]);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[9]);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(obstacle_car), obstacle_car, GL_STATIC_DRAW);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (void*)0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);						// 위치 속성
 	glEnableVertexAttribArray(0);
-
-	glBindBuffer(GL_ARRAY_BUFFER, vbo[19]);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(obstacle_car_color), obstacle_car_color, GL_STATIC_DRAW);
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (void*)0);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));		// 노말 속성
 	glEnableVertexAttribArray(1);
 
+	unsigned int lightPosLocation = glGetUniformLocation(shaderProgramID, "lightPos");
+	glUniform3f(lightPosLocation, lightX, lightY, lightZ);
+
+	unsigned int lightColorLocation = glGetUniformLocation(shaderProgramID, "lightColor");
+	glUniform3f(lightColorLocation, 1.0, 1.0, 1.0);
+
+	unsigned int objColorLocation = glGetUniformLocation(shaderProgramID, "objectColor");
+	glUniform3f(objColorLocation, 1.0, 0.5, 0.6);
+
+	unsigned int ablColorLocation = glGetUniformLocation(shaderProgramID, "ambientLight");
+	glUniform3f(ablColorLocation, light, light, light);
+
+	unsigned int viewPosLocation = glGetUniformLocation(shaderProgramID, "viewPos");	//--- viewPos 값 전달: 카메라위치
+	glUniform3f(viewPosLocation, c_dx, c_dy, c_dz);
 }
 
 // 자동차 초기화
