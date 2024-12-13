@@ -155,33 +155,22 @@ const float fy2 = 0.00015f;
 float FINISH_OFFSET_X = 0.0f; // X축 오프셋
 float FINISH_OFFSET_Z = 0.0f; // Z축 오프셋
 
-GLfloat finish_rect[2][6][3] = {
-	{	//바깥쪽 (z길이가 x길이의 두배로 설정)
-		{-FINISH_SIZE / 2, fy, -FINISH_SIZE * fheight},
-		{ FINISH_SIZE / 2, fy, -FINISH_SIZE * fheight},
-		{-FINISH_SIZE / 2, fy,  FINISH_SIZE * fheight},
-		{-FINISH_SIZE / 2, fy,  FINISH_SIZE * fheight},
-		{ FINISH_SIZE / 2, fy, -FINISH_SIZE * fheight},
-		{ FINISH_SIZE / 2, fy,  FINISH_SIZE * fheight}
-	},
-	{	//안쪽
-		{-FINISH_SIZE_2 / 2, fy2, -FINISH_SIZE_2 * fheight},
-		{ FINISH_SIZE_2 / 2, fy2, -FINISH_SIZE_2 * fheight},
-		{-FINISH_SIZE_2 / 2, fy2,  FINISH_SIZE_2 * fheight},
-		{-FINISH_SIZE_2 / 2, fy2,  FINISH_SIZE_2 * fheight},
-		{ FINISH_SIZE_2 / 2, fy2, -FINISH_SIZE_2 * fheight},
-		{ FINISH_SIZE_2 / 2, fy2,  FINISH_SIZE_2 * fheight}
-	}
-};
-GLfloat finish_rect_color[2][6][3] = {
-	{	//바깥쪽 (흰색)
-		{1.0f, 1.0f, 1.0f},		{1.0f, 1.0f, 1.0f},		{1.0f, 1.0f, 1.0f},
-		{1.0f, 1.0f, 1.0f},		{1.0f, 1.0f, 1.0f},		{1.0f, 1.0f, 1.0f}
-	},
-	{	//안쪽 (회색)
-		{0.8f, 0.8f, 0.8f},		{0.8f, 0.8f, 0.8f},		{0.8f, 0.8f, 0.8f},
-		{0.8f, 0.8f, 0.8f},		{0.8f, 0.8f, 0.8f},		{0.8f, 0.8f, 0.8f}
-	}
+GLfloat finish_rect[] = {
+		//바깥쪽 (z길이가 x길이의 두배로 설정)
+		-FINISH_SIZE / 2, fy, -FINISH_SIZE * fheight, 0.0f,	1.0f,	0.0f,
+		 FINISH_SIZE / 2, fy, -FINISH_SIZE * fheight, 0.0f,	1.0f,	0.0f,
+		-FINISH_SIZE / 2, fy,  FINISH_SIZE * fheight, 0.0f,	1.0f,	0.0f,
+		-FINISH_SIZE / 2, fy,  FINISH_SIZE * fheight, 0.0f,	1.0f,	0.0f,
+		 FINISH_SIZE / 2, fy, -FINISH_SIZE * fheight, 0.0f,	1.0f,	0.0f,
+		 FINISH_SIZE / 2, fy,  FINISH_SIZE * fheight, 0.0f,	1.0f,	0.0f,
+	
+		//안쪽
+		-FINISH_SIZE_2 / 2, fy2, -FINISH_SIZE_2 * fheight,	 0.0f,	1.0f,	0.0f,
+		 FINISH_SIZE_2 / 2, fy2, -FINISH_SIZE_2 * fheight,	 0.0f,	1.0f,	0.0f,
+		-FINISH_SIZE_2 / 2, fy2,  FINISH_SIZE_2 * fheight,	 0.0f,	1.0f,	0.0f,
+		-FINISH_SIZE_2 / 2, fy2,  FINISH_SIZE_2 * fheight,	 0.0f,	1.0f,	0.0f,
+		 FINISH_SIZE_2 / 2, fy2, -FINISH_SIZE_2 * fheight,	 0.0f,	1.0f,	0.0f,
+		 FINISH_SIZE_2 / 2, fy2,  FINISH_SIZE_2 * fheight,	 0.0f,	1.0f,	0.0f
 };
 
 // 주차 상태를 나타내는 변수
@@ -201,18 +190,13 @@ GLfloat not_finish_rect_color[2][6][3] = {
 
 // 땅바닥 초기화
 #define GROUND_SIZE 5.0f
-GLfloat ground[6][3] = {
-	{-GROUND_SIZE, 0.0f, -GROUND_SIZE}, {GROUND_SIZE, 0.0f, -GROUND_SIZE}, {-GROUND_SIZE, 0.0f, GROUND_SIZE},
-	{-GROUND_SIZE, 0.0f, GROUND_SIZE}, {GROUND_SIZE, 0.0f, -GROUND_SIZE}, {GROUND_SIZE, 0.0f, GROUND_SIZE}
-};
-GLfloat ground_color[6][3] = {
-	{0.8f, 0.8f, 0.8f},
-	{0.8f, 0.8f, 0.8f},
-	{0.8f, 0.8f, 0.8f},
-
-	{0.8f, 0.8f, 0.8f},
-	{0.8f, 0.8f, 0.8f},
-	{0.8f, 0.8f, 0.8f},
+GLfloat ground[] = {
+	-GROUND_SIZE, 0.0f, -GROUND_SIZE,  0.0f,	1.0f,	0.0f,
+	GROUND_SIZE, 0.0f, -GROUND_SIZE,   0.0f,	1.0f,	0.0f,
+	-GROUND_SIZE, 0.0f, GROUND_SIZE,   0.0f,	1.0f,	0.0f,
+	-GROUND_SIZE, 0.0f, GROUND_SIZE,   0.0f,	1.0f,	0.0f,
+	GROUND_SIZE, 0.0f, -GROUND_SIZE,   0.0f,	1.0f,	0.0f,
+	GROUND_SIZE, 0.0f, GROUND_SIZE,	   0.0f,	1.0f,	0.0f,
 };
 
 // 벽 초기화
@@ -231,16 +215,6 @@ GLfloat walls[24][3] = {
 	// Right Wall
 	{GROUND_SIZE, 0.0f, -GROUND_SIZE}, {GROUND_SIZE, 0.0f, GROUND_SIZE}, {GROUND_SIZE, WALL_HEIGHT, -GROUND_SIZE},
 	{GROUND_SIZE, WALL_HEIGHT, -GROUND_SIZE}, {GROUND_SIZE, 0.0f, GROUND_SIZE}, {GROUND_SIZE, WALL_HEIGHT, GROUND_SIZE}
-};
-GLfloat wall_colors[24][3] = {
-	{0.3f, 0.3f, 0.3f}, {0.3f, 0.3f, 0.3f}, {0.3f, 0.3f, 0.3f},
-	{0.3f, 0.3f, 0.3f}, {0.3f, 0.3f, 0.3f}, {0.3f, 0.3f, 0.3f},
-	{0.3f, 0.3f, 0.3f}, {0.3f, 0.3f, 0.3f}, {0.3f, 0.3f, 0.3f},
-	{0.3f, 0.3f, 0.3f}, {0.3f, 0.3f, 0.3f}, {0.3f, 0.3f, 0.3f},
-	{0.3f, 0.3f, 0.3f}, {0.3f, 0.3f, 0.3f}, {0.3f, 0.3f, 0.3f},
-	{0.3f, 0.3f, 0.3f}, {0.3f, 0.3f, 0.3f}, {0.3f, 0.3f, 0.3f},
-	{0.3f, 0.3f, 0.3f}, {0.3f, 0.3f, 0.3f}, {0.3f, 0.3f, 0.3f},
-	{0.3f, 0.3f, 0.3f}, {0.3f, 0.3f, 0.3f}, {0.3f, 0.3f, 0.3f}
 };
 
 // 필요 변수 선언
@@ -759,32 +733,6 @@ void UpdateParkingStatus(const std::vector<std::pair<float, float>>& carCorners)
 	if (newIsParked != isParked)
 	{
 		isParked = newIsParked;
-		if (isParked)
-		{
-			// 주차 공간 색상을 연두색으로 변경
-			for (int i = 0; i < 6; ++i)
-			{
-				finish_rect_color[0][i][0] = 0.5f; // R
-				finish_rect_color[0][i][1] = 1.0f; // G
-				finish_rect_color[0][i][2] = 0.5f; // B
-			}
-		}
-		else
-		{
-			// 주차 공간 색상을 원래대로 복원
-			// 바깥쪽 (흰색)
-			for (int i = 0; i < 6; ++i)
-			{
-				finish_rect_color[0][i][0] = 1.0f;
-				finish_rect_color[0][i][1] = 1.0f;
-				finish_rect_color[0][i][2] = 1.0f;
-			}
-		}
-
-		// VBO 업데이트
-		glBindBuffer(GL_ARRAY_BUFFER, vbo[11]);
-		glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(finish_rect_color), finish_rect_color);
-		glBindBuffer(GL_ARRAY_BUFFER, 0);
 	}
 }
 
@@ -1114,11 +1062,8 @@ void illuminate(int modelLoc)
 void draw_handle(int modelLoc, int num)
 {
 	// 그리기
-	int useUniformColorLoc = glGetUniformLocation(shaderProgramID, "useUniformColor");
-	int u_colorLoc = glGetUniformLocation(shaderProgramID, "u_color");
-
-	glUniform1i(useUniformColorLoc, 1);           // uniform color 사용하도록 설정
-	glUniform3f(u_colorLoc, 0.25f, 0.25f, 0.25f);    // u_color를 회색으로 설정
+	int objColorLocation = glGetUniformLocation(shaderProgramID, "objectColor");
+	glUniform3f(objColorLocation, 0.25f, 0.25f, 0.25f);
 
 	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(glm::mat4(1.0f)));
 	GLUquadricObj* qobj1;
@@ -1126,26 +1071,32 @@ void draw_handle(int modelLoc, int num)
 	gluDisk(qobj1, HANDLE_SIZE - HANDLE_SIZE / 2, HANDLE_SIZE, 20, 8);
 	gluDeleteQuadric(qobj1);
 
-	glUniform1i(useUniformColorLoc, 0); // 다시 passColor 사용
-
 	glBindVertexArray(vao[2]);
 	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(Handle()));
 	glDrawArrays(GL_TRIANGLES, 0, 6);
 }
 void draw_gear(int modelLoc, int num)
 {
+	int objColorLocation = glGetUniformLocation(shaderProgramID, "objectColor");
+	glUniform3f(objColorLocation, 0.5f, 0.5f, 0.5f);
+
 	glBindVertexArray(vao[6]); // 기어용 VAO 사용
 	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(Gear()));
 	glDrawArrays(GL_TRIANGLES, 0, 6); // 사각형 그리기
 }
 void draw_gear_stick(int modelLoc, int num)
 {
+	int objColorLocation = glGetUniformLocation(shaderProgramID, "objectColor");
+	glUniform3f(objColorLocation, 0.25f, 0.25f, 0.25f);
 	glBindVertexArray(vao[7]);
 	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(Gear_Stick()));
 	glDrawArrays(GL_TRIANGLES, 0, 6); // 사각형 그리기
 }
 void draw_pointMode(int modelLoc, int num)
 {
+	int objColorLocation = glGetUniformLocation(shaderProgramID, "objectColor");
+	glUniform3f(objColorLocation, 0.5f, 0.5f, 0.5f);
+
 	glBindVertexArray(vao[6]); // 기어용 VAO 사용
 	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(PointMode()));
 	glDrawArrays(GL_TRIANGLES, 0, 6); // 사각형 그리기
@@ -1154,11 +1105,8 @@ void draw_pointMode(int modelLoc, int num)
 void draw_wheels(int modelLoc, int num)
 {
 	// shaderProgramID에 바인딩된 쉐이더 프로그램 사용 중이라고 가정
-	int useUniformColorLoc = glGetUniformLocation(shaderProgramID, "useUniformColor");
-	int u_colorLoc = glGetUniformLocation(shaderProgramID, "u_color");
-
-	glUniform1i(useUniformColorLoc, 1);           // uniform color 사용하도록 설정
-	glUniform3f(u_colorLoc, 0.25f, 0.25f, 0.25f);    // u_color를 회색으로 설정
+	int objColorLocation = glGetUniformLocation(shaderProgramID, "objectColor");
+	glUniform3f(objColorLocation, 0.25f, 0.25f, 0.25f);
 
 	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(Wheel_on_000(num, 0)));
 	GLUquadricObj* qobj1;
@@ -1177,17 +1125,23 @@ void draw_wheels(int modelLoc, int num)
 	qobj3 = gluNewQuadric();
 	gluDisk(qobj3, 0.0f, WHEEL_SIZE, 20, 8);
 	gluDeleteQuadric(qobj3);
-
-	glUniform1i(useUniformColorLoc, 0); // 다시 passColor 사용
 }
 void drawCar(int modelLoc, int mod)
 {
 	// 차체
+	int objColorLocation = glGetUniformLocation(shaderProgramID, "objectColor");
+	glUniform3f(objColorLocation, 0.0f, 0.0f, 0.9f);
 	glBindVertexArray(vao[1]);
 	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(Car_Body()));
 	glDrawArrays(GL_TRIANGLES, 0, 6 * 6);
+
+	objColorLocation = glGetUniformLocation(shaderProgramID, "objectColor");
+	glUniform3f(objColorLocation, 0.0f, 0.0f, 0.6f);
 	glDrawArrays(GL_TRIANGLES, 36, 6 * 6);
+
 	// 헤드라이트
+	objColorLocation = glGetUniformLocation(shaderProgramID, "objectColor");
+	glUniform3f(objColorLocation, 1.0f, 1.0f, 1.0f);
 	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(Headlights(0)));
 	glDrawArrays(GL_TRIANGLES, 72, 6 * 6);	//왼쪽
 	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(Headlights(1)));
@@ -1200,12 +1154,8 @@ void drawCar(int modelLoc, int mod)
 	draw_wheels(modelLoc, 4);	//4
 
 	// 바퀴 사각형
-
-	int useUniformColorLoc = glGetUniformLocation(shaderProgramID, "useUniformColor");
-	int u_colorLoc = glGetUniformLocation(shaderProgramID, "u_color");
-
-	glUniform1i(useUniformColorLoc, 1);           // uniform color 사용하도록 설정
-	glUniform3f(u_colorLoc, 0.5f, 0.5f, 0.5f);    // u_color를 회색으로 설정
+	objColorLocation = glGetUniformLocation(shaderProgramID, "objectColor");
+	glUniform3f(objColorLocation, 0.5f, 0.5f, 0.5f);
 
 	glBindVertexArray(vao[4]);
 	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(Wheel_rects(1)));
@@ -1216,17 +1166,19 @@ void drawCar(int modelLoc, int mod)
 	glDrawArrays(GL_TRIANGLES, 72, 6 * 6);	//뒷바퀴 1
 	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(Wheel_rects(4)));
 	glDrawArrays(GL_TRIANGLES, 108, 6 * 6);	//뒷바퀴 2
-
-	glUniform1i(useUniformColorLoc, 0); // 다시 passColor 사용
 }
 void drawWalls(int modelLoc)
 {
+	int objColorLocation = glGetUniformLocation(shaderProgramID, "objectColor");
+	glUniform3f(objColorLocation, 0.3f, 0.3f, 0.3f);
 	glBindVertexArray(vao[3]);
 	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(SRT_MATRIX()));
 	glDrawArrays(GL_TRIANGLES, 0, 24);
 }
 void drawGround(int modelLoc)
 {
+	int objColorLocation = glGetUniformLocation(shaderProgramID, "objectColor");
+	glUniform3f(objColorLocation, 0.8f, 0.8f, 0.8f);
 	// 바닥
 	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(SRT_MATRIX()));
 	glBindVertexArray(vao[0]);
@@ -1234,29 +1186,67 @@ void drawGround(int modelLoc)
 }
 void drawFinishRect(int modelLoc)
 {
+	int objColorLocation = glGetUniformLocation(shaderProgramID, "objectColor");
+	glUniform3f(objColorLocation, 1.0f, 1.0f, 1.0f);
+	if (isParked)
+	{
+		glUniform3f(objColorLocation, 0.0f, 1.0f, 0.0f);
+	}
 	// 바닥
 	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(FinishRect()));
 	glBindVertexArray(vao[5]);
-	glDrawArrays(GL_TRIANGLES, 0, 12);
+	glDrawArrays(GL_TRIANGLES, 0, 6);
+
+	objColorLocation = glGetUniformLocation(shaderProgramID, "objectColor");
+	glUniform3f(objColorLocation, 0.8f, 0.8f, 0.8f);
+	glDrawArrays(GL_TRIANGLES, 6, 6);
 }
 void drawObstacleCars(int modelLoc)
 {
+	int objColorLocation = glGetUniformLocation(shaderProgramID, "objectColor");
 	// 장식용 주차공간
 	glBindVertexArray(vao[8]);
 	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(ObstacleCar(0)));
-	glDrawArrays(GL_TRIANGLES, 0, 12);
+	objColorLocation = glGetUniformLocation(shaderProgramID, "objectColor");
+	glUniform3f(objColorLocation, 1.0f, 1.0f, 1.0f);
+	glDrawArrays(GL_TRIANGLES, 0, 6);
+	objColorLocation = glGetUniformLocation(shaderProgramID, "objectColor");
+	glUniform3f(objColorLocation, 0.8f, 0.8f, 0.8f);
+	glDrawArrays(GL_TRIANGLES, 6, 6);
 	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(ObstacleCar(1)));
-	glDrawArrays(GL_TRIANGLES, 0, 12);
+	objColorLocation = glGetUniformLocation(shaderProgramID, "objectColor");
+	glUniform3f(objColorLocation, 1.0f, 1.0f, 1.0f);
+	glDrawArrays(GL_TRIANGLES, 0, 6);
+	objColorLocation = glGetUniformLocation(shaderProgramID, "objectColor");
+	glUniform3f(objColorLocation, 0.8f, 0.8f, 0.8f);
+	glDrawArrays(GL_TRIANGLES, 6, 6);
 	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(ObstacleCar(2)));
-	glDrawArrays(GL_TRIANGLES, 0, 12);
+	objColorLocation = glGetUniformLocation(shaderProgramID, "objectColor");
+	glUniform3f(objColorLocation, 1.0f, 1.0f, 1.0f);
+	glDrawArrays(GL_TRIANGLES, 0, 6);
+	objColorLocation = glGetUniformLocation(shaderProgramID, "objectColor");
+	glUniform3f(objColorLocation, 0.8f, 0.8f, 0.8f);
+	glDrawArrays(GL_TRIANGLES, 6, 6);
 	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(ObstacleCar(3)));
-	glDrawArrays(GL_TRIANGLES, 0, 12);
+	objColorLocation = glGetUniformLocation(shaderProgramID, "objectColor");
+	glUniform3f(objColorLocation, 1.0f, 1.0f, 1.0f);
+	glDrawArrays(GL_TRIANGLES, 0, 6);
+	objColorLocation = glGetUniformLocation(shaderProgramID, "objectColor");
+	glUniform3f(objColorLocation, 0.8f, 0.8f, 0.8f);
+	glDrawArrays(GL_TRIANGLES, 6, 6);
 	if (current_stage == 3)
 	{
 		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(ObstacleCar(4)));
-		glDrawArrays(GL_TRIANGLES, 0, 12);
+		objColorLocation = glGetUniformLocation(shaderProgramID, "objectColor");
+		glUniform3f(objColorLocation, 1.0f, 1.0f, 1.0f);
+		glDrawArrays(GL_TRIANGLES, 0, 6);
+		objColorLocation = glGetUniformLocation(shaderProgramID, "objectColor");
+		glUniform3f(objColorLocation, 0.8f, 0.8f, 0.8f);
+		glDrawArrays(GL_TRIANGLES, 6, 6);
 	}
 
+	objColorLocation = glGetUniformLocation(shaderProgramID, "objectColor");
+	glUniform3f(objColorLocation, 0.5f, 0.5f, 0.5f);
 	// 장애물
 	glBindVertexArray(vao[9]);
 	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(ObstacleCar(0)));
@@ -1275,6 +1265,8 @@ void drawObstacleCars(int modelLoc)
 }
 void drawCarCorners(int modelLoc)
 {
+	int objColorLocation = glGetUniformLocation(shaderProgramID, "objectColor");
+	glUniform3f(objColorLocation, 1.0f, 1.0f, 1.0f);
 	// 충돌체크용 차 꼭짓점 그리기
 	auto carCorners = getRotatedCarCorners(car_dx, car_dz, CAR_SIZE, car_rotateY);
 	for (const auto& corner : carCorners)
