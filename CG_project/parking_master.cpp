@@ -21,6 +21,7 @@
 
 time_t startTime;
 time_t pauseTime;
+time_t tempTime;
 int elapsedSeconds = 0;
 bool crushed = false;
 bool invincible = false;
@@ -809,16 +810,15 @@ void nextStage()
 	}
 }
 
-
+time_t currentTime;
 void TimerFunction_UpdateMove(int value)
 {
 	front_wheels_rotateY = (handle_rotateZ / 900.0f) * 30.0f;
 
-	time_t currentTime;
-	if(!point_mode)
+	currentTime = time(nullptr);
+	if (!point_mode)
 	{
-		currentTime = time(nullptr);
-		elapsedSeconds = static_cast<int>(currentTime - startTime);
+		elapsedSeconds = static_cast<int>(currentTime - pauseTime - startTime);
 	}
 
 	// 속도 계산
@@ -984,6 +984,7 @@ int main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정
 
 	// 시간 초기화
 	startTime = time(nullptr);
+	pauseTime = startTime - time(nullptr);
 
 	glEnable(GL_DEPTH_TEST);
 	initCar();
@@ -1511,14 +1512,17 @@ GLvoid Keyboard(unsigned char key, int x, int y)
 			point_mode = false;
 		}
 	}
-	else if (key == 27)
+	if (key == 27) // ESC 키
 	{
-		if (point_mode)
+		if (point_mode) //해제
 		{
+			//startTime = time(nullptr) - (pauseTime - startTime); // 정지 시간만큼 보정
+			pauseTime += time(nullptr) - tempTime;
 			point_mode = false;
 		}
-		else
+		else //정지
 		{
+			tempTime = currentTime;
 			point_mode = true;
 		}
 	}
