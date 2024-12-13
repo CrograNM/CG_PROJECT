@@ -131,8 +131,8 @@ enum GearState {
 GearState currentGear = DRIVE;
 
 // 장애물
-#define OBSTACEL_WIDTH CAR_SIZE * 0.7
-#define OBSTACEL_HEIGHT CAR_SIZE * 1.1
+#define OBSTACLE_WIDTH CAR_SIZE * 0.7
+#define OBSTACLE_HEIGHT CAR_SIZE * 1.1
 
 GLfloat obstacle[4][TRI_COUNT * 3][3];
 GLfloat obstacle_color[4][TRI_COUNT * 3][3];
@@ -480,16 +480,20 @@ glm::mat4 RearCameraView() {
 }
 
 // 장애물 차 변환
-float not_park_x1 = 0.0f;
-float not_park_x2 = 0.0f;
-float not_park_z1 = 1.55f;
-float not_park_z2 = -1.55f;
+float obstacle_xz[4][2] = {
+	{FINISH_OFFSET_X - 1.05f, FINISH_OFFSET_Z},
+	{FINISH_OFFSET_X + 1.05f, FINISH_OFFSET_Z},
+	{FINISH_OFFSET_X - 1.05f * 2, FINISH_OFFSET_Z},
+	{FINISH_OFFSET_X + 1.05f * 2, FINISH_OFFSET_Z}
+};
 glm::mat4 ObstacleCar(int index) {
 
 	glm::mat4 T = glm::mat4(1.0f);
 	glm::vec3 positions[] = {
-		glm::vec3(FINISH_OFFSET_X + not_park_x1, fy, FINISH_OFFSET_Z + not_park_z1),
-		glm::vec3(FINISH_OFFSET_X + not_park_x2, fy, FINISH_OFFSET_Z + not_park_z2)
+		glm::vec3(obstacle_xz[0][0], fy, obstacle_xz[0][1]),
+		glm::vec3(obstacle_xz[1][0], fy, obstacle_xz[1][1]),
+		glm::vec3(obstacle_xz[2][0], fy, obstacle_xz[2][1]),
+		glm::vec3(obstacle_xz[3][0], fy, obstacle_xz[3][1])
 	};
 	
 	T = glm::translate(T, positions[index]);
@@ -547,7 +551,7 @@ std::vector<std::pair<float, float>> getRotatedCarCorners(float carX, float carZ
 	}
 	return rotatedCorners;
 }
-bool checkCollision(const std::vector<std::pair<float, float>>& carCorners, float wallX, float wallZ, float wallWidth, float wallHeight)
+bool checkCollisionWalls(const std::vector<std::pair<float, float>>& carCorners, float wallX, float wallZ, float wallWidth, float wallHeight)
 {
 	// 벽의 AABB
 	float wallMinX = wallX - wallWidth / 2;
@@ -626,6 +630,38 @@ void UpdateParkingStatus(const std::vector<std::pair<float, float>>& carCorners)
 	}
 }
 
+bool checkCollisionObstacle(const std::vector<std::pair<float, float>>& carCorners)
+{
+	bool isCollision = false;
+	// 차량 꼭짓점 중 하나라도 충돌하면 true
+	for (const auto& corner : carCorners)
+	{
+		float cornerX = corner.first;
+		float cornerZ = corner.second;
+		if (obstacle_xz[0][0] - OBSTACLE_WIDTH <= cornerX && cornerX <= obstacle_xz[0][0] + OBSTACLE_WIDTH &&
+			obstacle_xz[0][1] - OBSTACLE_HEIGHT <= cornerZ && cornerZ <= obstacle_xz[0][1] + OBSTACLE_HEIGHT)
+		{
+			isCollision = true;
+		}
+		if (obstacle_xz[1][0] - OBSTACLE_WIDTH <= cornerX && cornerX <= obstacle_xz[1][0] + OBSTACLE_WIDTH &&
+			obstacle_xz[1][1] - OBSTACLE_HEIGHT <= cornerZ && cornerZ <= obstacle_xz[1][1] + OBSTACLE_HEIGHT)
+		{
+			isCollision = true;
+		}
+		if (obstacle_xz[2][0] - OBSTACLE_WIDTH <= cornerX && cornerX <= obstacle_xz[2][0] + OBSTACLE_WIDTH &&
+			obstacle_xz[2][1] - OBSTACLE_HEIGHT <= cornerZ && cornerZ <= obstacle_xz[2][1] + OBSTACLE_HEIGHT)
+		{
+			isCollision = true;
+		}
+		if (obstacle_xz[3][0] - OBSTACLE_WIDTH <= cornerX && cornerX <= obstacle_xz[3][0] + OBSTACLE_WIDTH &&
+			obstacle_xz[3][1] - OBSTACLE_HEIGHT <= cornerZ && cornerZ <= obstacle_xz[3][1] + OBSTACLE_HEIGHT)
+		{
+			isCollision = true;
+		}
+	}
+	return isCollision;
+}
+
 void TimerFunction_UpdateMove(int value)
 {
 	front_wheels_rotateY = (handle_rotateZ / 900.0f) * 30.0f;
@@ -683,6 +719,11 @@ void TimerFunction_UpdateMove(int value)
 		}
 	}
 
+	// 차량의 꼭짓점 계산
+	auto carCorners = getRotatedCarCorners(car_dx, car_dz, CAR_SIZE, car_rotateY);
+	// 주차 상태 업데이트
+	UpdateParkingStatus(carCorners);
+
 	if (car_speed != 0.0f)
 	{
 		// 이동 후의 새로운 위치 계산
@@ -702,13 +743,17 @@ void TimerFunction_UpdateMove(int value)
 			float wallWidth = (i % 2 == 0) ? GROUND_SIZE * 2 : WALL_THICKNESS;
 			float wallHeight = (i % 2 == 1) ? GROUND_SIZE * 2 : WALL_THICKNESS;
 
-			if (checkCollision(carCorners, wallX, wallZ, wallWidth, wallHeight))
+			if (checkCollisionWalls(carCorners, wallX, wallZ, wallWidth, wallHeight))
 			{
 				isColliding = true;
 				break;
 			}
-			// 주차 상태 업데이트
-			UpdateParkingStatus(carCorners);
+		}
+
+		// 장애물과 충돌 확인
+		if (checkCollisionObstacle(carCorners))
+		{
+			isColliding = true;
 		}
 
 		// 충돌이 없을 때만 이동 업데이트
@@ -755,12 +800,17 @@ void nextStage() {
 	PARKING_Z_MIN = -FINISH_SIZE * fheight + FINISH_OFFSET_Z;
 	PARKING_Z_MAX = FINISH_SIZE * fheight + FINISH_OFFSET_Z;
 
-	////장애물 1
-	//not_park_x1 = FINISH_OFFSET_X + 0.0f;
-	//not_park_z1 = FINISH_OFFSET_Z + 1.55f;
-	////장애물 2
-	//not_park_x2 = FINISH_OFFSET_X + 0.0f;
-	//not_park_z2 = FINISH_OFFSET_Z - 1.55f;
+	obstacle_xz[0][0] = FINISH_OFFSET_X;
+	obstacle_xz[0][1] = FINISH_OFFSET_Z + 1.55f;
+
+	obstacle_xz[1][0] = FINISH_OFFSET_X;
+	obstacle_xz[1][1] = FINISH_OFFSET_Z - 1.55f;
+
+	obstacle_xz[2][0] = FINISH_OFFSET_X - 1.05;
+	obstacle_xz[2][1] = FINISH_OFFSET_Z - 1.55f;
+
+	obstacle_xz[3][0] = FINISH_OFFSET_X - 1.05 * 2;
+	obstacle_xz[3][1] = FINISH_OFFSET_Z - 1.55f;
 }
 
 float c_dx = 0.0f;
@@ -917,12 +967,20 @@ void drawObstacleCars(int modelLoc)
 	glDrawArrays(GL_TRIANGLES, 0, 12);
 	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(ObstacleCar(1)));
 	glDrawArrays(GL_TRIANGLES, 0, 12);
+	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(ObstacleCar(2)));
+	glDrawArrays(GL_TRIANGLES, 0, 12);
+	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(ObstacleCar(3)));
+	glDrawArrays(GL_TRIANGLES, 0, 12);
 
 	// 장애물
 	glBindVertexArray(vao[9]);
 	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(ObstacleCar(0)));
 	glDrawArrays(GL_TRIANGLES, 0, TRI_COUNT * 3);
 	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(ObstacleCar(1)));
+	glDrawArrays(GL_TRIANGLES, 0, TRI_COUNT * 3);
+	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(ObstacleCar(2)));
+	glDrawArrays(GL_TRIANGLES, 0, TRI_COUNT * 3);
+	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(ObstacleCar(3)));
 	glDrawArrays(GL_TRIANGLES, 0, TRI_COUNT * 3);
 }
 
@@ -1768,14 +1826,14 @@ void initObstacleCar() {
 	if (true)
 	{
 		GLfloat vertices[8][3] = {
-			{-OBSTACEL_WIDTH,	0.0f,			-OBSTACEL_HEIGHT },	// Vertex 0
-			{ OBSTACEL_WIDTH,	0.0f,			-OBSTACEL_HEIGHT },	// Vertex 1
-			{ OBSTACEL_WIDTH,	CAR_SIZE,		-OBSTACEL_HEIGHT },   // Vertex 2
-			{-OBSTACEL_WIDTH,	CAR_SIZE,		-OBSTACEL_HEIGHT },  // Vertex 3
-			{-OBSTACEL_WIDTH,	0.0f,			 OBSTACEL_HEIGHT },  // Vertex 4
-			{ OBSTACEL_WIDTH,	0.0f,			 OBSTACEL_HEIGHT },  // Vertex 5
-			{ OBSTACEL_WIDTH,	CAR_SIZE,		 OBSTACEL_HEIGHT },  // Vertex 6
-			{-OBSTACEL_WIDTH,	CAR_SIZE,		 OBSTACEL_HEIGHT }   // Vertex 7
+			{-OBSTACLE_WIDTH,	0.0f,			-OBSTACLE_HEIGHT },	// Vertex 0
+			{ OBSTACLE_WIDTH,	0.0f,			-OBSTACLE_HEIGHT },	// Vertex 1
+			{ OBSTACLE_WIDTH,	CAR_SIZE,		-OBSTACLE_HEIGHT },   // Vertex 2
+			{-OBSTACLE_WIDTH,	CAR_SIZE,		-OBSTACLE_HEIGHT },  // Vertex 3
+			{-OBSTACLE_WIDTH,	0.0f,			 OBSTACLE_HEIGHT },  // Vertex 4
+			{ OBSTACLE_WIDTH,	0.0f,			 OBSTACLE_HEIGHT },  // Vertex 5
+			{ OBSTACLE_WIDTH,	CAR_SIZE,		 OBSTACLE_HEIGHT },  // Vertex 6
+			{-OBSTACLE_WIDTH,	CAR_SIZE,		 OBSTACLE_HEIGHT }   // Vertex 7
 		};
 		//큐브 데이터 초기화
 		GLfloat CubeFigure[1][TRI_COUNT * 3][3] = {
