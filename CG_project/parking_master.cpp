@@ -1,10 +1,9 @@
-﻿//링커-명령줄 : glew32.lib freeglut.lib
-#define _CRT_SECURE_NO_WARNINGS
+﻿#define _CRT_SECURE_NO_WARNINGS
 #include <iostream>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <math.h>
+#include <cstdlib>
+#include <ctime>
+#include <string>
+#include <vector>
 
 #include <gl/glew.h>			
 #include <gl/freeglut.h>
@@ -13,12 +12,10 @@
 #include <gl/glm/glm.hpp>
 #include <gl/glm/ext.hpp>
 #include <gl/glm/gtc/matrix_transform.hpp>
-#include <random>
-#include <vector>
 
-#include <ctime>
-#include <string>
+#define M_PI 3.14159265358979323846
 
+// 별 개수 관련
 time_t startTime;
 time_t pauseTime;
 time_t tempTime;
@@ -26,23 +23,12 @@ int elapsedSeconds = 0;
 bool crushed = false;
 bool invincible = false;
 
-#define M_PI 3.14159265358979323846
-
 // 클라이언트
 #define clientWidth 900
 #define clientHeight 600
 GLfloat rColor = 0.8;
 GLfloat gColor = 1.0;
 GLfloat bColor = 1.0;
-
-// 랜덤 실수값(min ~ max) 반환 함수
-std::random_device rd;
-std::mt19937 gen(rd()); // Mersenne Twister 엔진
-float generateRandomFloat(float min, float max)
-{
-	std::uniform_real_distribution<float> dis(min, max);	// 인자로 범위 설정
-	return dis(gen);
-}
 
 // 타이머 관련
 #define TIMER_VELOCITY 16
@@ -53,16 +39,6 @@ bool isCull = false;
 
 // 도형 관련
 #define TRI_COUNT 12	//육면체의 삼각형 개수 : 12
-
-// Car 초기화
-void initCar();
-#define CAR_SIZE 0.5f
-GLfloat Block[4][TRI_COUNT * 3][6];
-GLfloat	Block_Color[4][TRI_COUNT * 3][3];
-
-void initObstacleCar();
-GLfloat obstacle_car[TRI_COUNT * 3][6];
-GLfloat obstacle_car_color[TRI_COUNT * 3][3];
 
 // 핸들 초기화
 #define HANDLE_SIZE 0.7f
@@ -85,8 +61,6 @@ GLfloat gear_rect[] = {
 	0.3f, 0, -1.0f,  0.0f, 0.0f, 0.0f,
 	0.3f, 0, 1.0f,	 0.0f, 0.0f, 0.0f,
 };
-
-// 기어 봉 초기화
 GLfloat gear_stick_rect[] = {
 	-0.1f, 0, -0.1f, 0.0f, 0.0f, 0.0f,
 	0.1f, 0, -0.1f,  0.0f, 0.0f, 0.0f,
@@ -96,24 +70,7 @@ GLfloat gear_stick_rect[] = {
 	0.1f, 0, 0.1f, 	 0.0f, 0.0f, 0.0f,
 };
 
-// 텍스트 렌더링 함수
-void RenderBitmapString(float x, float y, void* font, const char* string)
-{
-	glRasterPos2f(x, y);
-	while (*string)
-	{
-		glutBitmapCharacter(font, *string);
-		string++;
-	}
-}
-
-// 바퀴 (육면체) 초기화
-#define WHEEL_SIZE CAR_SIZE / 4
-#define WHEEL_RECT_SIZE WHEEL_SIZE / 8
-GLfloat wheel_rect[4][TRI_COUNT * 3][6];
-GLfloat wheel_rect_color[4][TRI_COUNT * 3][3];
-
-// 기어 상태를 나타내는 열거형
+// 기어 상태
 enum GearState
 {
 	PARK,	    // P
@@ -121,13 +78,23 @@ enum GearState
 	NEUTRAL,	// N
 	DRIVE		// D
 };
+GearState currentGear = DRIVE; // 현재 기어 상태를 저장하는 변수
 
-// 현재 기어 상태를 저장하는 변수
-GearState currentGear = DRIVE;
+// Car 초기화
+void initCar();
+#define CAR_SIZE 0.5f
+GLfloat Block[4][TRI_COUNT * 3][6];
 
-// 장애물
+// 장애물 초기화
 #define OBSTACLE_WIDTH CAR_SIZE * 0.7
 #define OBSTACLE_HEIGHT CAR_SIZE * 1.1
+void initObstacleCar();
+GLfloat obstacle_car[TRI_COUNT * 3][6];
+
+// 바퀴 (육면체) 초기화
+#define WHEEL_SIZE CAR_SIZE / 4
+#define WHEEL_RECT_SIZE WHEEL_SIZE / 8
+GLfloat wheel_rect[4][TRI_COUNT * 3][6];
 
 // 도착지점
 #define FINISH_SIZE 1.0f //(바깥쪽 사각형 크기)
@@ -135,10 +102,6 @@ GearState currentGear = DRIVE;
 const float fheight = 0.75f;
 const float fy = 0.0001f;
 const float fy2 = 0.00015f;
-// 도착 지점 위치 설정
-float FINISH_OFFSET_X = 0.0f; // X축 오프셋
-float FINISH_OFFSET_Z = 0.0f; // Z축 오프셋
-
 GLfloat finish_rect[] = {
 		//바깥쪽 (z길이가 x길이의 두배로 설정)
 		-FINISH_SIZE / 2, fy, -FINISH_SIZE * fheight, 0.0f,	1.0f,	0.0f,
@@ -157,20 +120,9 @@ GLfloat finish_rect[] = {
 		 FINISH_SIZE_2 / 2, fy2,  FINISH_SIZE_2 * fheight,	 0.0f,	1.0f,	0.0f
 };
 
-// 주차 상태를 나타내는 변수
-bool isParked = false;
-void UpdateParkingStatus(const std::vector<std::pair<float, float>>& carCorners);
-// 장식용 주차공간 컬러 데이터
-GLfloat not_finish_rect_color[2][6][3] = {
-	{	//바깥쪽 (흰색)
-		{1.0f, 1.0f, 1.0f},		{1.0f, 1.0f, 1.0f},		{1.0f, 1.0f, 1.0f},
-		{1.0f, 1.0f, 1.0f},		{1.0f, 1.0f, 1.0f},		{1.0f, 1.0f, 1.0f}
-	},
-	{	//안쪽 (회색)
-		{0.8f, 0.8f, 0.8f},		{0.8f, 0.8f, 0.8f},		{0.8f, 0.8f, 0.8f},
-		{0.8f, 0.8f, 0.8f},		{0.8f, 0.8f, 0.8f},		{0.8f, 0.8f, 0.8f}
-	}
-};
+// 도착 지점 위치 설정
+float FINISH_OFFSET_X = 0.0f; // X축 오프셋
+float FINISH_OFFSET_Z = 0.0f; // Z축 오프셋
 
 // 땅바닥 초기화
 #define GROUND_SIZE 5.0f
@@ -217,19 +169,34 @@ GLfloat walls[] = {
 	GROUND_SIZE, WALL_HEIGHT, GROUND_SIZE,			  0.0f,	1.0f,	0.0f,
 };
 
+// 주차 상태를 나타내는 변수
+bool isParked = false;
+void UpdateParkingStatus(const std::vector<std::pair<float, float>>& carCorners);
+
+// 텍스트 렌더링 함수
+void RenderBitmapString(float x, float y, void* font, const char* string)
+{
+	glRasterPos2f(x, y);
+	while (*string)
+	{
+		glutBitmapCharacter(font, *string);
+		string++;
+	}
+}
+
 // 필요 변수 선언
 GLint width, height;
 GLchar* vertexSource, * fragmentSource;
 GLuint vertexShader, fragmentShader;
 GLuint shaderProgramID;
-GLuint vao[20], vbo[40];
+GLuint vao[20], vbo[20];
 
 // 필수 함수 정의
 GLvoid drawScene(GLvoid);
 GLvoid Reshape(int w, int h);
 GLvoid Keyboard(unsigned char key, int x, int y);
 GLvoid KeyboardUp(unsigned char key, int x, int y);
-GLvoid SpecialKeyboard(int key, int x, int y);
+//GLvoid SpecialKeyboard(int key, int x, int y);
 
 // 마우스 관련
 int lastMouseX = -1, lastMouseY = -1;
@@ -252,22 +219,7 @@ GLfloat lightX = 0.0f;
 GLfloat lightY = 5.0f;
 GLfloat lightZ = 1.0f;
 GLfloat lightD = 1.0f;	//distance
-float light = 0.5f;
-glm::mat4 SRT_MATRIX_LIGHT()
-{
-	glm::mat4 T = glm::mat4(1.0f);		//--- 이동 행렬 선언
-	glm::mat4 T2 = glm::mat4(1.0f);		//--- 이동 행렬 선언
-	//glm::mat4 Rx = glm::mat4(1.0f);		//--- 회전 행렬 선언
-	glm::mat4 Ry = glm::mat4(1.0f);		//--- 회전 행렬 선언
-	glm::mat4 S = glm::mat4(1.0f);
-
-
-	T = glm::translate(T, glm::vec3(lightX, lightY, lightZ));
-	S = glm::scale(S, glm::vec3(0.5, 0.5, 0.5));
-	Ry = glm::rotate(Ry, glm::radians(-light_rotateY), glm::vec3(0.0, 1.0, 0.0));		//--- y축에 대하여 회전 행렬
-
-	return T * Ry * S;
-}
+float light = 0.8f;
 
 // 기본 적용 변환 - 테스트용
 glm::mat4 SRT_MATRIX()
@@ -375,8 +327,6 @@ glm::mat4 Car_Body()
 
 	return SRT_MATRIX() * T * Ry;
 }
-
-// 헤드라이트 변환 - 차량의 앞으로 고정
 glm::mat4 Headlights(int left_right)
 {
 	glm::mat4 T = glm::mat4(1.0f);
@@ -979,11 +929,14 @@ void TimerFunction_UpdateMove(int value)
 	glutTimerFunc(TIMER_VELOCITY, TimerFunction_UpdateMove, 1);
 }
 
+// 카메라 초기 위치
 float c_dx = 0.0f;
 float c_dy = 1.0f;
 float c_dz = -3.0f;
 float c_angleY = 0.0f;
 float c_rotateY = 0.0f;
+
+// 메인 함수
 int main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정
 {
 	//srand(time(0));
@@ -1131,7 +1084,6 @@ void draw_pointMode(int modelLoc, int num)
 	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(PointMode()));
 	glDrawArrays(GL_TRIANGLES, 0, 6); // 사각형 그리기
 }
-
 void draw_wheels(int modelLoc, int num)
 {
 	int objColorLocation = glGetUniformLocation(shaderProgramID, "objectColor");
@@ -1312,7 +1264,6 @@ void drawCarCorners(int modelLoc)
 		gluDeleteQuadric(qobj1);
 	}
 }
-
 void drawScene()
 {
 	glViewport(0, 0, clientWidth, clientHeight);
