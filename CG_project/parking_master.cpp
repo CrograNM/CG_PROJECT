@@ -149,20 +149,20 @@ const float FINISH_OFFSET_Z = 0.0f; // Z축 오프셋
 
 GLfloat finish_rect[2][6][3] = {
 	{	//바깥쪽 (z길이가 x길이의 두배로 설정)
-		{-FINISH_SIZE/2 + FINISH_OFFSET_X, fy, -FINISH_SIZE * fheight + FINISH_OFFSET_Z},
-		{ FINISH_SIZE/2 + FINISH_OFFSET_X, fy, -FINISH_SIZE * fheight + FINISH_OFFSET_Z},
-		{-FINISH_SIZE/2 + FINISH_OFFSET_X, fy,  FINISH_SIZE * fheight + FINISH_OFFSET_Z},
-		{-FINISH_SIZE/2 + FINISH_OFFSET_X, fy,  FINISH_SIZE * fheight + FINISH_OFFSET_Z}, 
-		{ FINISH_SIZE/2 + FINISH_OFFSET_X, fy, -FINISH_SIZE * fheight + FINISH_OFFSET_Z},
-		{ FINISH_SIZE/2 + FINISH_OFFSET_X, fy,  FINISH_SIZE * fheight + FINISH_OFFSET_Z}
+		{-FINISH_SIZE/2, fy, -FINISH_SIZE * fheight},
+		{ FINISH_SIZE/2, fy, -FINISH_SIZE * fheight},
+		{-FINISH_SIZE/2, fy,  FINISH_SIZE * fheight},
+		{-FINISH_SIZE/2, fy,  FINISH_SIZE * fheight}, 
+		{ FINISH_SIZE/2, fy, -FINISH_SIZE * fheight},
+		{ FINISH_SIZE/2, fy,  FINISH_SIZE * fheight}
 	},
 	{	//안쪽
-		{-FINISH_SIZE_2 / 2 + FINISH_OFFSET_X, fy2, -FINISH_SIZE_2 * fheight + FINISH_OFFSET_Z},
-		{ FINISH_SIZE_2 / 2 + FINISH_OFFSET_X, fy2, -FINISH_SIZE_2 * fheight + FINISH_OFFSET_Z},
-		{-FINISH_SIZE_2 / 2 + FINISH_OFFSET_X, fy2,  FINISH_SIZE_2 * fheight + FINISH_OFFSET_Z},
-		{-FINISH_SIZE_2 / 2 + FINISH_OFFSET_X, fy2,  FINISH_SIZE_2 * fheight + FINISH_OFFSET_Z},
-		{ FINISH_SIZE_2 / 2 + FINISH_OFFSET_X, fy2, -FINISH_SIZE_2 * fheight + FINISH_OFFSET_Z},
-		{ FINISH_SIZE_2 / 2 + FINISH_OFFSET_X, fy2,  FINISH_SIZE_2 * fheight + FINISH_OFFSET_Z}
+		{-FINISH_SIZE_2 / 2, fy2, -FINISH_SIZE_2 * fheight},
+		{ FINISH_SIZE_2 / 2, fy2, -FINISH_SIZE_2 * fheight},
+		{-FINISH_SIZE_2 / 2, fy2,  FINISH_SIZE_2 * fheight},
+		{-FINISH_SIZE_2 / 2, fy2,  FINISH_SIZE_2 * fheight},
+		{ FINISH_SIZE_2 / 2, fy2, -FINISH_SIZE_2 * fheight},
+		{ FINISH_SIZE_2 / 2, fy2,  FINISH_SIZE_2 * fheight}
 	}
 };
 GLfloat finish_rect_color[2][6][3] = {
@@ -180,21 +180,11 @@ GLfloat finish_rect_color[2][6][3] = {
 bool isParked = false;
 void UpdateParkingStatus(const std::vector<std::pair<float, float>>& carCorners);
 
-// 주차 공간의 경계 정의
-const float PARKING_X_MIN = -FINISH_SIZE / 2 + FINISH_OFFSET_X;
-const float PARKING_X_MAX = FINISH_SIZE / 2 + FINISH_OFFSET_X;
-const float PARKING_Z_MIN = -FINISH_SIZE * fheight + FINISH_OFFSET_Z;
-const float PARKING_Z_MAX = FINISH_SIZE * fheight + FINISH_OFFSET_Z;
-
 // 장식용 주차공간의 위치를 저장하는 벡터
 float not_park_x1 = 0.0f;
 float not_park_x2 = 0.0f;
 float not_park_z1 = 1.55f;
 float not_park_z2 = -1.55f;
-std::vector<glm::vec3> notParkingPositions = {
-	glm::vec3(not_park_x1, fy, not_park_z1),
-	glm::vec3(not_park_x2, fy, not_park_z2)
-};
 // 장식용 주차공간 컬러 데이터
 GLfloat not_finish_rect_color[2][6][3] = {
 	{	//바깥쪽 (흰색)
@@ -494,14 +484,26 @@ glm::mat4 RearCameraView() {
 	return glm::lookAt(cameraPosition, lookAtTarget, upVector);
 }
 
+// 장애물 차 변환
 glm::mat4 ObstacleCar(int index) {
+
 	glm::mat4 T = glm::mat4(1.0f);
 	glm::vec3 positions[] = {
-		glm::vec3(FINISH_OFFSET_X + not_park_x1, 0.0f, FINISH_OFFSET_Z + not_park_z1),
-		glm::vec3(FINISH_OFFSET_X + not_park_x2, 0.0f, FINISH_OFFSET_Z + not_park_z2)
+		glm::vec3(FINISH_OFFSET_X + not_park_x1, fy, FINISH_OFFSET_Z + not_park_z1),
+		glm::vec3(FINISH_OFFSET_X + not_park_x2, fy, FINISH_OFFSET_Z + not_park_z2)
 	};
 	
 	T = glm::translate(T, positions[index]);
+	return T;
+}
+
+// 도착지점 변환
+glm::mat4 FinishRect()
+{
+
+	glm::mat4 T = glm::mat4(1.0f);
+
+	T = glm::translate(T, glm::vec3(FINISH_OFFSET_X, fy, FINISH_OFFSET_Z));
 	return T;
 }
 
@@ -572,6 +574,10 @@ bool checkCollision(const std::vector<std::pair<float, float>>& carCorners, floa
 }
 
 // 주차 상태를 업데이트하는 함수
+const float PARKING_X_MIN = -FINISH_SIZE / 2 + FINISH_OFFSET_X;
+const float PARKING_X_MAX = FINISH_SIZE / 2 + FINISH_OFFSET_X;
+const float PARKING_Z_MIN = -FINISH_SIZE * fheight + FINISH_OFFSET_Z;
+const float PARKING_Z_MAX = FINISH_SIZE * fheight + FINISH_OFFSET_Z;
 void UpdateParkingStatus(const std::vector<std::pair<float, float>>& carCorners) {
 	bool newIsParked = false;
 	int checkCount = 0;
@@ -741,6 +747,10 @@ void TimerFunction_UpdateMove(int value)
 	glutTimerFunc(TIMER_VELOCITY, TimerFunction_UpdateMove, 1);
 }
 
+void nextStage() {
+
+}
+
 float c_dx = 0.0f;
 float c_dy = 1.0f;
 float c_dz = -3.0f;
@@ -883,31 +893,25 @@ void drawGround(int modelLoc)
 void drawFinishRect(int modelLoc)
 {
 	// 바닥
-	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(SRT_MATRIX()));
+	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(FinishRect()));
 	glBindVertexArray(vao[5]);
 	glDrawArrays(GL_TRIANGLES, 0, 12);
 }
-
-void drawNotParkingSpaces(int modelLoc)
-{
-	glBindVertexArray(vao[8]); // 장식용 주차공간의 VAO 사용
-	for (const auto& pos : notParkingPositions) {
-		// 위치 변환 행렬 적용
-		glm::mat4 model = glm::translate(glm::mat4(1.0f), pos);
-		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-
-		// 주차공간 그리기
-		glDrawArrays(GL_TRIANGLES, 0, 12);
-	}
-}
-
 void drawObstacleCars(int modelLoc)
 {
+	// 장식용 주차공간
+	glBindVertexArray(vao[8]); 
+	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(ObstacleCar(0)));
+	glDrawArrays(GL_TRIANGLES, 0, 12);
+	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(ObstacleCar(1)));
+	glDrawArrays(GL_TRIANGLES, 0, 12);
+
+	// 장애물
 	glBindVertexArray(vao[9]);
-	for (int i = 0; i < 2; ++i) {  // Draw two obstacle cars
-		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(ObstacleCar(i)));
-		glDrawArrays(GL_TRIANGLES, 0, TRI_COUNT * 3);
-	}
+	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(ObstacleCar(0)));
+	glDrawArrays(GL_TRIANGLES, 0, TRI_COUNT * 3);
+	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(ObstacleCar(1)));
+	glDrawArrays(GL_TRIANGLES, 0, TRI_COUNT * 3);
 }
 
 void drawScene()
@@ -984,11 +988,7 @@ void drawScene()
 
 		// 도착지점 그리기
 		drawFinishRect(modelLoc);
-
-		// 장식용 주차공간 그리기
-		drawNotParkingSpaces(modelLoc);
 	}
-
 	// 후방 카메라 뷰
 	if (currentGear == REVERSE) {
 		// 후방 카메라 뷰포트 설정
@@ -1018,7 +1018,6 @@ void drawScene()
 		drawObstacleCars(modelLoc);
 		drawWalls(modelLoc);
 		drawFinishRect(modelLoc);
-		drawNotParkingSpaces(modelLoc);
 	}
 	glDisable(GL_DEPTH_TEST);
 	// 핸들 - 뷰포트 설정으로 그리기
@@ -1808,8 +1807,7 @@ void initCar()
 		}
 	}
 }
-
-
+// 장애물 초기화
 void initObstacleCar() {
 	if (true)
 	{
