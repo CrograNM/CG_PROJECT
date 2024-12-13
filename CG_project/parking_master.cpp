@@ -752,12 +752,68 @@ void UpdateParkingStatus(const std::vector<std::pair<float, float>>& carCorners)
 }
 
 // 자동차 이동 및 회전 애니메이션
+// 다음 스테이지 (수치 변경)
+int current_stage = 1;
+bool point_mode = false;
+void nextStage()
+{
+	if (current_stage == 1)
+	{
+		std::cout << "stage " << current_stage << " clear!\n";
+
+		//next stage
+		current_stage++;
+
+		FINISH_OFFSET_X = 3.0f;
+		FINISH_OFFSET_Z = 0.0f;
+
+		PARKING_X_MIN = -FINISH_SIZE / 2 + FINISH_OFFSET_X;
+		PARKING_X_MAX = FINISH_SIZE / 2 + FINISH_OFFSET_X;
+		PARKING_Z_MIN = -FINISH_SIZE * fheight + FINISH_OFFSET_Z;
+		PARKING_Z_MAX = FINISH_SIZE * fheight + FINISH_OFFSET_Z;
+
+		obstacle_xz[0][0] = FINISH_OFFSET_X;
+		obstacle_xz[0][1] = FINISH_OFFSET_Z + 1.55f;
+
+		obstacle_xz[1][0] = FINISH_OFFSET_X;
+		obstacle_xz[1][1] = FINISH_OFFSET_Z - 1.55f;
+
+		obstacle_xz[2][0] = FINISH_OFFSET_X - 1.05;
+		obstacle_xz[2][1] = FINISH_OFFSET_Z - 1.55f;
+
+		obstacle_xz[3][0] = FINISH_OFFSET_X - 1.05 * 2;
+		obstacle_xz[3][1] = FINISH_OFFSET_Z - 1.55f;
+
+		car_dx = 2.0f;
+		car_dz = -4.0f;
+		car_rotateY = 0.0f;
+		front_wheels_rotateY = 0.0f;
+		wheel_rect_rotateX = 0.0f;
+
+		cumulativeAngle = 0.0f;
+		handle_rotateZ = 0.0f;
+		lastAngle = 0.0f;
+
+		currentGear = DRIVE;
+
+		startTime = time(nullptr);
+	}
+	else if (current_stage == 2)
+	{
+		//finish
+		std::cout << "stage " << current_stage << " clear!\n";
+	}
+}
+
 void TimerFunction_UpdateMove(int value)
 {
 	front_wheels_rotateY = (handle_rotateZ / 900.0f) * 30.0f;
 
-	time_t currentTime = time(nullptr);
-	elapsedSeconds = static_cast<int>(currentTime - startTime);
+	if(!point_mode)
+	{
+		time_t currentTime = time(nullptr);
+		elapsedSeconds = static_cast<int>(currentTime - startTime);
+	}
 
 	// 속도 계산
 	if (currentGear == PARK || currentGear == NEUTRAL)
@@ -882,59 +938,6 @@ void TimerFunction_UpdateMove(int value)
 	// 화면 갱신 요청 및 타이머 재설정
 	glutPostRedisplay();
 	glutTimerFunc(TIMER_VELOCITY, TimerFunction_UpdateMove, 1);
-}
-
-// 다음 스테이지 (수치 변경)
-bool point_mode = false;
-int current_stage = 1;
-void nextStage()
-{
-	if (current_stage == 1)
-	{	
-		std::cout << "stage " << current_stage << " clear!\n";
-
-		//next stage
-		current_stage++;
-
-		FINISH_OFFSET_X = 3.0f;
-		FINISH_OFFSET_Z = 0.0f;
-
-		PARKING_X_MIN = -FINISH_SIZE / 2 + FINISH_OFFSET_X;
-		PARKING_X_MAX = FINISH_SIZE / 2 + FINISH_OFFSET_X;
-		PARKING_Z_MIN = -FINISH_SIZE * fheight + FINISH_OFFSET_Z;
-		PARKING_Z_MAX = FINISH_SIZE * fheight + FINISH_OFFSET_Z;
-
-		obstacle_xz[0][0] = FINISH_OFFSET_X;
-		obstacle_xz[0][1] = FINISH_OFFSET_Z + 1.55f;
-
-		obstacle_xz[1][0] = FINISH_OFFSET_X;
-		obstacle_xz[1][1] = FINISH_OFFSET_Z - 1.55f;
-
-		obstacle_xz[2][0] = FINISH_OFFSET_X - 1.05;
-		obstacle_xz[2][1] = FINISH_OFFSET_Z - 1.55f;
-
-		obstacle_xz[3][0] = FINISH_OFFSET_X - 1.05 * 2;
-		obstacle_xz[3][1] = FINISH_OFFSET_Z - 1.55f;
-
-		car_dx = 2.0f;
-		car_dz = -4.0f;
-		car_rotateY = 0.0f;
-		front_wheels_rotateY = 0.0f;
-		wheel_rect_rotateX = 0.0f;
-
-		cumulativeAngle = 0.0f;
-		handle_rotateZ = 0.0f;
-		lastAngle = 0.0f;
-
-		currentGear = DRIVE;
-
-		startTime = time(nullptr);
-	}
-	else if (current_stage == 2)
-	{
-		//finish
-		std::cout << "stage " << current_stage << " clear!\n";
-	}
 }
 
 float c_dx = 0.0f;
@@ -1412,54 +1415,58 @@ GLvoid Reshape(int w, int h) //--- 콜백 함수: 다시 그리기 콜백 함수
 
 GLvoid Keyboard(unsigned char key, int x, int y)
 {
-	switch (key)
+	if(key == 'n')
 	{
-	case 'n': // 다음 스테이지 기능 테스트
 		if (point_mode)
 		{
 			nextStage();
 			point_mode = false;
 		}
-		break;
-	case 'q': // 이전 기어
+	}
+	if (!point_mode)
 	{
-		if (currentGear > PARK)
-			currentGear = static_cast<GearState>(currentGear - 1);
+		switch (key)
+		{
+		case 'q': // 이전 기어
+		{
+			if (currentGear > PARK)
+				currentGear = static_cast<GearState>(currentGear - 1);
 
-		if (currentGear == PARK)
-		{
-			if (isParked)
+			if (currentGear == PARK)
 			{
-				point_mode = true;
+				if (isParked)
+				{
+					point_mode = true;
+				}
 			}
+			break;
 		}
-		break;
-	}
-	case 'e': // 다음 기어
-	{
-		if (currentGear < DRIVE)
-			currentGear = static_cast<GearState>(currentGear + 1);
-		break;
-	}
-	case 'w': // 액셀
-	{
-		if (currentGear == DRIVE)
+		case 'e': // 다음 기어
 		{
-			isAcceleratingForward = true; // 전진
+			if (currentGear < DRIVE)
+				currentGear = static_cast<GearState>(currentGear + 1);
+			break;
 		}
-		else if (currentGear == REVERSE)
+		case 'w': // 액셀
 		{
-			isAcceleratingBackward = true; // 후진
+			if (currentGear == DRIVE)
+			{
+				isAcceleratingForward = true; // 전진
+			}
+			else if (currentGear == REVERSE)
+			{
+				isAcceleratingBackward = true; // 후진
+			}
+			break;
 		}
-		break;
-	}
-	case 's': // 브레이크
-	{
-		// isAcceleratingForward = false;
-		// isAcceleratingBackward = true;
-		isBraking = true;
-		break;
-	}
+		case 's': // 브레이크
+		{
+			// isAcceleratingForward = false;
+			// isAcceleratingBackward = true;
+			isBraking = true;
+			break;
+		}
+		}
 	}
 	glutPostRedisplay(); //--- refresh
 }
