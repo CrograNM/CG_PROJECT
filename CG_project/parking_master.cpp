@@ -1483,7 +1483,8 @@ void MouseMotion(int x, int y)
 		float currentAngle = -atan2(dx, -dy) * (180.0f / M_PI);
 
 		// 각도 차이 계산 (누적 회전을 위해)
-		float deltaAngle = currentAngle - lastAngle;
+		float deltaAngle;
+		deltaAngle = currentAngle - lastAngle;
 
 		// 경계 처리 (-180 ~ 180 사이의 점프 방지)
 		if (deltaAngle > 180.0f)
@@ -1492,16 +1493,17 @@ void MouseMotion(int x, int y)
 			deltaAngle += 360.0f;
 
 		// 회전 누적
-		cumulativeAngle += deltaAngle;
+		if ( -900.0f <= handle_rotateZ && handle_rotateZ <= 900.0f)
+		{
+			cumulativeAngle += deltaAngle;
+			if (cumulativeAngle > 900.0f)
+				cumulativeAngle = 900.0f;
+			else if (cumulativeAngle < -900.0f)
+				cumulativeAngle = -900.0f;
 
-		// handle_rotateZ 업데이트 (누적 각도)
-		handle_rotateZ = cumulativeAngle;
-
-		// 값 제한 (최대 900도, 최소 -900도)
-		if (handle_rotateZ > 900.0f)
-			handle_rotateZ = 900.0f;
-		else if (handle_rotateZ < -900.0f)
-			handle_rotateZ = -900.0f;
+			// handle_rotateZ 업데이트 (누적 각도)
+			handle_rotateZ = cumulativeAngle;
+		}
 
 		// 현재 각도를 저장 (다음 프레임 비교를 위해)
 		lastAngle = currentAngle;
