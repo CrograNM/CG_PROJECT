@@ -26,9 +26,9 @@ bool invincible = false;
 // 클라이언트
 #define clientWidth 900
 #define clientHeight 600
-GLfloat rColor = 0.8;
-GLfloat gColor = 1.0;
-GLfloat bColor = 1.0;
+GLfloat rColor = 0.8f;
+GLfloat gColor = 1.0f;
+GLfloat bColor = 1.0f;
 
 // 타이머 관련
 #define TIMER_VELOCITY 16
@@ -42,14 +42,14 @@ bool isCull = false;
 
 // 핸들 초기화
 #define HANDLE_SIZE 0.7f
-#define HAND_RECT_SIZE HANDLE_SIZE / 4
+#define HAND_RECT_SIZE HANDLE_SIZE / 4.0f
 GLfloat handle_rect[] = {
-	-HAND_RECT_SIZE, 0, -HAND_RECT_SIZE, 0.0f, 0.0f, 0.0f,
-	HAND_RECT_SIZE, 0, -HAND_RECT_SIZE,  0.0f, 0.0f, 0.0f,
-	-HAND_RECT_SIZE, 0, HAND_RECT_SIZE,	 0.0f, 0.0f, 0.0f,
-	-HAND_RECT_SIZE, 0, HAND_RECT_SIZE,  0.0f, 0.0f, 0.0f,
-	HAND_RECT_SIZE, 0, -HAND_RECT_SIZE,  0.0f, 0.0f, 0.0f,
-	 HAND_RECT_SIZE, 0, HAND_RECT_SIZE,	 0.0f, 0.0f, 0.0f,
+	-HAND_RECT_SIZE, 0.0f, -HAND_RECT_SIZE, 0.0f, 0.0f, 0.0f,
+	HAND_RECT_SIZE, 0.0f, -HAND_RECT_SIZE,  0.0f, 0.0f, 0.0f,
+	-HAND_RECT_SIZE, 0.0f, HAND_RECT_SIZE,	 0.0f, 0.0f, 0.0f,
+	-HAND_RECT_SIZE, 0.0f, HAND_RECT_SIZE,  0.0f, 0.0f, 0.0f,
+	HAND_RECT_SIZE, 0.0f, -HAND_RECT_SIZE,  0.0f, 0.0f, 0.0f,
+	 HAND_RECT_SIZE, 0.0f, HAND_RECT_SIZE,	 0.0f, 0.0f, 0.0f,
 };
 
 // 기어 초기화
@@ -86,14 +86,14 @@ void initCar();
 GLfloat Block[4][TRI_COUNT * 3][6];
 
 // 장애물 초기화
-#define OBSTACLE_WIDTH CAR_SIZE * 0.7
-#define OBSTACLE_HEIGHT CAR_SIZE * 1.1
+#define OBSTACLE_WIDTH CAR_SIZE * 0.7f
+#define OBSTACLE_HEIGHT CAR_SIZE * 1.1f
 void initObstacleCar();
 GLfloat obstacle_car[TRI_COUNT * 3][6];
 
 // 바퀴 (육면체) 초기화
-#define WHEEL_SIZE CAR_SIZE / 4
-#define WHEEL_RECT_SIZE WHEEL_SIZE / 8
+#define WHEEL_SIZE CAR_SIZE / 4.0f
+#define WHEEL_RECT_SIZE WHEEL_SIZE / 8.0f
 GLfloat wheel_rect[4][TRI_COUNT * 3][6];
 
 // 도착지점
@@ -720,8 +720,8 @@ void nextStage()
 		FINISH_OFFSET_X = 3.0f;
 		FINISH_OFFSET_Z = 0.0f;
 
-		PARKING_X_MIN = -FINISH_SIZE / 2 + FINISH_OFFSET_X;
-		PARKING_X_MAX = FINISH_SIZE / 2 + FINISH_OFFSET_X;
+		PARKING_X_MIN = -FINISH_SIZE / 2.0f + FINISH_OFFSET_X;
+		PARKING_X_MAX = FINISH_SIZE / 2.0f + FINISH_OFFSET_X;
 		PARKING_Z_MIN = -FINISH_SIZE * fheight + FINISH_OFFSET_Z;
 		PARKING_Z_MAX = FINISH_SIZE * fheight + FINISH_OFFSET_Z;
 
@@ -732,10 +732,10 @@ void nextStage()
 		obstacle_xz[1][0] = FINISH_OFFSET_X;
 		obstacle_xz[1][1] = FINISH_OFFSET_Z - 1.55f;
 
-		obstacle_xz[2][0] = FINISH_OFFSET_X - 1.05;
+		obstacle_xz[2][0] = FINISH_OFFSET_X - 1.05f;
 		obstacle_xz[2][1] = FINISH_OFFSET_Z - 1.55f;
 
-		obstacle_xz[3][0] = FINISH_OFFSET_X - 1.05 * 2;
+		obstacle_xz[3][0] = FINISH_OFFSET_X - 1.05f * 2.0f;
 		obstacle_xz[3][1] = FINISH_OFFSET_Z - 1.55f;
 
 		// 차 위치 변경
@@ -757,20 +757,20 @@ void nextStage()
 		PARKING_Z_MAX = FINISH_SIZE * fheight + FINISH_OFFSET_Z;
 
 		// 장애물 위치 변경
-		obstacle_xz[0][0] = FINISH_OFFSET_X - 1.05;
+		obstacle_xz[0][0] = FINISH_OFFSET_X - 1.05f;
 		obstacle_xz[0][1] = FINISH_OFFSET_Z;
 
-		obstacle_xz[1][0] = FINISH_OFFSET_X - 1.05;
+		obstacle_xz[1][0] = FINISH_OFFSET_X - 1.05f;
 		obstacle_xz[1][1] = FINISH_OFFSET_Z + 1.55f;
 
 		obstacle_xz[2][0] = FINISH_OFFSET_X;
 		obstacle_xz[2][1] = FINISH_OFFSET_Z + 1.55f;
 
-		obstacle_xz[3][0] = FINISH_OFFSET_X + 1.05;
+		obstacle_xz[3][0] = FINISH_OFFSET_X + 1.05f;
 		obstacle_xz[3][1] = FINISH_OFFSET_Z + 1.55f;
 
-		obstacle_xz[4][0] = FINISH_OFFSET_X + 1.05;
-		obstacle_xz[4][1] = FINISH_OFFSET_Z + 1.55f * 2;
+		obstacle_xz[4][0] = FINISH_OFFSET_X + 1.05f;
+		obstacle_xz[4][1] = FINISH_OFFSET_Z + 1.55f * 2.0f;
 
 		// 차 위치 변경
 		car_dx = -4.0f;
@@ -779,7 +779,7 @@ void nextStage()
 	else if (current_stage == 3)
 	{
 		//finish
-		std::cout << "--Quit--\n";
+		std::cout << "--Clear!!!--\n";
 		glutLeaveMainLoop(); // OpenGL 메인 루프 종료
 	}
 }
@@ -1023,17 +1023,17 @@ void illuminate(int modelLoc)
 	{
 		glUseProgram(shaderProgramID);
 		int lightColorLocation = glGetUniformLocation(shaderProgramID, "lightColor");
-		glUniform3f(lightColorLocation, 0.1, 0.1, 0.1);
+		glUniform3f(lightColorLocation, 0.1f, 0.1f, 0.1f);
 	}
 	else
 	{
 		glUseProgram(shaderProgramID);
 		int lightColorLocation = glGetUniformLocation(shaderProgramID, "lightColor");
-		glUniform3f(lightColorLocation, 0.8, 0.8, 0.8);
+		glUniform3f(lightColorLocation, 0.8f, 0.8f, 0.8f);
 	}
 
 	unsigned int objColorLocation = glGetUniformLocation(shaderProgramID, "objectColor");
-	glUniform3f(objColorLocation, 1.0, 0.5, 0.6);
+	glUniform3f(objColorLocation, 1.0f, 0.5f, 0.6f);
 
 	unsigned int ablColorLocation = glGetUniformLocation(shaderProgramID, "ambientLight");
 	glUniform3f(ablColorLocation, light, light, light);
@@ -1524,8 +1524,8 @@ void drawScene()
 	{
 		int miniMapWidth = clientWidth / 2;
 		int miniMapHeight = clientHeight / 2;
-		int miniMapX = clientWidth - miniMapWidth * 1.5;
-		int miniMapY = clientHeight - miniMapHeight * 1.5;
+		int miniMapX = clientWidth - miniMapWidth * 3 / 2;
+		int miniMapY = clientHeight - miniMapHeight * 3 / 2;
 		glViewport(miniMapX, miniMapY, miniMapWidth, miniMapHeight);
 
 		glm::mat4 topViewTransform = glm::lookAt(
@@ -1554,8 +1554,8 @@ void drawScene()
 
 		// 텍스트 위치 계산 (픽셀 단위)
 		float textScale = 1.0f; // 텍스트 크기 조절
-		float mx = miniMapWidth * 0.5;
-		float my = miniMapHeight * 0.5;
+		float mx = miniMapWidth * 0.5f;
+		float my = miniMapHeight * 0.5f;
 
 		if (!isClear) // 정지 모드
 		{
@@ -1802,7 +1802,7 @@ void MouseMotion(int x, int y)
 		int dy = y - 450;
 
 		// 기준 각도를 y축 음의 방향으로 설정
-		float currentAngle = -atan2(dx, -dy) * (180.0f / M_PI);
+		float currentAngle = float(-atan2(dx, -dy)) * (180.0f / M_PI);
 
 		// 각도 차이 계산 (누적 회전을 위해)
 		float deltaAngle;
@@ -1871,7 +1871,7 @@ char* filetobuf(const char* file)
 }
 void make_vertexShaders()
 {
-	vertexSource = filetobuf("vertex_1.glsl");
+	vertexSource = filetobuf("vertex.glsl");
 
 	//--- 버텍스 세이더 객체 만들기
 	vertexShader = glCreateShader(GL_VERTEX_SHADER);
@@ -1895,7 +1895,7 @@ void make_vertexShaders()
 }
 void make_fragmentShaders()
 {
-	fragmentSource = filetobuf("fragment_1.glsl");
+	fragmentSource = filetobuf("fragment.glsl");
 
 	//--- 프래그먼트 세이더 객체 만들기
 	fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
@@ -2034,10 +2034,10 @@ void InitBuffer()
 	glUniform3f(lightPosLocation, lightX, lightY, lightZ);
 
 	unsigned int lightColorLocation = glGetUniformLocation(shaderProgramID, "lightColor");
-	glUniform3f(lightColorLocation, 1.0, 1.0, 1.0);
+	glUniform3f(lightColorLocation, 1.0f, 1.0f, 1.0f);
 
 	unsigned int objColorLocation = glGetUniformLocation(shaderProgramID, "objectColor");
-	glUniform3f(objColorLocation, 1.0, 0.5, 0.6);
+	glUniform3f(objColorLocation, 1.0f, 1.0f, 1.0f);
 
 	unsigned int ablColorLocation = glGetUniformLocation(shaderProgramID, "ambientLight");
 	glUniform3f(ablColorLocation, light, light, light);
