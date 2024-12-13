@@ -5,7 +5,13 @@
 in vec3 passColor;		//--- 버텍스 세이더에게서 전달 받음
 out vec4 FragColor;		//--- 색상 출력
 
+uniform vec3 u_color;
+uniform bool useUniformColor;
+
 void main(void) 
 {
-	FragColor = vec4 (passColor, 1.0);
+	if(useUniformColor)
+        FragColor = vec4(u_color, 1.0);
+    else
+        FragColor = vec4(passColor, 1.0);
 }

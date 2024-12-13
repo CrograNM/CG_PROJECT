@@ -73,13 +73,13 @@ GLfloat handle_rect[6][3] = {
 	{-HAND_RECT_SIZE, 0, HAND_RECT_SIZE},  {HAND_RECT_SIZE, 0, -HAND_RECT_SIZE}, { HAND_RECT_SIZE, 0, HAND_RECT_SIZE}
 };
 GLfloat handle_rect_color[6][3] = {
-	{0.3f, 0.0f, 1.0f},
-	{0.3f, 0.0f, 1.0f},
-	{0.3f, 0.0f, 1.0f},
-
-	{0.3f, 0.0f, 1.0f},
-	{0.3f, 0.0f, 1.0f},
-	{0.3f, 0.0f, 1.0f}
+	{0.5f, 0.5f, 0.5f},
+	{0.5f, 0.5f, 0.5f},
+	{0.5f, 0.5f, 0.5f},
+	   		 	 
+	{0.5f, 0.5f, 0.5f},
+	{0.5f, 0.5f, 0.5f},
+	{0.5f, 0.5f, 0.5f}
 };
 
 // 기어 초기화
@@ -1055,11 +1055,19 @@ int main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정
 void draw_handle(int modelLoc, int num)
 {
 	// 그리기
+	int useUniformColorLoc = glGetUniformLocation(shaderProgramID, "useUniformColor");
+	int u_colorLoc = glGetUniformLocation(shaderProgramID, "u_color");
+
+	glUniform1i(useUniformColorLoc, 1);           // uniform color 사용하도록 설정
+	glUniform3f(u_colorLoc, 0.25f, 0.25f, 0.25f);    // u_color를 회색으로 설정
+
 	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(glm::mat4(1.0f)));
 	GLUquadricObj* qobj1;
 	qobj1 = gluNewQuadric();
 	gluDisk(qobj1, HANDLE_SIZE - HANDLE_SIZE / 2, HANDLE_SIZE, 20, 8);
 	gluDeleteQuadric(qobj1);
+
+	glUniform1i(useUniformColorLoc, 0); // 다시 passColor 사용
 
 	glBindVertexArray(vao[2]);
 	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(Handle()));
@@ -1086,6 +1094,13 @@ void draw_pointMode(int modelLoc, int num)
 
 void draw_wheels(int modelLoc, int num)
 {
+	// shaderProgramID에 바인딩된 쉐이더 프로그램 사용 중이라고 가정
+	int useUniformColorLoc = glGetUniformLocation(shaderProgramID, "useUniformColor");
+	int u_colorLoc = glGetUniformLocation(shaderProgramID, "u_color");
+
+	glUniform1i(useUniformColorLoc, 1);           // uniform color 사용하도록 설정
+	glUniform3f(u_colorLoc, 0.25f, 0.25f, 0.25f);    // u_color를 회색으로 설정
+
 	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(Wheel_on_000(num, 0)));
 	GLUquadricObj* qobj1;
 	qobj1 = gluNewQuadric();						// 객체 생성하기
@@ -1103,6 +1118,8 @@ void draw_wheels(int modelLoc, int num)
 	qobj3 = gluNewQuadric();
 	gluDisk(qobj3, 0.0f, WHEEL_SIZE, 20, 8);
 	gluDeleteQuadric(qobj3);
+
+	glUniform1i(useUniformColorLoc, 0); // 다시 passColor 사용
 }
 void drawCar(int modelLoc, int mod)
 {
@@ -1124,6 +1141,13 @@ void drawCar(int modelLoc, int mod)
 	draw_wheels(modelLoc, 4);	//4
 
 	// 바퀴 사각형
+
+	int useUniformColorLoc = glGetUniformLocation(shaderProgramID, "useUniformColor");
+	int u_colorLoc = glGetUniformLocation(shaderProgramID, "u_color");
+
+	glUniform1i(useUniformColorLoc, 1);           // uniform color 사용하도록 설정
+	glUniform3f(u_colorLoc, 0.5f, 0.5f, 0.5f);    // u_color를 회색으로 설정
+
 	glBindVertexArray(vao[4]);
 	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(Wheel_rects(1)));
 	glDrawArrays(GL_TRIANGLES, 0, 6 * 6);	//앞바퀴 1
@@ -1133,6 +1157,8 @@ void drawCar(int modelLoc, int mod)
 	glDrawArrays(GL_TRIANGLES, 72, 6 * 6);	//뒷바퀴 1
 	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(Wheel_rects(4)));
 	glDrawArrays(GL_TRIANGLES, 108, 6 * 6);	//뒷바퀴 2
+
+	glUniform1i(useUniformColorLoc, 0); // 다시 passColor 사용
 }
 void drawWalls(int modelLoc)
 {
@@ -1578,11 +1604,11 @@ GLvoid Reshape(int w, int h) //--- 콜백 함수: 다시 그리기 콜백 함수
 
 GLvoid Keyboard(unsigned char key, int x, int y)
 {
-	if (key == 'b')
-	{
-		//디버그
-		nextStage();
-	}
+	//if (key == 'b')
+	//{
+	//	//디버그
+	//	nextStage();
+	//}
 	if (key == 'n')
 	{
 		if (isClear)
