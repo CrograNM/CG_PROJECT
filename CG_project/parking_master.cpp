@@ -835,7 +835,7 @@ void TimerFunction_UpdateMove(int value)
 			car_rotateY += front_wheels_rotateY * n * car_speed; // n * MAX_SPEED = 0.02 가 적당
 			car_dx = new_dx;
 			car_dz = new_dz;
-			wheel_rect_rotateX += car_speed * 100.0f;
+			wheel_rect_rotateX += car_speed * 200.0f;
 		}
 
 		// 핸들과 바퀴 복원 로직
@@ -863,27 +863,41 @@ void TimerFunction_UpdateMove(int value)
 }
 
 // 다음 스테이지 (수치 변경)
+int current_stage = 1;
 void nextStage()
 {
-	FINISH_OFFSET_X = 3.0f;
-	FINISH_OFFSET_Z = 0.0f;
+	if (current_stage == 1)
+	{	
+		std::cout << "stage " << current_stage << " clear!\n";
 
-	PARKING_X_MIN = -FINISH_SIZE / 2 + FINISH_OFFSET_X;
-	PARKING_X_MAX = FINISH_SIZE / 2 + FINISH_OFFSET_X;
-	PARKING_Z_MIN = -FINISH_SIZE * fheight + FINISH_OFFSET_Z;
-	PARKING_Z_MAX = FINISH_SIZE * fheight + FINISH_OFFSET_Z;
+		//next stage
+		current_stage++;
 
-	obstacle_xz[0][0] = FINISH_OFFSET_X;
-	obstacle_xz[0][1] = FINISH_OFFSET_Z + 1.55f;
+		FINISH_OFFSET_X = 3.0f;
+		FINISH_OFFSET_Z = 0.0f;
 
-	obstacle_xz[1][0] = FINISH_OFFSET_X;
-	obstacle_xz[1][1] = FINISH_OFFSET_Z - 1.55f;
+		PARKING_X_MIN = -FINISH_SIZE / 2 + FINISH_OFFSET_X;
+		PARKING_X_MAX = FINISH_SIZE / 2 + FINISH_OFFSET_X;
+		PARKING_Z_MIN = -FINISH_SIZE * fheight + FINISH_OFFSET_Z;
+		PARKING_Z_MAX = FINISH_SIZE * fheight + FINISH_OFFSET_Z;
 
-	obstacle_xz[2][0] = FINISH_OFFSET_X - 1.05;
-	obstacle_xz[2][1] = FINISH_OFFSET_Z - 1.55f;
+		obstacle_xz[0][0] = FINISH_OFFSET_X;
+		obstacle_xz[0][1] = FINISH_OFFSET_Z + 1.55f;
 
-	obstacle_xz[3][0] = FINISH_OFFSET_X - 1.05 * 2;
-	obstacle_xz[3][1] = FINISH_OFFSET_Z - 1.55f;
+		obstacle_xz[1][0] = FINISH_OFFSET_X;
+		obstacle_xz[1][1] = FINISH_OFFSET_Z - 1.55f;
+
+		obstacle_xz[2][0] = FINISH_OFFSET_X - 1.05;
+		obstacle_xz[2][1] = FINISH_OFFSET_Z - 1.55f;
+
+		obstacle_xz[3][0] = FINISH_OFFSET_X - 1.05 * 2;
+		obstacle_xz[3][1] = FINISH_OFFSET_Z - 1.55f;
+	}
+	else if (current_stage == 2)
+	{
+		//finish
+		std::cout << "stage " << current_stage << " clear!\n";
+	}
 }
 
 float c_dx = 0.0f;
@@ -1327,6 +1341,14 @@ GLvoid Keyboard(unsigned char key, int x, int y)
 	{
 		if (currentGear > PARK)
 			currentGear = static_cast<GearState>(currentGear - 1);
+
+		if (currentGear == PARK)
+		{
+			if (isParked)
+			{
+				nextStage();
+			}
+		}
 		break;
 	}
 	case 'e': // 다음 기어
