@@ -540,7 +540,7 @@ std::vector<std::pair<float, float>> getRotatedCarCorners(float carX, float carZ
 	};
 
 	// 회전 각도(라디안)
-	float radians = glm::radians(carRotateY);
+	float radians = glm::radians(-carRotateY);
 
 	// 회전된 꼭짓점 좌표
 	std::vector<std::pair<float, float>> rotatedCorners;
@@ -633,8 +633,6 @@ void UpdateParkingStatus(const std::vector<std::pair<float, float>>& carCorners)
 
 bool checkCollisionObstacle(const std::vector<std::pair<float, float>>& carCorners)
 {
-	bool isCollision = true;
-	int checkCount = 0;
 	// 차량 꼭짓점 중 하나라도 충돌하면 true
 	for (const auto& corner : carCorners)
 	{
@@ -643,36 +641,25 @@ bool checkCollisionObstacle(const std::vector<std::pair<float, float>>& carCorne
 		if (obstacle_xz[0][0] - OBSTACLE_WIDTH <= cornerX && cornerX <= obstacle_xz[0][0] + OBSTACLE_WIDTH &&
 			obstacle_xz[0][1] - OBSTACLE_HEIGHT <= cornerZ && cornerZ <= obstacle_xz[0][1] + OBSTACLE_HEIGHT)
 		{
-			checkCount++;
-			break;
+			return true;
 		}
 		else if (obstacle_xz[1][0] - OBSTACLE_WIDTH <= cornerX && cornerX <= obstacle_xz[1][0] + OBSTACLE_WIDTH &&
 				 obstacle_xz[1][1] - OBSTACLE_HEIGHT <= cornerZ && cornerZ <= obstacle_xz[1][1] + OBSTACLE_HEIGHT)
 		{
-			isCollision = true;
-			checkCount++;
-			break;
+			return true;
 		}
 		else if (obstacle_xz[2][0] - OBSTACLE_WIDTH <= cornerX && cornerX <= obstacle_xz[2][0] + OBSTACLE_WIDTH &&
 				 obstacle_xz[2][1] - OBSTACLE_HEIGHT <= cornerZ && cornerZ <= obstacle_xz[2][1] + OBSTACLE_HEIGHT)
 		{
-			isCollision = true;
-			checkCount++;
-			break;
+			return true;
 		}
 		else if (obstacle_xz[3][0] - OBSTACLE_WIDTH <= cornerX && cornerX <= obstacle_xz[3][0] + OBSTACLE_WIDTH &&
 				 obstacle_xz[3][1] - OBSTACLE_HEIGHT <= cornerZ && cornerZ <= obstacle_xz[3][1] + OBSTACLE_HEIGHT)
 		{
-			isCollision = true;
-			checkCount++;
-			break;
+			return true;
 		}
 	}
-	if (checkCount == 0)
-	{
-		isCollision = false;
-	}
-	return isCollision;
+	return false;
 }
 
 void TimerFunction_UpdateMove(int value)
@@ -997,6 +984,7 @@ void drawObstacleCars(int modelLoc)
 	glDrawArrays(GL_TRIANGLES, 0, TRI_COUNT * 3);
 }
 
+// 충돌체크용 차 꼭짓점 그리기
 void drawCarCorners(int modelLoc)
 {
 	auto carCorners = getRotatedCarCorners(car_dx, car_dz, CAR_SIZE, car_rotateY);
@@ -1090,6 +1078,7 @@ void drawScene()
 		// 도착지점 그리기
 		drawFinishRect(modelLoc);
 
+		// 차 꼭지점 (좌표에 따라) 그리기
 		drawCarCorners(modelLoc);
 	}
 	// 후방 카메라 뷰
