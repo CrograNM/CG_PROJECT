@@ -21,6 +21,8 @@
 
 time_t startTime;
 int elapsedSeconds = 0;
+bool crushed = false;
+bool invincible = false;
 
 #define M_PI 3.14159265358979323846
 
@@ -139,9 +141,6 @@ GearState currentGear = DRIVE;
 // 장애물
 #define OBSTACLE_WIDTH CAR_SIZE * 0.7
 #define OBSTACLE_HEIGHT CAR_SIZE * 1.1
-
-GLfloat obstacle[4][TRI_COUNT * 3][3];
-GLfloat obstacle_color[4][TRI_COUNT * 3][3];
 
 // 도착지점
 #define FINISH_SIZE 1.0f //(바깥쪽 사각형 크기)
@@ -797,11 +796,14 @@ void nextStage()
 		currentGear = DRIVE;
 
 		startTime = time(nullptr);
+		crushed = false;
 	}
 	else if (current_stage == 2)
 	{
 		//finish
 		std::cout << "stage " << current_stage << " clear!\n";
+		std::cout << "--Quit--\n";
+		glutLeaveMainLoop(); // OpenGL 메인 루프 종료
 	}
 }
 
@@ -881,39 +883,47 @@ void TimerFunction_UpdateMove(int value)
 		float new_dz = car_dz + car_speed * cos(radians);
 
 		// 차량의 꼭짓점 계산
+		bool isColliding = false;
 		auto carCorners = getRotatedCarCorners(new_dx, new_dz, CAR_SIZE, car_rotateY);
 
-		// 벽과의 충돌 여부 확인
-		bool isColliding = false;
-		for (int i = 0; i < 4; ++i)
+		if(!invincible)
 		{
-			float wallX = (i % 2 == 0) ? 0.0f : (i == 1 ? GROUND_SIZE : -GROUND_SIZE);
-			float wallZ = (i % 2 == 1) ? 0.0f : (i == 2 ? GROUND_SIZE : -GROUND_SIZE);
-			float wallWidth = (i % 2 == 0) ? GROUND_SIZE * 2 : WALL_THICKNESS;
-			float wallHeight = (i % 2 == 1) ? GROUND_SIZE * 2 : WALL_THICKNESS;
+			// 벽과의 충돌 여부 확인
+			for (int i = 0; i < 4; ++i)
+			{
+				float wallX = (i % 2 == 0) ? 0.0f : (i == 1 ? GROUND_SIZE : -GROUND_SIZE);
+				float wallZ = (i % 2 == 1) ? 0.0f : (i == 2 ? GROUND_SIZE : -GROUND_SIZE);
+				float wallWidth = (i % 2 == 0) ? GROUND_SIZE * 2 : WALL_THICKNESS;
+				float wallHeight = (i % 2 == 1) ? GROUND_SIZE * 2 : WALL_THICKNESS;
 
-			if (checkCollisionWalls(carCorners, wallX, wallZ, wallWidth, wallHeight))
+				if (checkCollisionWalls(carCorners, wallX, wallZ, wallWidth, wallHeight))
+				{
+					isColliding = true;
+					break;
+				}
+			}
+
+			// 장애물과 충돌 확인
+			if (checkCollisionObstacle(carCorners))
 			{
 				isColliding = true;
-				break;
 			}
-		}
-
-		// 장애물과 충돌 확인
-		if (checkCollisionObstacle(carCorners))
-		{
-			isColliding = true;
 		}
 
 		// 충돌이 없을 때만 이동 업데이트
 		if (!isColliding)
 		{
+
 			// 회전 업데이트 (바퀴 회전에 따라 차량 회전)
 			float n = (MAX_SPEED * 2) / MAX_SPEED;
 			car_rotateY += front_wheels_rotateY * n * car_speed; // n * MAX_SPEED = 0.02 가 적당
 			car_dx = new_dx;
 			car_dz = new_dz;
 			wheel_rect_rotateX += car_speed * 200.0f;
+		}
+		else
+		{
+			crushed = true;
 		}
 
 		// 핸들과 바퀴 복원 로직
@@ -1213,8 +1223,9 @@ void drawScene()
 		// 도착지점 그리기
 		drawFinishRect(modelLoc);
 
-		// 차 꼭지점 (좌표에 따라) 그리기
-		drawCarCorners(modelLoc);
+		// 차 꼭지점 (좌표에 따라) 그리기 (디버깅, 무적)
+		if(invincible)
+			drawCarCorners(modelLoc);
 	}
 	// 후방 카메라 뷰
 	if (currentGear == REVERSE)
@@ -1313,8 +1324,13 @@ void drawScene()
 		float d_x = miniMapWidth * 0.65f;
 		float y = miniMapHeight * 0.5f;
 
-
-		glColor3f(1.0f, 0.0f, 0.0f); // 빨간색
+		int star_count = 1;
+		if (elapsedSeconds < 30)
+			glColor3f(1.0f, 1.0f, 1.0f); // 흰색
+		else if (elapsedSeconds < 60)
+			glColor3f(1.0f, 1.0f, 0.0f); // 노란색
+		else if (elapsedSeconds >= 60)
+			glColor3f(1.0f, 0.0f, 0.0f); // 빨간색
 		std::string timeString = std::to_string(elapsedSeconds) + "s";
 
 		glPushMatrix();
@@ -1418,13 +1434,51 @@ void drawScene()
 		float my = miniMapHeight * 0.5;
 
 		glColor3f(1.0f, 1.0f, 1.0f); // 흰색
-		std::string timeString = "stage " + std::to_string(current_stage) + " clear!!";
+		std::string String = "stage " + std::to_string(current_stage) + " clear!!";
 
 		glPushMatrix();
 		glTranslatef(mx - 50, my + 50, 0.0f);
 		glScalef(textScale, textScale, textScale);
-		RenderBitmapString(0, 0, GLUT_BITMAP_HELVETICA_18, timeString.c_str());
+		RenderBitmapString(0, 0, GLUT_BITMAP_HELVETICA_18, String.c_str());
 		glPopMatrix();
+
+		glColor3f(1.0f, 1.0f, 0.0f); // 노란색
+		int star_count = 1;
+		if (elapsedSeconds <= 60)
+		{
+			star_count++;
+		}
+		if (!crushed)
+		{
+			star_count++;
+		}
+
+		String = "your star count : " + std::to_string(star_count);
+		glPushMatrix();
+		glTranslatef(mx - 65, my, 0.0f);
+		glScalef(textScale, textScale, textScale);
+		RenderBitmapString(0, 0, GLUT_BITMAP_HELVETICA_18, String.c_str());
+		glPopMatrix();
+
+		glColor3f(1.0f, 1.0f, 1.0f); // 흰색
+		if (current_stage == 1)
+		{
+			String = "Press 'n' to next stage";
+			glPushMatrix();
+			glTranslatef(mx - 80, my - 50, 0.0f);
+			glScalef(textScale, textScale, textScale);
+			RenderBitmapString(0, 0, GLUT_BITMAP_HELVETICA_18, String.c_str());
+			glPopMatrix();
+		}
+		else
+		{
+			String = "Press 'n' to quit game";
+			glPushMatrix();
+			glTranslatef(mx - 80, my - 50, 0.0f);
+			glScalef(textScale, textScale, textScale);
+			RenderBitmapString(0, 0, GLUT_BITMAP_HELVETICA_18, String.c_str());
+			glPopMatrix();
+		}
 
 		glPopMatrix(); // 모델뷰
 		glMatrixMode(GL_PROJECTION);
@@ -1457,6 +1511,14 @@ GLvoid Keyboard(unsigned char key, int x, int y)
 	{
 		switch (key)
 		{
+		case 'i':
+		{
+			if (invincible)
+				invincible = false;
+			else
+				invincible = true;
+			break;
+		}
 		case 'q': // 이전 기어
 		{
 			if (currentGear > PARK)
