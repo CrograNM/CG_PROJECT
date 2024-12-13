@@ -818,8 +818,8 @@ void nextStage()
 		current_stage++;
 
 		// 도착지점 위치 변경
-		FINISH_OFFSET_X = 3.0f;
-		FINISH_OFFSET_Z = 0.0f;
+		FINISH_OFFSET_X = -2.0f;
+		FINISH_OFFSET_Z = -4.0f;
 
 		PARKING_X_MIN = -FINISH_SIZE / 2 + FINISH_OFFSET_X;
 		PARKING_X_MAX = FINISH_SIZE / 2 + FINISH_OFFSET_X;
@@ -827,23 +827,23 @@ void nextStage()
 		PARKING_Z_MAX = FINISH_SIZE * fheight + FINISH_OFFSET_Z;
 
 		// 장애물 위치 변경
-		obstacle_xz[0][0] = FINISH_OFFSET_X;
-		obstacle_xz[0][1] = FINISH_OFFSET_Z + 1.55f;
+		obstacle_xz[0][0] = FINISH_OFFSET_X - 1.05;
+		obstacle_xz[0][1] = FINISH_OFFSET_Z;
 
-		obstacle_xz[1][0] = FINISH_OFFSET_X;
-		obstacle_xz[1][1] = FINISH_OFFSET_Z - 1.55f;
+		obstacle_xz[1][0] = FINISH_OFFSET_X - 1.05;
+		obstacle_xz[1][1] = FINISH_OFFSET_Z + 1.55f;
 
-		obstacle_xz[2][0] = FINISH_OFFSET_X - 1.05;
-		obstacle_xz[2][1] = FINISH_OFFSET_Z - 1.55f;
+		obstacle_xz[2][0] = FINISH_OFFSET_X ;
+		obstacle_xz[2][1] = FINISH_OFFSET_Z + 1.55f;
 
-		obstacle_xz[3][0] = FINISH_OFFSET_X - 1.05 * 2;
-		obstacle_xz[3][1] = FINISH_OFFSET_Z - 1.55f;
+		obstacle_xz[3][0] = FINISH_OFFSET_X + 1.05;
+		obstacle_xz[3][1] = FINISH_OFFSET_Z + 1.55f;
 
-		obstacle_xz[4][0] = FINISH_OFFSET_X - 1.05 * 3;
-		obstacle_xz[4][1] = FINISH_OFFSET_Z - 1.55f;
+		obstacle_xz[4][0] = FINISH_OFFSET_X + 1.05;
+		obstacle_xz[4][1] = FINISH_OFFSET_Z + 1.55f*2;
 
 		// 차 위치 변경
-		car_dx = 2.0f;
+		car_dx = -4.0f;
 		car_dz = -4.0f;
 	}
 	else if (current_stage == 3)
@@ -1578,6 +1578,11 @@ GLvoid Reshape(int w, int h) //--- 콜백 함수: 다시 그리기 콜백 함수
 
 GLvoid Keyboard(unsigned char key, int x, int y)
 {
+	if (key == 'b')
+	{
+		//디버그
+		nextStage();
+	}
 	if (key == 'n')
 	{
 		if (isClear)
