@@ -486,11 +486,12 @@ glm::mat4 Wheel_on_000(int num, int type) //num은 4개 바퀴의 번호, type�
 }
 
 // 장애물 차 변환
-float obstacle_xz[4][2] = {
+float obstacle_xz[5][2] = {
 	{FINISH_OFFSET_X - 1.05f, FINISH_OFFSET_Z},
 	{FINISH_OFFSET_X + 1.05f, FINISH_OFFSET_Z},
 	{FINISH_OFFSET_X - 1.05f * 2, FINISH_OFFSET_Z},
-	{FINISH_OFFSET_X + 1.05f * 2, FINISH_OFFSET_Z}
+	{FINISH_OFFSET_X + 1.05f * 2, FINISH_OFFSET_Z},
+	{100.0f, 100.0f}
 };
 glm::mat4 ObstacleCar(int index)
 {
@@ -500,7 +501,8 @@ glm::mat4 ObstacleCar(int index)
 		glm::vec3(obstacle_xz[0][0], fy, obstacle_xz[0][1]),
 		glm::vec3(obstacle_xz[1][0], fy, obstacle_xz[1][1]),
 		glm::vec3(obstacle_xz[2][0], fy, obstacle_xz[2][1]),
-		glm::vec3(obstacle_xz[3][0], fy, obstacle_xz[3][1])
+		glm::vec3(obstacle_xz[3][0], fy, obstacle_xz[3][1]),
+		glm::vec3(obstacle_xz[4][0], fy, obstacle_xz[4][1])
 	};
 
 	T = glm::translate(T, positions[index]);
@@ -760,13 +762,31 @@ bool pause_mode = false;
 bool isClear = false;
 void nextStage()
 {
+	// 각도 초기화
+	car_rotateY = 0.0f;
+	front_wheels_rotateY = 0.0f;
+	wheel_rect_rotateX = 0.0f;
+
+	cumulativeAngle = 0.0f;
+	handle_rotateZ = 0.0f;
+	lastAngle = 0.0f;
+
+	// 기어 초기화
+	currentGear = DRIVE;
+
+	// 시간 초기화
+	startTime = time(nullptr);
+	pauseTime = startTime - time(nullptr);
+
+	// 충돌여부 초기화
+	crushed = false;
+
 	if (current_stage == 1)
 	{
-		std::cout << "stage " << current_stage << " clear!\n";
-
 		//next stage
 		current_stage++;
 
+		// 도착지점 위치 변경
 		FINISH_OFFSET_X = 3.0f;
 		FINISH_OFFSET_Z = 0.0f;
 
@@ -775,6 +795,7 @@ void nextStage()
 		PARKING_Z_MIN = -FINISH_SIZE * fheight + FINISH_OFFSET_Z;
 		PARKING_Z_MAX = FINISH_SIZE * fheight + FINISH_OFFSET_Z;
 
+		// 장애물 위치 변경
 		obstacle_xz[0][0] = FINISH_OFFSET_X;
 		obstacle_xz[0][1] = FINISH_OFFSET_Z + 1.55f;
 
@@ -787,32 +808,47 @@ void nextStage()
 		obstacle_xz[3][0] = FINISH_OFFSET_X - 1.05 * 2;
 		obstacle_xz[3][1] = FINISH_OFFSET_Z - 1.55f;
 
+		// 차 위치 변경
 		car_dx = 2.0f;
 		car_dz = -4.0f;
-
-		// 각도 초기화
-		car_rotateY = 0.0f;
-		front_wheels_rotateY = 0.0f;
-		wheel_rect_rotateX = 0.0f;
-
-		cumulativeAngle = 0.0f;
-		handle_rotateZ = 0.0f;
-		lastAngle = 0.0f;
-
-		// 기어 초기화
-		currentGear = DRIVE;
-
-		// 시간 초기화
-		startTime = time(nullptr);
-		pauseTime = startTime - time(nullptr);
-
-		// 충돌여부 초기화
-		crushed = false;
 	}
 	else if (current_stage == 2)
 	{
+		//next stage
+		current_stage++;
+
+		// 도착지점 위치 변경
+		FINISH_OFFSET_X = 3.0f;
+		FINISH_OFFSET_Z = 0.0f;
+
+		PARKING_X_MIN = -FINISH_SIZE / 2 + FINISH_OFFSET_X;
+		PARKING_X_MAX = FINISH_SIZE / 2 + FINISH_OFFSET_X;
+		PARKING_Z_MIN = -FINISH_SIZE * fheight + FINISH_OFFSET_Z;
+		PARKING_Z_MAX = FINISH_SIZE * fheight + FINISH_OFFSET_Z;
+
+		// 장애물 위치 변경
+		obstacle_xz[0][0] = FINISH_OFFSET_X;
+		obstacle_xz[0][1] = FINISH_OFFSET_Z + 1.55f;
+
+		obstacle_xz[1][0] = FINISH_OFFSET_X;
+		obstacle_xz[1][1] = FINISH_OFFSET_Z - 1.55f;
+
+		obstacle_xz[2][0] = FINISH_OFFSET_X - 1.05;
+		obstacle_xz[2][1] = FINISH_OFFSET_Z - 1.55f;
+
+		obstacle_xz[3][0] = FINISH_OFFSET_X - 1.05 * 2;
+		obstacle_xz[3][1] = FINISH_OFFSET_Z - 1.55f;
+
+		obstacle_xz[4][0] = FINISH_OFFSET_X - 1.05 * 3;
+		obstacle_xz[4][1] = FINISH_OFFSET_Z - 1.55f;
+
+		// 차 위치 변경
+		car_dx = 2.0f;
+		car_dz = -4.0f;
+	}
+	else if (current_stage == 3)
+	{
 		//finish
-		std::cout << "stage " << current_stage << " clear!\n";
 		std::cout << "--Quit--\n";
 		glutLeaveMainLoop(); // OpenGL 메인 루프 종료
 	}
@@ -1130,6 +1166,11 @@ void drawObstacleCars(int modelLoc)
 	glDrawArrays(GL_TRIANGLES, 0, 12);
 	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(ObstacleCar(3)));
 	glDrawArrays(GL_TRIANGLES, 0, 12);
+	if (current_stage == 3)
+	{
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(ObstacleCar(4)));
+		glDrawArrays(GL_TRIANGLES, 0, 12);
+	}
 
 	// 장애물
 	glBindVertexArray(vao[9]);
@@ -1141,6 +1182,11 @@ void drawObstacleCars(int modelLoc)
 	glDrawArrays(GL_TRIANGLES, 0, TRI_COUNT * 3);
 	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(ObstacleCar(3)));
 	glDrawArrays(GL_TRIANGLES, 0, TRI_COUNT * 3);
+	if(current_stage == 3)
+	{
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(ObstacleCar(4)));
+		glDrawArrays(GL_TRIANGLES, 0, TRI_COUNT * 3);
+	}
 }
 void drawCarCorners(int modelLoc)
 {
@@ -1493,7 +1539,7 @@ void drawScene()
 			glPopMatrix();
 
 			glColor3f(1.0f, 1.0f, 1.0f); // 흰색
-			if (current_stage == 1)
+			if (current_stage <= 2)
 			{
 				String = "Press 'n' to next stage";
 				glPushMatrix();
