@@ -1642,32 +1642,6 @@ GLvoid Reshape(int w, int h) //--- 콜백 함수: 다시 그리기 콜백 함수
 	glViewport(0, 0, w, h);
 }
 
-const float speed = 0.05f;
-const float WHEEL_TURN_SPEED = 0.5f;	// 복원 속도
-const float CAR_SPEED = 0.05f;			// 자동차 이동 속도
-bool a_down = false;
-bool d_down = false;
-void UpdateCar(bool isReverse)
-{
-	// 자동차 회전 업데이트 (앞바퀴 회전량에 따라 방향 전환
-	float moveFactor = isReverse ? -1.0f : 1.0f; // 후진 시 방향 반전
-
-	car_rotateY += moveFactor * front_wheels_rotateY * 0.1f;
-
-	// 자동차 이동 (회전 방향에 따른 이동량 계산)
-	float radians = glm::radians(car_rotateY);
-	car_dx += moveFactor * CAR_SPEED * sin(radians);
-	car_dz += moveFactor * CAR_SPEED * cos(radians);
-
-	// 앞바퀴 회전량을 점점 0으로 복원
-	if (a_down == false && d_down == false)
-	{
-		if (front_wheels_rotateY > 0.0f)
-			front_wheels_rotateY = std::max(0.0f, front_wheels_rotateY - WHEEL_TURN_SPEED);
-		else if (front_wheels_rotateY < 0.0f)
-			front_wheels_rotateY = std::min(0.0f, front_wheels_rotateY + WHEEL_TURN_SPEED);
-	}
-}
 GLvoid Keyboard(unsigned char key, int x, int y)
 {
 	if (key == 'b')
